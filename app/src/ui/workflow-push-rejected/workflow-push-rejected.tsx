@@ -44,12 +44,12 @@ export class WorkflowPushRejectedDialog extends React.Component<
           <p>
             The push was rejected by the server for containing a modification to
             the workflow file <Ref>{this.props.rejectedPath}</Ref>. In order to
-            be able to push to workflow files GitHub Desktop needs to request
+            be able to push to workflow files GlitchHub Desktop needs to request
             additional permissions.
           </p>
           <p>
-            Would you like to open a browser to grant GitHub Desktop permission
-            to update workflow files?
+            Would you like to open a browser to grant GlitchHub Desktop
+            permission to update workflow files?
           </p>
         </DialogContent>
         <DialogFooter>

@@ -73,6 +73,9 @@ interface IDiffProps {
   /** Whether we should display side by side diffs. */
   readonly showSideBySideDiff: boolean
 
+  /** Whether text diffs should be expanded to the whole file when loaded. */
+  readonly expandWholeFileByDefault: boolean
+
   /** Whether we should show a confirmation dialog when the user discards changes */
   readonly askForConfirmationOnDiscardChanges?: boolean
 
@@ -291,6 +294,7 @@ export class Diff extends React.Component<IDiffProps, IDiffState> {
         fileContents={this.props.fileContents}
         hideWhitespaceInDiff={this.props.hideWhitespaceInDiff}
         showSideBySideDiff={this.props.showSideBySideDiff}
+        expandWholeFileByDefault={this.props.expandWholeFileByDefault}
         onIncludeChanged={this.props.onIncludeChanged}
         onDiscardChanges={this.props.onDiscardChanges}
         askForConfirmationOnDiscardChanges={

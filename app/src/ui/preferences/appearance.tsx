@@ -22,14 +22,25 @@ import {
   numberFormatToKey,
 } from '../../models/formatting-preferences'
 import { formatNumber } from '../../lib/format-number'
+import {
+  DiffChangesOnlySwatch,
+  DiffWholeFileSwatch,
+} from './diff-expansion-swatches'
+import { TextSizeSlider } from '../lib/text-size-slider'
+
+type DiffExpansionOption = 'changes-only' | 'whole-file'
 
 interface IAppearanceProps {
   readonly selectedTheme: ApplicationTheme
   readonly onSelectedThemeChanged: (theme: ApplicationTheme) => void
   readonly selectedTabSize: number
   readonly onSelectedTabSizeChanged: (tabSize: number) => void
+  readonly selectedTextSize: number
+  readonly onSelectedTextSizeChanged: (textSize: number) => void
   readonly alwaysShowWorktreeList: boolean
   readonly onAlwaysShowWorktreeListChanged: (value: boolean) => void
+  readonly expandWholeFileByDefault: boolean
+  readonly onExpandWholeFileByDefaultChanged: (value: boolean) => void
   readonly selectedDateFormat: DateFormat
   readonly onSelectedDateFormatChanged: (format: DateFormat) => void
   readonly selectedTimeFormat: TimeFormat
@@ -137,6 +148,79 @@ export class Appearance extends React.Component<
     event: React.FormEvent<HTMLInputElement>
   ) => {
     this.props.onAlwaysShowWorktreeListChanged(event.currentTarget.checked)
+  }
+
+  private onDiffExpansionChanged = (option: DiffExpansionOption) => {
+    this.props.onExpandWholeFileByDefaultChanged(option === 'whole-file')
+  }
+
+  private renderDiffExpansionSwatch = (option: DiffExpansionOption) => {
+    switch (option) {
+      case 'changes-only':
+        return (
+          <span>
+            <DiffChangesOnlySwatch />
+            <span className="theme-value-label">Changed lines only</span>
+          </span>
+        )
+      case 'whole-file':
+        return (
+          <span>
+            <DiffWholeFileSwatch />
+            <span className="theme-value-label">Whole file</span>
+          </span>
+        )
+    }
+  }
+
+  private renderTextSize() {
+    return (
+      <div className="appearance-section text-size-section">
+        <h2 id="text-size-heading">
+          {__DARWIN__ ? 'Text Size' : 'Text size'}
+        </h2>
+        <p className="appearance-section-description">
+          Use the slider to set the reading size for the whole app. Changes
+          apply right away.
+        </p>
+        <TextSizeSlider
+          value={this.props.selectedTextSize}
+          onChange={this.props.onSelectedTextSizeChanged}
+          ariaLabelledBy="text-size-heading"
+        />
+      </div>
+    )
+  }
+
+  private renderDiffExpansion() {
+    const options: ReadonlyArray<DiffExpansionOption> = [
+      'changes-only',
+      'whole-file',
+    ]
+    const selected: DiffExpansionOption = this.props.expandWholeFileByDefault
+      ? 'whole-file'
+      : 'changes-only'
+
+    return (
+      <div className="appearance-section diff-expansion-section">
+        <h2 id="diff-expansion-heading">
+          {__DARWIN__ ? 'Diff Expansion' : 'Diff expansion'}
+        </h2>
+        <p className="appearance-section-description">
+          Choose how much of a file is shown when you open a diff. You can still
+          expand or collapse any single diff from its context menu.
+        </p>
+
+        <RadioGroup<DiffExpansionOption>
+          ariaLabelledBy="diff-expansion-heading"
+          className="theme-selector diff-expansion-selector"
+          selectedKey={selected}
+          radioButtonKeys={options}
+          onSelectionChanged={this.onDiffExpansionChanged}
+          renderRadioButtonLabelContents={this.renderDiffExpansionSwatch}
+        />
+      </div>
+    )
   }
 
   public renderThemeSwatch = (theme: ApplicationTheme) => {
@@ -306,6 +390,8 @@ export class Appearance extends React.Component<
     return (
       <DialogContent>
         {this.renderSelectedTheme()}
+        {this.renderTextSize()}
+        {this.renderDiffExpansion()}
         {this.renderFormatting()}
         {this.renderMiscellaneous()}
       </DialogContent>

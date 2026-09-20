@@ -302,6 +302,9 @@ export interface IAppState {
   /** Whether we should show side by side diffs */
   readonly showSideBySideDiff: boolean
 
+  /** Whether text diffs should show the whole file as soon as they load */
+  readonly expandWholeFileByDefault: boolean
+
   /** The user's preferred shell. */
   readonly selectedShell: Shell
 
@@ -322,6 +325,9 @@ export interface IAppState {
 
   /** The selected tab size preference */
   readonly selectedTabSize: number
+
+  /** The selected text size preference, in pixels */
+  readonly selectedTextSize: number
 
   /** Whether to show the worktree dropdown even without linked worktrees. */
   readonly alwaysShowWorktreeList: boolean

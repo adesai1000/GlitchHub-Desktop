@@ -108,7 +108,9 @@ interface IPreferencesProps {
   readonly selectedShell: Shell
   readonly selectedTheme: ApplicationTheme
   readonly selectedTabSize: number
+  readonly selectedTextSize: number
   readonly alwaysShowWorktreeList: boolean
+  readonly expandWholeFileByDefault: boolean
   readonly useCustomEditor: boolean
   readonly customEditor: ICustomIntegration | null
   readonly useCustomShell: boolean
@@ -170,7 +172,9 @@ interface IPreferencesState {
 
   readonly initiallySelectedTheme: ApplicationTheme
   readonly initiallySelectedTabSize: number
+  readonly initiallySelectedTextSize: number
   readonly alwaysShowWorktreeList: boolean
+  readonly expandWholeFileByDefault: boolean
 
   readonly isLoadingGitConfig: boolean
 
@@ -247,7 +251,9 @@ export class Preferences extends React.Component<
       repositoryIndicatorsEnabled: this.props.repositoryIndicatorsEnabled,
       initiallySelectedTheme: this.props.selectedTheme,
       initiallySelectedTabSize: this.props.selectedTabSize,
+      initiallySelectedTextSize: this.props.selectedTextSize,
       alwaysShowWorktreeList: this.props.alwaysShowWorktreeList,
+      expandWholeFileByDefault: this.props.expandWholeFileByDefault,
       isLoadingGitConfig: true,
       underlineLinks: this.props.underlineLinks,
       showDiffCheckMarks: this.props.showDiffCheckMarks,
@@ -368,6 +374,9 @@ export class Preferences extends React.Component<
     }
     if (this.state.initiallySelectedTabSize !== this.props.selectedTabSize) {
       this.onSelectedTabSizeChanged(this.state.initiallySelectedTabSize)
+    }
+    if (this.state.initiallySelectedTextSize !== this.props.selectedTextSize) {
+      this.onSelectedTextSizeChanged(this.state.initiallySelectedTextSize)
     }
 
     this.props.onDismissed()
@@ -643,9 +652,15 @@ export class Preferences extends React.Component<
             onSelectedThemeChanged={this.onSelectedThemeChanged}
             selectedTabSize={this.props.selectedTabSize}
             onSelectedTabSizeChanged={this.onSelectedTabSizeChanged}
+            selectedTextSize={this.props.selectedTextSize}
+            onSelectedTextSizeChanged={this.onSelectedTextSizeChanged}
             alwaysShowWorktreeList={this.state.alwaysShowWorktreeList}
             onAlwaysShowWorktreeListChanged={
               this.onAlwaysShowWorktreeListChanged
+            }
+            expandWholeFileByDefault={this.state.expandWholeFileByDefault}
+            onExpandWholeFileByDefaultChanged={
+              this.onExpandWholeFileByDefaultChanged
             }
             selectedDateFormat={
               this.state.selectedDateFormat ?? getDateFormatPreference()
@@ -978,10 +993,20 @@ export class Preferences extends React.Component<
     this.props.dispatcher.setSelectedTabSize(tabSize)
   }
 
+  private onSelectedTextSizeChanged = (textSize: number) => {
+    this.props.dispatcher.setSelectedTextSize(textSize)
+  }
+
   private onAlwaysShowWorktreeListChanged = (
     alwaysShowWorktreeList: boolean
   ) => {
     this.setState({ alwaysShowWorktreeList })
+  }
+
+  private onExpandWholeFileByDefaultChanged = (
+    expandWholeFileByDefault: boolean
+  ) => {
+    this.setState({ expandWholeFileByDefault })
   }
 
   private renderFooter() {
@@ -1147,6 +1172,7 @@ export class Preferences extends React.Component<
 
     dispatcher.setDiffCheckMarksSetting(this.state.showDiffCheckMarks)
     dispatcher.setAlwaysShowWorktreeList(this.state.alwaysShowWorktreeList)
+    dispatcher.setExpandWholeFileByDefault(this.state.expandWholeFileByDefault)
 
     dispatcher.setSelectedCopilotModelsByAccount(
       this.state.selectedCopilotModelsByAccount

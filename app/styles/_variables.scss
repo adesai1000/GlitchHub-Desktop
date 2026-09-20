@@ -92,6 +92,10 @@ $overlay-background-color: rgba(0, 0, 0, 0.4);
   /** Extra small font size, be very conservative with the use of this */
   --font-size-xs: 9px;
 
+  // Height of a single line in the diff view. Scaled together with the font
+  // sizes by the text size preference, see app/src/ui/lib/text-size.ts
+  --diff-line-height: 20px;
+
   /**
    * Background color for custom scroll bars.
    * The color is applied to the thumb part of the scrollbar.

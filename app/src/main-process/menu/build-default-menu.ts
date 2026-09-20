@@ -69,10 +69,10 @@ export function buildDefaultMenuTemplate({
 
   if (__DARWIN__) {
     template.push({
-      label: 'GitHub Desktop',
+      label: 'GlitchHub Desktop',
       submenu: [
         {
-          label: 'About GitHub Desktop',
+          label: 'About GlitchHub Desktop',
           click: emit('show-about'),
           id: 'about',
         },
@@ -601,7 +601,7 @@ export function buildDefaultMenuTemplate({
         ...helpItems,
         separator,
         {
-          label: '&About GitHub Desktop',
+          label: '&About GlitchHub Desktop',
           click: emit('show-about'),
           id: 'about',
         },

@@ -136,8 +136,8 @@ export class CrashApp extends React.Component<ICrashAppProps, ICrashAppState> {
   private renderTitle() {
     const message =
       this.state.type === 'launch'
-        ? 'GitHub Desktop failed to launch'
-        : 'GitHub Desktop encountered an error'
+        ? 'GlitchHub Desktop failed to launch'
+        : 'GlitchHub Desktop encountered an error'
 
     return (
       <header>
@@ -151,18 +151,18 @@ export class CrashApp extends React.Component<ICrashAppProps, ICrashAppState> {
     if (this.state.type === 'launch') {
       return (
         <p>
-          GitHub Desktop encountered a catastrophic error that prevents it from
-          launching. This has been reported to the team, but if you encounter
-          this repeatedly please report this issue to the GitHub Desktop{' '}
-          <LinkButton uri={issuesUri}>issue tracker</LinkButton>.
+          GlitchHub Desktop encountered a catastrophic error that prevents it
+          from launching. This has been reported to the team, but if you
+          encounter this repeatedly please report this issue to the GlitchHub
+          Desktop <LinkButton uri={issuesUri}>issue tracker</LinkButton>.
         </p>
       )
     } else {
       return (
         <p>
-          GitHub Desktop has encountered an unrecoverable error and will need to
-          restart. This has been reported to the team, but if you encounter this
-          repeatedly please report this issue to the GitHub Desktop{' '}
+          GlitchHub Desktop has encountered an unrecoverable error and will need
+          to restart. This has been reported to the team, but if you encounter
+          this repeatedly please report this issue to the GlitchHub Desktop{' '}
           <LinkButton uri={issuesUri}>issue tracker</LinkButton>.
         </p>
       )

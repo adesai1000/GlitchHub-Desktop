@@ -8,6 +8,7 @@ import { ManualConflictResolution } from '../../../models/manual-conflict-resolu
 import { FileList } from '../../history/file-list'
 import { SeamlessDiffSwitcher } from '../../diff/seamless-diff-switcher'
 import { DiffOptions } from '../../diff/diff-options'
+import { getExpandWholeFileByDefault } from '../../lib/diff-mode'
 import { Repository } from '../../../models/repository'
 import { Dispatcher } from '../../dispatcher'
 import { openFile } from '../../lib/open-file'
@@ -456,6 +457,7 @@ export class CopilotConflictsChanges extends React.Component<
                 imageDiffType={this.state.imageDiffType}
                 hideWhitespaceInDiff={hideWhitespaceInDiff}
                 showSideBySideDiff={showSideBySideDiff}
+                expandWholeFileByDefault={getExpandWholeFileByDefault()}
                 showDiffCheckMarks={false}
                 onOpenBinaryFile={this.onOpenBinaryFile}
                 onChangeImageDiffType={this.onChangeImageDiffType}

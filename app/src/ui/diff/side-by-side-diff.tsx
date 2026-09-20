@@ -61,6 +61,7 @@ import {
 import { showContextualMenu } from '../../lib/menu-item'
 import { getTokens } from './get-tokens'
 import { DiffSearchInput } from './diff-search-input'
+import { textSizeChangedEvent } from '../lib/text-size'
 import {
   expandTextDiffHunk,
   DiffExpansionKind,
@@ -144,6 +145,13 @@ interface ISideBySideDiffProps {
    * Whether we'll show the diff in a side-by-side layout.
    */
   readonly showSideBySideDiff: boolean
+
+  /**
+   * Whether the diff should be expanded to show the whole file as soon as
+   * the file contents are available (same as picking "Expand Whole File"
+   * from the context menu, but automatically).
+   */
+  readonly expandWholeFileByDefault: boolean
 
   /** Whether or not to show the diff check marks indicating inclusion in a commit */
   readonly showDiffCheckMarks: boolean
@@ -237,6 +245,14 @@ export class SideBySideDiff extends React.Component<
   /** Diff to restore when "Collapse all expanded lines" option is used */
   private diffToRestore: ITextDiff | null = null
 
+  /**
+   * The diff (as received via props) that we last auto-expanded to the whole
+   * file because of the expandWholeFileByDefault preference. Used to make sure
+   * we only auto-expand once per diff so that manually collapsing the
+   * expanded lines isn't immediately undone.
+   */
+  private lastAutoExpandedDiff: ITextDiff | null = null
+
   private textSelectionStartRow: number | undefined = undefined
   private textSelectionEndRow: number | undefined = undefined
 
@@ -263,8 +279,10 @@ export class SideBySideDiff extends React.Component<
   public constructor(props: ISideBySideDiffProps) {
     super(props)
 
+    const autoExpandedDiff = this.getAutoExpandedDiff()
+
     this.state = {
-      diff: props.diff,
+      diff: autoExpandedDiff ?? props.diff,
       isSearching: false,
       selectedSearchResult: undefined,
       selectingTextInRow: 'before',
@@ -281,6 +299,10 @@ export class SideBySideDiff extends React.Component<
     // Listen for the custom event find-text (see app.tsx)
     // and trigger the search plugin if we see it.
     document.addEventListener('find-text', this.showSearch)
+
+    // Row heights are measured once and cached, so when the text size
+    // preference changes (see ui/lib/text-size.ts) they need re-measuring.
+    document.addEventListener(textSizeChangedEvent, this.onTextSizeChanged)
 
     document.addEventListener('cut', this.onCutOrCopy)
     document.addEventListener('copy', this.onCutOrCopy)
@@ -416,6 +438,7 @@ export class SideBySideDiff extends React.Component<
     window.removeEventListener('keydown', this.onWindowKeyDown)
     document.removeEventListener('mouseup', this.onEndSelection)
     document.removeEventListener('find-text', this.showSearch)
+    document.removeEventListener(textSizeChangedEvent, this.onTextSizeChanged)
     document.removeEventListener(
       'selectionchange',
       this.onDocumentSelectionChange
@@ -438,6 +461,19 @@ export class SideBySideDiff extends React.Component<
     if (!textDiffEquals(this.props.diff, prevProps.diff)) {
       this.diffToRestore = null
       this.setState({ diff: this.props.diff, lastExpandedHunk: null })
+      this.rowSelectableGroupStaticDataCache.clear()
+    }
+
+    if (
+      prevProps.expandWholeFileByDefault !== this.props.expandWholeFileByDefault
+    ) {
+      // Give the preference a fresh chance to apply to the current diff
+      this.lastAutoExpandedDiff = null
+    }
+
+    const autoExpandedDiff = this.getAutoExpandedDiff()
+    if (autoExpandedDiff !== null) {
+      this.setState({ diff: autoExpandedDiff, lastExpandedHunk: null })
       this.rowSelectableGroupStaticDataCache.clear()
     }
 
@@ -981,6 +1017,12 @@ export class SideBySideDiff extends React.Component<
     listRowsHeightCache.clearAll()
   }
 
+  private onTextSizeChanged = () => {
+    this.clearListRowsHeightCache()
+    this.rowSelectableGroupStaticDataCache.clear()
+    this.virtualListRef.current?.recomputeRowHeights()
+  }
+
   private async initDiffSyntaxMode() {
     const contents = this.props.fileContents
 
@@ -1493,6 +1535,37 @@ export class SideBySideDiff extends React.Component<
             : 'Collapse expanded lines',
           action: this.onCollapseExpandedLines,
         }
+  }
+
+  /**
+   * If the "expand whole file by default" preference is enabled and the
+   * current props diff hasn't already been auto-expanded, expands it and
+   * returns the expanded diff. Returns null when there's nothing to do.
+   *
+   * Has the side effect of remembering the diff so we don't expand it twice,
+   * and of setting diffToRestore so that "Collapse Expanded Lines" works.
+   */
+  private getAutoExpandedDiff(): ITextDiff | null {
+    const { diff, expandWholeFileByDefault, fileContents } = this.props
+
+    if (
+      !expandWholeFileByDefault ||
+      this.lastAutoExpandedDiff === diff ||
+      fileContents === null ||
+      !this.canExpandDiff()
+    ) {
+      return null
+    }
+
+    this.lastAutoExpandedDiff = diff
+
+    const expandedDiff = expandWholeTextDiff(diff, fileContents.newContents)
+    if (expandedDiff === undefined || expandedDiff === diff) {
+      return null
+    }
+
+    this.diffToRestore = diff
+    return expandedDiff
   }
 
   private onExpandWholeFile = () => {

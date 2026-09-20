@@ -10,13 +10,20 @@ import {
   getNumberFormatPreference,
 } from '../../../src/models/formatting-preferences'
 
-function renderAppearance(alwaysShowWorktreeList = false) {
+function renderAppearance(
+  alwaysShowWorktreeList = false,
+  expandWholeFileByDefault = false
+) {
   const changes: boolean[] = []
+  const expandChanges: boolean[] = []
+  const textSizes: number[] = []
   const props = {
     selectedTheme: ApplicationTheme.Light,
     onSelectedThemeChanged: () => {},
     selectedTabSize: 4,
     onSelectedTabSizeChanged: () => {},
+    selectedTextSize: 12,
+    onSelectedTextSizeChanged: (value: number) => textSizes.push(value),
     selectedDateFormat: getDateFormatPreference(),
     onSelectedDateFormatChanged: () => {},
     selectedTimeFormat: getTimeFormatPreference(),
@@ -27,9 +34,12 @@ function renderAppearance(alwaysShowWorktreeList = false) {
     onPreferAbsoluteDatesChanged: () => {},
     alwaysShowWorktreeList,
     onAlwaysShowWorktreeListChanged: (value: boolean) => changes.push(value),
+    expandWholeFileByDefault,
+    onExpandWholeFileByDefaultChanged: (value: boolean) =>
+      expandChanges.push(value),
   }
   const view = render(<Appearance {...props} />)
-  return { ...view, props, changes }
+  return { ...view, props, changes, expandChanges, textSizes }
 }
 
 describe('Appearance preferences', () => {
@@ -72,5 +82,65 @@ describe('Appearance preferences', () => {
 
     fireEvent.click(checkbox)
     assert.deepStrictEqual(changes, [true, false])
+  })
+
+  it('shows a text size slider at the default size with a live example', () => {
+    const { textSizes, rerender, props } = renderAppearance()
+
+    const slider = screen.getByRole('slider', { name: /Text size/i })
+    assert.ok(slider instanceof HTMLInputElement)
+    assert.strictEqual(slider.value, '12')
+    assert.ok(screen.getByText('Example 12 px'))
+    assert.ok(screen.getByText('Default'))
+
+    fireEvent.change(slider, { target: { value: '16' } })
+    assert.deepStrictEqual(textSizes, [16])
+
+    rerender(<Appearance {...props} selectedTextSize={16} />)
+    assert.strictEqual(slider.value, '16')
+    assert.ok(screen.getByText('Example 16 px'))
+  })
+
+  it('shows the diff expansion options under their own heading, changes only by default', () => {
+    renderAppearance()
+
+    const heading = screen.getByRole('heading', { name: /Diff Expansion/i })
+    const changesOnly = screen.getByRole('radio', {
+      name: 'Changed lines only',
+    })
+    const wholeFile = screen.getByRole('radio', { name: 'Whole file' })
+
+    assert.strictEqual(
+      heading.parentElement,
+      changesOnly.closest('.appearance-section')
+    )
+    assert.strictEqual(
+      heading.parentElement,
+      wholeFile.closest('.appearance-section')
+    )
+    assert.ok(changesOnly instanceof HTMLInputElement)
+    assert.ok(wholeFile instanceof HTMLInputElement)
+    assert.strictEqual(changesOnly.checked, true)
+    assert.strictEqual(wholeFile.checked, false)
+  })
+
+  it('reports picking whole file or changes only and reflects updated props', () => {
+    const { rerender, props, expandChanges } = renderAppearance()
+    const changesOnly = screen.getByRole('radio', {
+      name: 'Changed lines only',
+    })
+    const wholeFile = screen.getByRole('radio', { name: 'Whole file' })
+
+    fireEvent.click(wholeFile)
+    assert.deepStrictEqual(expandChanges, [true])
+
+    rerender(<Appearance {...props} expandWholeFileByDefault={true} />)
+    assert.ok(wholeFile instanceof HTMLInputElement)
+    assert.ok(changesOnly instanceof HTMLInputElement)
+    assert.strictEqual(wholeFile.checked, true)
+    assert.strictEqual(changesOnly.checked, false)
+
+    fireEvent.click(changesOnly)
+    assert.deepStrictEqual(expandChanges, [true, false])
   })
 })

@@ -20,6 +20,7 @@ import { FetchType } from '../models/fetch'
 import { shouldRenderApplicationMenu } from './lib/features'
 import { matchExistingRepository } from '../lib/repository-matching'
 import { getVersion, getName } from './lib/app-proxy'
+import { applyTextSize } from './lib/text-size'
 import {
   getOS,
   isOSNoLongerSupportedByElectron,
@@ -1049,7 +1050,15 @@ export class App extends React.Component<IAppProps, IAppState> {
     this.props.dispatcher.hideStashedChanges(state.repository)
   }
 
+  public componentDidUpdate(prevProps: IAppProps, prevState: IAppState) {
+    if (prevState.selectedTextSize !== this.state.selectedTextSize) {
+      applyTextSize(this.state.selectedTextSize)
+    }
+  }
+
   public componentDidMount() {
+    applyTextSize(this.state.selectedTextSize)
+
     document.ondragover = e => {
       if (e.dataTransfer != null) {
         if (this.isShowingModal) {
@@ -1760,6 +1769,7 @@ export class App extends React.Component<IAppProps, IAppState> {
             selectedShell={this.state.selectedShell}
             selectedTheme={this.state.selectedTheme}
             selectedTabSize={this.state.selectedTabSize}
+            selectedTextSize={this.state.selectedTextSize}
             useCustomEditor={this.state.useCustomEditor}
             customEditor={this.state.customEditor}
             useCustomShell={this.state.useCustomShell}
@@ -1769,6 +1779,7 @@ export class App extends React.Component<IAppProps, IAppState> {
             underlineLinks={this.state.underlineLinks}
             showDiffCheckMarks={this.state.showDiffCheckMarks}
             alwaysShowWorktreeList={this.state.alwaysShowWorktreeList}
+            expandWholeFileByDefault={this.state.expandWholeFileByDefault}
             selectedCopilotModelsByAccount={
               this.state.selectedCopilotModelsByAccount
             }
@@ -2713,6 +2724,7 @@ export class App extends React.Component<IAppProps, IAppState> {
             repository={repository}
             externalEditorLabel={externalEditorLabel}
             showSideBySideDiff={showSideBySideDiff}
+            expandWholeFileByDefault={this.state.expandWholeFileByDefault}
             currentBranchHasPullRequest={currentBranchHasPullRequest}
             onDismissed={onPopupDismissedFn}
             onOpenInExternalEditor={this.onOpenInExternalEditor}
@@ -3960,6 +3972,7 @@ export class App extends React.Component<IAppProps, IAppState> {
           showDiffCheckMarks={state.showDiffCheckMarks}
           preferAbsoluteDates={state.preferAbsoluteDates}
           showSideBySideDiff={state.showSideBySideDiff}
+          expandWholeFileByDefault={state.expandWholeFileByDefault}
           focusCommitMessage={state.focusCommitMessage}
           askForConfirmationOnDiscardChanges={
             state.askForConfirmationOnDiscardChanges

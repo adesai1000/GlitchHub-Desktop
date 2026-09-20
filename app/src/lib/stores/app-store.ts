@@ -364,7 +364,16 @@ import {
   ShowSideBySideDiffDefault,
   getShowSideBySideDiff,
   setShowSideBySideDiff,
+  ExpandWholeFileByDefaultDefault,
+  getExpandWholeFileByDefault,
+  setExpandWholeFileByDefault,
 } from '../../ui/lib/diff-mode'
+import {
+  textSizeDefault,
+  getTextSize,
+  setTextSize,
+  clampTextSize,
+} from '../../ui/lib/text-size'
 import {
   abortCherryPick,
   cherryPick,
@@ -674,6 +683,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
   /** Whether or not the spellchecker is enabled for commit summary and description */
   private commitSpellcheckEnabled: boolean = commitSpellcheckEnabledDefault
   private showSideBySideDiff: boolean = ShowSideBySideDiffDefault
+  private expandWholeFileByDefault: boolean = ExpandWholeFileByDefaultDefault
 
   private uncommittedChangesStrategy = defaultUncommittedChangesStrategy
 
@@ -700,6 +710,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
   private selectedTheme = ApplicationTheme.System
   private currentTheme: ApplicableTheme = ApplicationTheme.Light
   private selectedTabSize = tabSizeDefault
+  private selectedTextSize = textSizeDefault
 
   private useWindowsOpenSSH: boolean = false
 
@@ -867,7 +878,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
   /**
    * On Windows OS, whenever a user toggles their zoom factor, chromium stores it
-   * in their `%AppData%/Roaming/GitHub Desktop/Preferences.js` denoted by the
+   * in their `%AppData%/Roaming/GlitchHub Desktop/Preferences.js` denoted by the
    * file path to the application. That file path contains the apps version.
    * Thus, on every update, the users set zoom level gets reset as there is not
    * defined value for the current app version.
@@ -1322,6 +1333,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       hideWhitespaceInHistoryDiff: this.hideWhitespaceInHistoryDiff,
       hideWhitespaceInPullRequestDiff: this.hideWhitespaceInPullRequestDiff,
       showSideBySideDiff: this.showSideBySideDiff,
+      expandWholeFileByDefault: this.expandWholeFileByDefault,
       selectedShell: this.selectedShell,
       repositoryFilterText: this.repositoryFilterText,
       resolvedExternalEditor: this.resolvedExternalEditor,
@@ -1330,6 +1342,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       selectedTheme: this.selectedTheme,
       currentTheme: this.currentTheme,
       selectedTabSize: this.selectedTabSize,
+      selectedTextSize: this.selectedTextSize,
       apiRepositories: this.apiRepositoriesStore.getState(),
       useWindowsOpenSSH: this.useWindowsOpenSSH,
       showCommitLengthWarning: this.showCommitLengthWarning,
@@ -2574,6 +2587,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       commitSpellcheckEnabledDefault
     )
     this.showSideBySideDiff = getShowSideBySideDiff()
+    this.expandWholeFileByDefault = getExpandWholeFileByDefault()
 
     this.selectedTheme = getPersistedThemeName()
     // Make sure the persisted theme is applied
@@ -2582,6 +2596,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.currentTheme = await getCurrentlyAppliedTheme()
 
     this.selectedTabSize = getNumber(tabSizeKey, tabSizeDefault)
+    this.selectedTextSize = getTextSize()
 
     themeChangeMonitor.onThemeChanged(theme => {
       this.currentTheme = theme
@@ -7670,7 +7685,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
         if (match === null) {
           this.emitError(
             new ExternalEditorError(
-              `No suitable editors installed for GitHub Desktop to launch. Install ${suggestedExternalEditor.name} for your platform and restart GitHub Desktop to try again.`,
+              `No suitable editors installed for GlitchHub Desktop to launch. Install ${suggestedExternalEditor.name} for your platform and restart GlitchHub Desktop to try again.`,
               { suggestDefaultEditor: true }
             )
           )
@@ -7704,7 +7719,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       if (match === null) {
         this.emitError(
           new ExternalEditorError(
-            `No suitable editors installed for GitHub Desktop to launch. Install ${suggestedExternalEditor.name} for your platform and restart GitHub Desktop to try again.`,
+            `No suitable editors installed for GlitchHub Desktop to launch. Install ${suggestedExternalEditor.name} for your platform and restart GlitchHub Desktop to try again.`,
             { suggestDefaultEditor: true }
           )
         )
@@ -7937,6 +7952,15 @@ export class AppStore extends TypedBaseStore<IAppState> {
       setShowSideBySideDiff(showSideBySideDiff)
       this.showSideBySideDiff = showSideBySideDiff
       this.statsStore.increment('diffModeChangeCount')
+      this.emitUpdate()
+    }
+  }
+
+  /** This shouldn't be called directly. See 'Dispatcher'. */
+  public _setExpandWholeFileByDefault(expandWholeFileByDefault: boolean) {
+    if (expandWholeFileByDefault !== this.expandWholeFileByDefault) {
+      setExpandWholeFileByDefault(expandWholeFileByDefault)
+      this.expandWholeFileByDefault = expandWholeFileByDefault
       this.emitUpdate()
     }
   }
@@ -8828,6 +8852,20 @@ export class AppStore extends TypedBaseStore<IAppState> {
     if (!isNaN(tabSize)) {
       this.selectedTabSize = tabSize
       setNumber(tabSizeKey, tabSize)
+      this.emitUpdate()
+    }
+
+    return Promise.resolve()
+  }
+
+  /**
+   * Set the application-wide text size, in pixels
+   */
+  public _setSelectedTextSize(textSize: number) {
+    const size = clampTextSize(textSize)
+    if (size !== this.selectedTextSize) {
+      this.selectedTextSize = size
+      setTextSize(size)
       this.emitUpdate()
     }
 

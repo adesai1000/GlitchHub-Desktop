@@ -90,7 +90,7 @@
   .row {
     display: flex;
     flex-direction: row;
-    line-height: 20px;
+    line-height: var(--diff-line-height);
     position: relative;
     height: 100%;
 

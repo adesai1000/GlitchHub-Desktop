@@ -1,5 +1,5 @@
 /**
- * E2E tests for GitHub Desktop using Playwright + Electron.
+ * E2E tests for GlitchHub Desktop using Playwright + Electron.
  *
  * These tests launch the real production-built app, interact with it
  * via Playwright, and verify core functionality end-to-end. Video and
@@ -98,7 +98,7 @@ async function clickCheckForUpdatesIfAvailable(target: Page | Locator) {
 
 // ── Smoke tests ─────────────────────────────────────────────────────
 
-test.describe('GitHub Desktop - App Launch', () => {
+test.describe('GlitchHub Desktop - App Launch', () => {
   test('should launch, complete welcome flow, commit, and switch branches', async ({
     mainWindow: page,
   }) => {
@@ -119,7 +119,7 @@ test.describe('GitHub Desktop - App Launch', () => {
     const nameInput = page.locator('input[placeholder="Your Name"]')
     await nameInput.waitFor({ state: 'visible', timeout: 15000 })
     if ((await nameInput.inputValue()) === '') {
-      await nameInput.fill('GitHub Desktop E2E')
+      await nameInput.fill('GlitchHub Desktop E2E')
     }
 
     const emailInput = page.locator(
@@ -419,7 +419,7 @@ test.describe('Auto-update', () => {
       await dialog.waitFor({ state: 'visible', timeout: 5000 })
 
       await expect(dialog.locator('.updating-message')).toContainText(
-        'Do not close GitHub Desktop while the update is in progress'
+        'Do not close GlitchHub Desktop while the update is in progress'
       )
 
       // Reset mock and trigger quit again to test Quit Anyway

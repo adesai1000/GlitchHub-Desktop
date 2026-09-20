@@ -65,6 +65,7 @@ interface ISelectedCommitsProps {
 
   /** Whether we should display side by side diffs. */
   readonly showSideBySideDiff: boolean
+  readonly expandWholeFileByDefault: boolean
 
   /**
    * Called when the user requests to open a binary file in an the
@@ -167,6 +168,7 @@ export class SelectedCommits extends React.Component<
           hideWhitespaceInDiff={this.props.hideWhitespaceInDiff}
           showDiffCheckMarks={false}
           showSideBySideDiff={this.props.showSideBySideDiff}
+          expandWholeFileByDefault={this.props.expandWholeFileByDefault}
           onOpenBinaryFile={this.props.onOpenBinaryFile}
           onChangeImageDiffType={this.props.onChangeImageDiffType}
           onHideWhitespaceInDiffChanged={this.onHideWhitespaceInDiffChanged}

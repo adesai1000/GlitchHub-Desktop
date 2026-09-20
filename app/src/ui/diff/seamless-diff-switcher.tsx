@@ -84,6 +84,11 @@ interface ISeamlessDiffSwitcherProps {
   // eslint-disable-next-line react/no-unused-prop-types
   readonly showSideBySideDiff: boolean
 
+  /** Whether text diffs should be expanded to the whole file when loaded. */
+  // Used in getDerivedStateFromProps, no-unused-prop-types doesn't know that
+  // eslint-disable-next-line react/no-unused-prop-types
+  readonly expandWholeFileByDefault: boolean
+
   /** Whether or not to show the diff check marks indicating inclusion in a commit */
   // Used in getDerivedStateFromProps, no-unused-prop-types doesn't know that
   // eslint-disable-next-line react/no-unused-prop-types
@@ -369,6 +374,7 @@ export class SeamlessDiffSwitcher extends React.Component<
       readOnly,
       hideWhitespaceInDiff,
       showSideBySideDiff,
+      expandWholeFileByDefault,
       showDiffCheckMarks,
       onIncludeChanged,
       onDiscardChanges,
@@ -403,6 +409,7 @@ export class SeamlessDiffSwitcher extends React.Component<
             readOnly={readOnly}
             hideWhitespaceInDiff={hideWhitespaceInDiff}
             showSideBySideDiff={showSideBySideDiff}
+            expandWholeFileByDefault={expandWholeFileByDefault}
             askForConfirmationOnDiscardChanges={
               this.props.askForConfirmationOnDiscardChanges
             }

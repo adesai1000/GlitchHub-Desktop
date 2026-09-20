@@ -73,11 +73,11 @@ export class UpdateAvailable extends React.Component<IUpdateAvailableProps> {
     if (this.props.isX64ToARM64ImmediateAutoUpdate) {
       return (
         <span onSubmit={this.updateNow}>
-          An optimized version of GitHub Desktop is available for your{' '}
+          An optimized version of GlitchHub Desktop is available for your{' '}
           {__DARWIN__ ? 'Apple silicon' : 'Arm64'} machine and will be installed
           at the next launch or{' '}
           <LinkButton onClick={this.updateNow}>
-            restart GitHub Desktop
+            restart GlitchHub Desktop
           </LinkButton>{' '}
           now.
         </span>
@@ -87,7 +87,7 @@ export class UpdateAvailable extends React.Component<IUpdateAvailableProps> {
     if (this.props.isUpdateShowcaseVisible) {
       const version =
         this.props.newReleases !== null
-          ? ` with GitHub Desktop ${this.props.newReleases[0].latestVersion}`
+          ? ` with GlitchHub Desktop ${this.props.newReleases[0].latestVersion}`
           : ''
 
       return (
@@ -112,7 +112,7 @@ export class UpdateAvailable extends React.Component<IUpdateAvailableProps> {
     if (this.props.prioritizeUpdate) {
       return (
         <span onSubmit={this.updateNow}>
-          This version of GitHub Desktop is missing{' '}
+          This version of GlitchHub Desktop is missing{' '}
           {this.props.prioritizeUpdateInfoUrl ? (
             <LinkButton uri={this.props.prioritizeUpdateInfoUrl}>
               important updates
@@ -122,7 +122,7 @@ export class UpdateAvailable extends React.Component<IUpdateAvailableProps> {
           )}
           . Please{' '}
           <LinkButton onClick={this.updateNow}>
-            restart GitHub Desktop
+            restart GlitchHub Desktop
           </LinkButton>{' '}
           now to install pending updates.
         </span>
@@ -131,10 +131,12 @@ export class UpdateAvailable extends React.Component<IUpdateAvailableProps> {
 
     return (
       <span onSubmit={this.updateNow}>
-        An updated version of GitHub Desktop is available and will be installed
-        at the next launch. See{' '}
+        An updated version of GlitchHub Desktop is available and will be
+        installed at the next launch. See{' '}
         <LinkButton onClick={this.showReleaseNotes}>what's new</LinkButton> or{' '}
-        <LinkButton onClick={this.updateNow}>restart GitHub Desktop</LinkButton>
+        <LinkButton onClick={this.updateNow}>
+          restart GlitchHub Desktop
+        </LinkButton>
         .
       </span>
     )

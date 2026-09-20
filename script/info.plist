@@ -18,6 +18,6 @@
 	<key>CFBundleIconName</key>
 	<string>icon-logo</string>
 	<key>NSAppleEventsUsageDescription</key>
-	<string>GitHub Desktop uses Apple Events to implement integration features with external editors.</string>
+	<string>GlitchHub Desktop uses Apple Events to implement integration features with external editors.</string>
 </dict>
 </plist>

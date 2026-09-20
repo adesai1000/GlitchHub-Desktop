@@ -44,6 +44,7 @@ interface IPullRequestFilesChangedProps {
 
   /** Whether we should display side by side diffs. */
   readonly showSideBySideDiff: boolean
+  readonly expandWholeFileByDefault: boolean
 
   /** Whether we should hide whitespace in diff. */
   readonly hideWhitespaceInDiff: boolean
@@ -289,7 +290,13 @@ export class PullRequestFilesChanged extends React.Component<
       return
     }
 
-    const { diff, repository, imageDiffType, hideWhitespaceInDiff } = this.props
+    const {
+      diff,
+      repository,
+      imageDiffType,
+      hideWhitespaceInDiff,
+      expandWholeFileByDefault,
+    } = this.props
 
     const { showSideBySideDiff } = this.state
 
@@ -302,6 +309,7 @@ export class PullRequestFilesChanged extends React.Component<
         readOnly={true}
         hideWhitespaceInDiff={hideWhitespaceInDiff}
         showSideBySideDiff={showSideBySideDiff}
+        expandWholeFileByDefault={expandWholeFileByDefault}
         showDiffCheckMarks={false}
         onOpenBinaryFile={this.onOpenBinaryFile}
         onChangeImageDiffType={this.onChangeImageDiffType}

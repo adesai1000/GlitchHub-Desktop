@@ -27,7 +27,7 @@ interface IEmail {
   /**
    * Represents whether GitHub has confirmed the user has access to this
    * email address. New users require a verified email address before
-   * they can sign into GitHub Desktop.
+   * they can sign into GlitchHub Desktop.
    */
   readonly verified: boolean
   /**
@@ -104,7 +104,7 @@ export class AccountsStore extends TypedBaseStore<ReadonlyArray<Account>> {
       if (__DARWIN__ && isKeyChainError(e)) {
         this.emitError(
           new Error(
-            `GitHub Desktop was unable to store the account token in the keychain. Please check you have unlocked access to the 'login' keychain.`
+            `GlitchHub Desktop was unable to store the account token in the keychain. Please check you have unlocked access to the 'login' keychain.`
           )
         )
       } else {

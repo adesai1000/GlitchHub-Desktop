@@ -1,110 +1,78 @@
-# [GitHub Desktop](https://desktop.github.com)
+# GlitchHub Desktop
 
-[GitHub Desktop](https://desktop.github.com/) is an open-source [Electron](https://www.electronjs.org/)-based
-GitHub app. It is written in [TypeScript](https://www.typescriptlang.org) and
-uses [React](https://reactjs.org/).
+GitHub doesn't deliver the open source features people ask for, so this is my
+own fork of [GitHub Desktop](https://github.com/desktop/desktop) with the
+features I want, so in classic Larry David fashion, I'm doing a spite fork and adding the features the community has been asking for.
 
-<picture>
-  <source
-    srcset="https://user-images.githubusercontent.com/634063/202742848-63fa1488-6254-49b5-af7c-96a6b50ea8af.png"
-    media="(prefers-color-scheme: dark)"
-  />
-  <img
-    width="1072"
-    src="https://user-images.githubusercontent.com/634063/202742985-bb3b3b94-8aca-404a-8d8a-fd6a6f030672.png"
-    alt="A screenshot of the GitHub Desktop application showing changes being viewed and committed with two attributed co-authors"
-  />
-</picture>
+It is the same [Electron](https://www.electronjs.org/) app, written in
+[TypeScript](https://www.typescriptlang.org) with [React](https://reactjs.org/),
+tracking upstream's `development` branch. Everything upstream ships is here,
+plus the extras below.
 
-## Where can I get it?
+## What's different
 
-Download the official installer for your operating system:
+### Expand whole file in diffs by default
 
- - [macOS](https://central.github.com/deployments/desktop/desktop/latest/darwin)
- - [macOS (Apple silicon)](https://central.github.com/deployments/desktop/desktop/latest/darwin-arm64)
- - [Windows](https://central.github.com/deployments/desktop/desktop/latest/win32)
- - [Windows machine-wide install](https://central.github.com/deployments/desktop/desktop/latest/win32?format=msi)
+Upstream issue [#20548](https://github.com/desktop/desktop/issues/20548),
+"Option to Always Expand File Diffs by Default", has been open since May 2025
+with no response from the maintainers. GlitchHub Desktop adds it.
 
-Linux is not officially supported; however, you can find installers created for Linux from a fork of GitHub Desktop in the [Community Releases](https://github.com/desktop/desktop#community-releases) section.
+Settings → Appearance → **Diff Expansion** lets you pick between _Changed lines
+only_ (upstream's behaviour) and _Whole file_. With _Whole file_ selected every
+text diff opens fully expanded, in the Changes view, History, stash previews
+and the pull request dialog. The right-click menu still lets you collapse or
+expand any single diff.
 
-### Beta Channel
+### Text size slider
 
-Want to test out new features and get fixes before everyone else? Install the
-beta channel to get access to early builds of Desktop:
+Settings → Appearance → **Text Size** has a macOS-style slider that scales all
+text in the app from 10 px to 18 px. Changes apply live while you drag, and the
+preference persists across restarts. It is independent of the window zoom
+(<kbd>⌘</kbd>+<kbd>=</kbd> / <kbd>⌘</kbd>+<kbd>-</kbd>), which scales the whole
+UI.
 
- - [macOS](https://central.github.com/deployments/desktop/desktop/latest/darwin?env=beta)
- - [macOS (Apple silicon)](https://central.github.com/deployments/desktop/desktop/latest/darwin-arm64?env=beta)
- - [Windows](https://central.github.com/deployments/desktop/desktop/latest/win32?env=beta)
- - [Windows (ARM64)](https://central.github.com/deployments/desktop/desktop/latest/win32-arm64?env=beta)
+### Its own name and icon
 
-The release notes for the latest beta versions are available [here](https://desktop.github.com/release-notes/?env=beta).
+The app is called GlitchHub Desktop, with its own icon, so it can live next to
+the official app without the two being confused. It uses a separate profile
+folder too.
 
-### Past Releases
-You can find past releases at https://desktop.githubusercontent.com. After installation of a past version, the auto update functionality will attempt to download the latest version. 
+## Building it
 
-### Community Releases
+Follow upstream's
+[setup guide](docs/contributing/setup.md) for the prerequisites (Node, Yarn,
+Python 3 and the Xcode command line tools on macOS). The repo pins Node 24.19
+in `.node-version`; use that exact version, older 24.x releases silently fail
+to package the app.
 
-There are several community-supported package managers that can be used to
-install GitHub Desktop:
- - Windows users can install using [winget](https://docs.microsoft.com/en-us/windows/package-manager/winget/) `c:\> winget install github-desktop` or [Chocolatey](https://chocolatey.org/) `c:\> choco install github-desktop`
- - macOS users can install using [Homebrew](https://brew.sh/) package manager:
-      `$ brew install --cask github`
+```shellsession
+$ yarn                 # install dependencies
+$ yarn build:dev       # build the development app bundle
+$ yarn start           # launch it with hot reload for the UI
+```
 
-Installers for various Linux distributions can be found on the
-[`shiftkey/desktop`](https://github.com/shiftkey/desktop) fork.
+Changes under `app/src` reload live. Press <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>R</kbd>
+in the app if the window doesn't refresh on its own. Changes to the main
+process or the packaging need `yarn build:dev` again.
 
-## Is GitHub Desktop right for me? What are the primary areas of focus?
+To regenerate the macOS icon after editing `app/static/logos/*/icon-logo.icon`
+in Icon Composer, run `script/build-icon-assets.sh`. It needs a full Xcode
+install, not just the command line tools.
 
-[This document](https://github.com/desktop/desktop/blob/development/docs/process/what-is-desktop.md) describes the focus of GitHub Desktop and who the product is most useful for.
+## Upstream
 
-## I have a problem with GitHub Desktop
-
-Note: The [GitHub Desktop Code of Conduct](https://github.com/desktop/desktop/blob/development/CODE_OF_CONDUCT.md) applies in all interactions relating to the GitHub Desktop project.
-
-First, please search the [open issues](https://github.com/desktop/desktop/issues?q=is%3Aopen)
-and [closed issues](https://github.com/desktop/desktop/issues?q=is%3Aclosed)
-to see if your issue hasn't already been reported (it may also be fixed).
-
-There is also a list of [known issues](https://github.com/desktop/desktop/blob/development/docs/known-issues.md)
-that are being tracked against Desktop, and some of these issues have workarounds.
-
-If you can't find an issue that matches what you're seeing, open a [new issue](https://github.com/desktop/desktop/issues/new/choose),
-choose the right template and provide us with enough information to investigate
-further.
-
-## The issue I reported isn't fixed yet. What can I do?
-
-If nobody has responded to your issue in a few days, you're welcome to respond to it with a friendly ping in the issue. Please do not respond more than a second time if nobody has responded. The GitHub Desktop maintainers are constrained in time and resources, and diagnosing individual configurations can be difficult and time consuming. While we'll try to at least get you pointed in the right direction, we can't guarantee we'll be able to dig too deeply into any one person's issue.
-
-## How can I contribute to GitHub Desktop?
-
-The [CONTRIBUTING.md](./.github/CONTRIBUTING.md) document will help you get setup and
-familiar with the source. The [documentation](docs/) folder also contains more
-resources relevant to the project.
-
-If you're looking for something to work on, check out the [help wanted](https://github.com/desktop/desktop/issues?q=is%3Aissue+is%3Aopen+label%3A%22help%20wanted%22) label.
-
-## Building Desktop
-
-To setup your development environment for building Desktop, check out: [`setup.md`](./docs/contributing/setup.md).
-
-## More Resources
-
-See [desktop.github.com](https://desktop.github.com) for more product-oriented
-information about GitHub Desktop.
-
-See our [getting started documentation](https://docs.github.com/en/desktop/overview/getting-started-with-github-desktop) for more information on how to set up, authenticate, and configure GitHub Desktop.
+Bug reports, documentation and contribution guidelines for the underlying app
+live at [desktop/desktop](https://github.com/desktop/desktop). Upstream changes
+are merged in regularly. Please don't report problems with the GlitchHub
+additions to the GitHub Desktop maintainers.
 
 ## License
 
-**[MIT](LICENSE)**
+**[MIT](LICENSE)**, the same license as GitHub Desktop.
 
 The MIT license grant is not for GitHub's trademarks, which include the logo
 designs. GitHub reserves all trademark and copyright rights in and to all
 GitHub trademarks. GitHub's logos include, for instance, the stylized
-Invertocat designs that include "logo" in the file title in the following
-folder: [logos](app/static/logos).
-
-GitHub® and its stylized versions and the Invertocat mark are GitHub's
-Trademarks or registered Trademarks. When using GitHub's logos, be sure to
-follow the GitHub [logo guidelines](https://github.com/logos).
+Invertocat designs that include "logo" in the file title in the
+[logos](app/static/logos) folder. The GlitchHub icon is a remix of the
+Invertocat and is not endorsed by GitHub.

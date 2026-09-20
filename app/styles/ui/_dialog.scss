@@ -544,6 +544,12 @@ dialog {
       $default-tab-height: 500px;
       min-height: $default-tab-height;
 
+      // Never let a tab grow past the window. Larger text sizes (see the
+      // Appearance tab) push the content well beyond the default height, and
+      // the dialog itself doesn't scroll, so the content has to.
+      max-height: calc(100vh - 150px);
+      overflow-y: auto;
+
       &.accounts-tab {
         max-height: $default-tab-height;
         overflow: auto;

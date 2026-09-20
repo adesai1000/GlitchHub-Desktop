@@ -2412,6 +2412,11 @@ export class Dispatcher {
     return this.appStore._setShowSideBySideDiff(showSideBySideDiff)
   }
 
+  /** Set whether text diffs should show the whole file as soon as they load */
+  public setExpandWholeFileByDefault(expandWholeFileByDefault: boolean) {
+    return this.appStore._setExpandWholeFileByDefault(expandWholeFileByDefault)
+  }
+
   /** Install the global Git LFS filters. */
   public installGlobalLFSFilters(force: boolean): Promise<void> {
     return this.appStore._installGlobalLFSFilters(force)
@@ -2684,6 +2689,11 @@ export class Dispatcher {
    */
   public setSelectedTabSize(tabSize: number) {
     return this.appStore._setSelectedTabSize(tabSize)
+  }
+
+  /** Set the application-wide text size, in pixels */
+  public setSelectedTextSize(textSize: number) {
+    return this.appStore._setSelectedTextSize(textSize)
   }
 
   /**
