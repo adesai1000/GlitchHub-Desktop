@@ -21,6 +21,12 @@ import { PopupType } from '../../models/popup'
 import { encodePathAsUrl } from '../../lib/path'
 import { TooltippedContent } from '../lib/tooltipped-content'
 import memoizeOne from 'memoize-one'
+import {
+  getRepositoryListOrder,
+  moveRepositoryInGroup,
+  RepositoryListOrder,
+  setRepositoryListOrder,
+} from '../../lib/repository-list-order'
 import { KeyboardShortcut } from '../keyboard-shortcut/keyboard-shortcut'
 import { generateRepositoryListContextMenu } from '../repositories-list/repository-list-item-context-menu'
 import { enableWorktreeSupport } from '../../lib/feature-flag'
@@ -80,6 +86,8 @@ interface IRepositoriesListProps {
 interface IRepositoriesListState {
   readonly newRepositoryMenuExpanded: boolean
   readonly selectedItem: IRepositoryListItem | null
+  /** User-chosen ordering of repositories within each group */
+  readonly customOrder: RepositoryListOrder
 }
 
 const RowHeight = 29
@@ -122,16 +130,27 @@ export class RepositoriesList extends React.Component<
     (
       repositories: ReadonlyArray<Repositoryish> | null,
       localRepositoryStateLookup: ReadonlyMap<number, ILocalRepositoryState>,
-      recentRepositories: ReadonlyArray<number>
+      recentRepositories: ReadonlyArray<number>,
+      customOrder: RepositoryListOrder
     ) =>
       repositories === null
         ? []
         : groupRepositories(
             repositories,
             localRepositoryStateLookup,
-            recentRepositories
+            recentRepositories,
+            customOrder
           )
   )
+
+  private get groups() {
+    return this.getRepositoryGroups(
+      this.props.repositories,
+      this.props.localRepositoryStateLookup,
+      this.props.recentRepositories,
+      this.state.customOrder
+    )
+  }
 
   /**
    * A memoized function for finding the selected list item based
@@ -150,6 +169,7 @@ export class RepositoriesList extends React.Component<
     this.state = {
       newRepositoryMenuExpanded: false,
       selectedItem: null,
+      customOrder: getRepositoryListOrder(),
     }
   }
 
@@ -287,7 +307,17 @@ export class RepositoriesList extends React.Component<
   ) => {
     event.preventDefault()
 
+    const group = this.groups.find(g => g.items.includes(item)) ?? null
+    const index = group?.items.indexOf(item) ?? -1
+
     const items = generateRepositoryListContextMenu({
+      onMoveRepository:
+        group !== null && group.identifier.kind !== 'recent'
+          ? this.onMoveRepository
+          : undefined,
+      canMoveUp: index > 0,
+      canMoveDown:
+        group !== null && index >= 0 && index < group.items.length - 1,
       onRemoveRepository: this.props.onRemoveRepository,
       onShowRepository: this.props.onShowRepository,
       onOpenInShell: this.props.onOpenInShell,
@@ -322,11 +352,7 @@ export class RepositoriesList extends React.Component<
       this.getGroupLabel(groups[group].identifier)
 
   public render() {
-    const groups = this.getRepositoryGroups(
-      this.props.repositories,
-      this.props.localRepositoryStateLookup,
-      this.props.recentRepositories
-    )
+    const groups = this.groups
 
     // So there's two types of selection at play here. There's the repository
     // selection for the whole app and then there's the keyboard selection in
@@ -451,6 +477,34 @@ export class RepositoriesList extends React.Component<
 
   private onCreateNewRepository = () => {
     this.props.dispatcher.showPopup({ type: PopupType.CreateRepository })
+  }
+
+  private onMoveRepository = (
+    repository: Repositoryish,
+    direction: 'up' | 'down'
+  ) => {
+    // A repository can be listed in the recent group and in its own group;
+    // reordering applies to its own group.
+    const group =
+      this.groups.find(
+        g =>
+          g.identifier.kind !== 'recent' &&
+          g.items.some(i => i.repository.id === repository.id)
+      ) ?? null
+    if (group === null) {
+      return
+    }
+
+    const ids = group.items.map(i => i.repository.id)
+    const moved = moveRepositoryInGroup(ids, repository.id, direction)
+    if (moved === null) {
+      return
+    }
+
+    const customOrder = new Map(this.state.customOrder)
+    customOrder.set(getGroupKey(group.identifier), moved)
+    setRepositoryListOrder(customOrder)
+    this.setState({ customOrder })
   }
 
   private onChangeRepositoryAlias = (repository: Repository) => {

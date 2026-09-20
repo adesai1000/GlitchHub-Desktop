@@ -31,6 +31,42 @@ preference persists across restarts. It is independent of the window zoom
 (<kbd>⌘</kbd>+<kbd>=</kbd> / <kbd>⌘</kbd>+<kbd>-</kbd>), which scales the whole
 UI.
 
+### Run package.json scripts from the toolbar
+
+A **Run script** button sits next to Fetch origin for any repository with a
+`package.json`. Pick a script and it runs in the repository folder with your
+login shell's environment, streaming its output into a terminal view with a
+Stop button. Long-running scripts such as `dev` or `test:watch` keep running
+while you work, and a banner tells you when a script finishes if its output
+isn't on screen.
+
+Nothing is exposed until you opt in: Repository Settings → **Scripts** (or
+Settings → **Scripts**, which has a repository picker) lists every script with
+a _Show_ checkbox and a _Confirm_ checkbox for the ones that deserve a second
+look, like a production deploy. The package manager is detected from the lock
+file (npm, yarn, pnpm or bun) and can be overridden globally.
+
+### Smaller things the official app declined
+
+- **Default editor per repository** ([#12195](https://github.com/desktop/desktop/issues/12195)):
+  Repository Settings → **Editor** overrides the editor from Settings for that
+  repository. Every "Open in editor" button and menu item follows it.
+- **Turn off line wrapping in diffs** ([#11052](https://github.com/desktop/desktop/issues/11052)):
+  Settings → Appearance → Diff Expansion → _Wrap long lines_. Off means long
+  lines scroll horizontally instead.
+- **Sort branches by last update** ([#5155](https://github.com/desktop/desktop/issues/5155),
+  [#21358](https://github.com/desktop/desktop/issues/21358)): Settings →
+  Appearance → Branch List.
+- **Pin branches** ([#15767](https://github.com/desktop/desktop/issues/15767)):
+  right-click a branch and choose _Pin Branch_. Pinned branches get their own
+  group at the top of the list.
+- **Search tags** ([#15702](https://github.com/desktop/desktop/issues/15702)):
+  the branch dropdown has a **Tags** tab with a filter. Picking a tag checks
+  out the commit it points to.
+- **Reorder the repository list** ([#11608](https://github.com/desktop/desktop/issues/11608)):
+  right-click a repository and choose _Move Up_ or _Move Down_. The order is
+  remembered per group.
+
 ### Its own name and icon
 
 The app is called GlitchHub Desktop, with its own icon, so it can live next to

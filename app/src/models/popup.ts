@@ -122,6 +122,8 @@ export enum PopupType {
   ConfirmDeleteCopilotBYOKProvider = 'ConfirmDeleteCopilotBYOKProvider',
   CopilotConflictResolutionAlwaysNudge = 'CopilotConflictResolutionAlwaysNudge',
   DeleteWorktreeFailed = 'DeleteWorktreeFailed',
+  ScriptOutput = 'ScriptOutput',
+  ConfirmRunScript = 'ConfirmRunScript',
 }
 
 interface IBasePopup {
@@ -549,5 +551,17 @@ export type PopupDetail =
       worktreePath: string
       error: Error
       originalWorktree: WorktreeEntry | null
+    }
+  | {
+      type: PopupType.ScriptOutput
+      repository: Repository
+      /** A specific run to show; the most recent one when omitted. */
+      runId?: number
+    }
+  | {
+      type: PopupType.ConfirmRunScript
+      repository: Repository
+      scriptName: string
+      command: string
     }
 export type Popup = IBasePopup & PopupDetail

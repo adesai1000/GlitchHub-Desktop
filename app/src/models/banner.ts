@@ -1,3 +1,4 @@
+import { Repository } from './repository'
 import { Emoji } from '../lib/emoji'
 import { Popup } from './popup'
 
@@ -17,6 +18,7 @@ export enum BannerType {
   SuccessfulReorder = 'SuccessfulReorder',
   ConflictsFound = 'ConflictsFound',
   OSVersionNoLongerSupported = 'OSVersionNoLongerSupported',
+  ScriptFinished = 'ScriptFinished',
 }
 
 export type Banner =
@@ -122,3 +124,11 @@ export type Banner =
       readonly onOpenConflictsDialog: () => void
     }
   | { readonly type: BannerType.OSVersionNoLongerSupported }
+  | {
+      readonly type: BannerType.ScriptFinished
+      readonly repository: Repository
+      readonly runId: number
+      readonly scriptName: string
+      readonly status: 'succeeded' | 'failed' | 'stopped'
+      readonly exitCode: number | null
+    }

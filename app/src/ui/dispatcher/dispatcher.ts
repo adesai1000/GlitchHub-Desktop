@@ -1121,6 +1121,25 @@ export class Dispatcher {
     return this.appStore._clearBanner(bannerType)
   }
 
+  /** Run a package.json script for the repository and show its output. */
+  public runRepositoryScript(
+    repository: Repository,
+    scriptName: string,
+    options?: { readonly skipConfirmation?: boolean }
+  ) {
+    return this.appStore._runRepositoryScript(repository, scriptName, options)
+  }
+
+  /** Stop the script currently running for the repository, if any. */
+  public stopRepositoryScript(repository: Repository) {
+    return this.appStore._stopRepositoryScript(repository)
+  }
+
+  /** Forget the finished script runs for the repository. */
+  public clearRepositoryScriptHistory(repository: Repository) {
+    return this.appStore._clearRepositoryScriptHistory(repository)
+  }
+
   /**
    * Reset the width of the repository sidebar to its default
    * value. This affects the changes and history sidebar
@@ -2694,6 +2713,19 @@ export class Dispatcher {
   /** Set the application-wide text size, in pixels */
   public setSelectedTextSize(textSize: number) {
     return this.appStore._setSelectedTextSize(textSize)
+  }
+
+  /** Set whether long lines in diffs wrap or scroll horizontally */
+  public setDiffWrapLines(wrap: boolean) {
+    return this.appStore._setDiffWrapLines(wrap)
+  }
+
+  /** Set (or clear with null) the external editor override for a repository */
+  public setRepositoryExternalEditor(
+    repository: Repository,
+    editor: string | null
+  ) {
+    return this.appStore._setRepositoryExternalEditor(repository, editor)
   }
 
   /**

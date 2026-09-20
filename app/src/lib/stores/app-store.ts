@@ -374,6 +374,23 @@ import {
   setTextSize,
   clampTextSize,
 } from '../../ui/lib/text-size'
+import { ScriptRunner, ScriptRunStatus } from '../scripts/script-runner'
+import {
+  diffWrapLinesDefault,
+  getDiffWrapLines,
+  setDiffWrapLines,
+} from '../../ui/lib/diff-wrap'
+import {
+  findRepositoryForPath,
+  getRepositoryExternalEditor,
+  setRepositoryExternalEditor,
+} from '../repository-editor'
+import {
+  discoverRepositoryScripts,
+  getRepositoryScriptsConfig,
+  getScriptRunCommand,
+  shouldConfirmScript,
+} from '../scripts/repository-scripts'
 import {
   abortCherryPick,
   cherryPick,
@@ -711,6 +728,14 @@ export class AppStore extends TypedBaseStore<IAppState> {
   private currentTheme: ApplicableTheme = ApplicationTheme.Light
   private selectedTabSize = tabSizeDefault
   private selectedTextSize = textSizeDefault
+  private diffWrapLines = diffWrapLinesDefault
+
+  /** Runs package.json scripts, see `_runRepositoryScript`. */
+  private readonly scriptRunner = new ScriptRunner(() =>
+    this.onScriptRunsUpdated()
+  )
+  /** Last status seen per run id, to detect runs finishing. */
+  private readonly lastScriptStatuses = new Map<number, ScriptRunStatus>()
 
   private useWindowsOpenSSH: boolean = false
 
@@ -1343,6 +1368,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
       currentTheme: this.currentTheme,
       selectedTabSize: this.selectedTabSize,
       selectedTextSize: this.selectedTextSize,
+      diffWrapLines: this.diffWrapLines,
+      scriptRuns: this.scriptRunner.getHistory(),
       apiRepositories: this.apiRepositoriesStore.getState(),
       useWindowsOpenSSH: this.useWindowsOpenSSH,
       showCommitLengthWarning: this.showCommitLengthWarning,
@@ -2597,6 +2624,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
     this.selectedTabSize = getNumber(tabSizeKey, tabSizeDefault)
     this.selectedTextSize = getTextSize()
+    this.diffWrapLines = getDiffWrapLines()
 
     themeChangeMonitor.onThemeChanged(theme => {
       this.currentTheme = theme
@@ -2903,9 +2931,15 @@ export class AppStore extends TypedBaseStore<IAppState> {
       askForConfirmationOnForcePush,
     } = this
 
+    const editorOverride =
+      selectedRepository instanceof Repository
+        ? getRepositoryExternalEditor(selectedRepository)
+        : null
+
     const labels: MenuLabelsEvent = {
       selectedShell: useCustomShell ? null : selectedShell,
-      selectedExternalEditor: useCustomEditor ? null : selectedExternalEditor,
+      selectedExternalEditor:
+        editorOverride ?? (useCustomEditor ? null : selectedExternalEditor),
       askForConfirmationOnRepositoryRemoval,
       askForConfirmationOnForcePush,
     }
@@ -7677,11 +7711,18 @@ export class AppStore extends TypedBaseStore<IAppState> {
     const { selectedExternalEditor, useCustomEditor, customEditor } =
       this.getState()
 
+    // A repository can override the editor from Settings
+    const repository = findRepositoryForPath(this.repositories, fullPath)
+    const override =
+      repository !== null ? getRepositoryExternalEditor(repository) : null
+
     try {
-      if (useCustomEditor && customEditor) {
+      if (override === null && useCustomEditor && customEditor) {
         await launchCustomExternalEditor(fullPath, customEditor)
       } else {
-        const match = await findEditorOrDefault(selectedExternalEditor)
+        const match = await findEditorOrDefault(
+          override ?? selectedExternalEditor
+        )
         if (match === null) {
           this.emitError(
             new ExternalEditorError(
@@ -8855,6 +8896,144 @@ export class AppStore extends TypedBaseStore<IAppState> {
       this.emitUpdate()
     }
 
+    return Promise.resolve()
+  }
+
+  /**
+   * Runs a package.json script for the repository, asking for confirmation
+   * first when the script (or the global setting) requires it, and shows the
+   * output popup.
+   */
+  public async _runRepositoryScript(
+    repository: Repository,
+    scriptName: string,
+    options?: { readonly skipConfirmation?: boolean }
+  ): Promise<void> {
+    const scripts = await discoverRepositoryScripts(repository.path)
+    const script = scripts?.scripts.find(s => s.name === scriptName)
+
+    if (scripts === null || script === undefined) {
+      this.emitError(
+        new Error(
+          `The script "${scriptName}" no longer exists in ${repository.name}'s package.json.`
+        )
+      )
+      return
+    }
+
+    const command = getScriptRunCommand(scripts.packageManager, script.name)
+    const config = getRepositoryScriptsConfig(repository)
+
+    if (
+      options?.skipConfirmation !== true &&
+      shouldConfirmScript(config, script.name)
+    ) {
+      await this._showPopup({
+        type: PopupType.ConfirmRunScript,
+        repository,
+        scriptName: script.name,
+        command,
+      })
+      return
+    }
+
+    const running = this.scriptRunner.getRunningRun(repository)
+    if (running !== undefined) {
+      this.emitError(
+        new Error(
+          `"${running.scriptName}" is still running in ${repository.name}. Stop it before running another script.`
+        )
+      )
+      return
+    }
+
+    let runId: number
+    try {
+      runId = await this.scriptRunner.start(repository, script.name, command)
+    } catch (e) {
+      this.emitError(e)
+      return
+    }
+    this.lastScriptStatuses.set(runId, 'running')
+
+    await this._showPopup({ type: PopupType.ScriptOutput, repository, runId })
+  }
+
+  /** Stops the script running for the repository, if any. */
+  public _stopRepositoryScript(repository: Repository) {
+    this.scriptRunner.stop(repository)
+    return Promise.resolve()
+  }
+
+  /** Forgets the finished runs for the repository. */
+  public _clearRepositoryScriptHistory(repository: Repository) {
+    this.scriptRunner.clearHistory(repository)
+    return Promise.resolve()
+  }
+
+  private onScriptRunsUpdated() {
+    for (const [repositoryId, runs] of this.scriptRunner.getHistory()) {
+      for (const run of runs) {
+        const previous = this.lastScriptStatuses.get(run.id)
+        if (previous === undefined) {
+          continue
+        }
+        if (run.status !== 'running') {
+          this.lastScriptStatuses.delete(run.id)
+        }
+        if (previous !== 'running' || run.status === 'running') {
+          continue
+        }
+
+        // The run just finished. If its output isn't on screen let the user
+        // know with a banner.
+        const popup = this.popupManager.currentPopup
+        const outputVisible =
+          popup !== null &&
+          popup.type === PopupType.ScriptOutput &&
+          popup.repository.id === repositoryId &&
+          (popup.runId === undefined || popup.runId === run.id)
+
+        if (!outputVisible) {
+          const repository = this.repositories.find(
+            (r): r is Repository =>
+              r instanceof Repository && r.id === repositoryId
+          )
+          if (repository !== undefined) {
+            this.currentBanner = {
+              type: BannerType.ScriptFinished,
+              repository,
+              runId: run.id,
+              scriptName: run.scriptName,
+              status: run.status,
+              exitCode: run.exitCode,
+            }
+          }
+        }
+      }
+    }
+
+    this.emitUpdate()
+  }
+
+  /** Set whether long lines in diffs wrap or scroll horizontally */
+  public _setDiffWrapLines(wrap: boolean) {
+    if (wrap !== this.diffWrapLines) {
+      this.diffWrapLines = wrap
+      setDiffWrapLines(wrap)
+      this.emitUpdate()
+    }
+    return Promise.resolve()
+  }
+
+  /** Set (or clear with null) the editor override for a repository */
+  public _setRepositoryExternalEditor(
+    repository: Repository,
+    editor: string | null
+  ) {
+    setRepositoryExternalEditor(repository, editor)
+    this.updateMenuLabelsForSelectedRepository()
+    this.emitUpdate()
     return Promise.resolve()
   }
 
@@ -10112,7 +10291,10 @@ export class AppStore extends TypedBaseStore<IAppState> {
       defaultBranch,
       imageDiffType,
       repository,
-      externalEditorLabel: selectedExternalEditor ?? undefined,
+      externalEditorLabel:
+        getRepositoryExternalEditor(repository) ??
+        selectedExternalEditor ??
+        undefined,
       nonLocalCommitSHA,
       showSideBySideDiff,
       currentBranchHasPullRequest: currentPullRequest !== null,

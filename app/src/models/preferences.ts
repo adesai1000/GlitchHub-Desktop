@@ -3,6 +3,7 @@ export enum PreferencesTab {
   Integrations,
   Copilot,
   Git,
+  Scripts,
   Appearance,
   Notifications,
   Prompts,

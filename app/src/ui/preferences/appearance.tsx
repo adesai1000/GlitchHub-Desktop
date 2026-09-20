@@ -27,6 +27,7 @@ import {
   DiffWholeFileSwatch,
 } from './diff-expansion-swatches'
 import { TextSizeSlider } from '../lib/text-size-slider'
+import { BranchSortOrder } from '../../lib/branches/branch-preferences'
 
 type DiffExpansionOption = 'changes-only' | 'whole-file'
 
@@ -37,6 +38,10 @@ interface IAppearanceProps {
   readonly onSelectedTabSizeChanged: (tabSize: number) => void
   readonly selectedTextSize: number
   readonly onSelectedTextSizeChanged: (textSize: number) => void
+  readonly diffWrapLines: boolean
+  readonly onDiffWrapLinesChanged: (wrap: boolean) => void
+  readonly branchSortOrder: BranchSortOrder
+  readonly onBranchSortOrderChanged: (order: BranchSortOrder) => void
   readonly alwaysShowWorktreeList: boolean
   readonly onAlwaysShowWorktreeListChanged: (value: boolean) => void
   readonly expandWholeFileByDefault: boolean
@@ -176,9 +181,7 @@ export class Appearance extends React.Component<
   private renderTextSize() {
     return (
       <div className="appearance-section text-size-section">
-        <h2 id="text-size-heading">
-          {__DARWIN__ ? 'Text Size' : 'Text size'}
-        </h2>
+        <h2 id="text-size-heading">{__DARWIN__ ? 'Text Size' : 'Text size'}</h2>
         <p className="appearance-section-description">
           Use the slider to set the reading size for the whole app. Changes
           apply right away.
@@ -219,6 +222,53 @@ export class Appearance extends React.Component<
           onSelectionChanged={this.onDiffExpansionChanged}
           renderRadioButtonLabelContents={this.renderDiffExpansionSwatch}
         />
+
+        <Checkbox
+          className="diff-wrap-lines"
+          label={__DARWIN__ ? 'Wrap Long Lines' : 'Wrap long lines'}
+          value={
+            this.props.diffWrapLines ? CheckboxValue.On : CheckboxValue.Off
+          }
+          onChange={this.onDiffWrapLinesChanged}
+        />
+      </div>
+    )
+  }
+
+  private onDiffWrapLinesChanged = (
+    event: React.FormEvent<HTMLInputElement>
+  ) => {
+    this.props.onDiffWrapLinesChanged(event.currentTarget.checked)
+  }
+
+  private onBranchSortOrderChanged = (
+    event: React.FormEvent<HTMLSelectElement>
+  ) => {
+    this.props.onBranchSortOrderChanged(
+      event.currentTarget.value === 'date' ? 'date' : 'name'
+    )
+  }
+
+  private renderBranchList() {
+    return (
+      <div className="appearance-section branch-list-section">
+        <h2 id="branch-list-heading">
+          {__DARWIN__ ? 'Branch List' : 'Branch list'}
+        </h2>
+        <p className="appearance-section-description">
+          Right-click a branch to pin it to the top of the list. This controls
+          how the remaining branches are ordered.
+        </p>
+        <Select
+          label={
+            __DARWIN__ ? 'Sort Other Branches By' : 'Sort other branches by'
+          }
+          value={this.props.branchSortOrder}
+          onChange={this.onBranchSortOrderChanged}
+        >
+          <option value="name">Name (default)</option>
+          <option value="date">Last update, newest first</option>
+        </Select>
       </div>
     )
   }
@@ -392,6 +442,7 @@ export class Appearance extends React.Component<
         {this.renderSelectedTheme()}
         {this.renderTextSize()}
         {this.renderDiffExpansion()}
+        {this.renderBranchList()}
         {this.renderFormatting()}
         {this.renderMiscellaneous()}
       </DialogContent>

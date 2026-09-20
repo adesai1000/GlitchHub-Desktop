@@ -9,6 +9,9 @@ interface IBranchContextMenuConfig {
   onViewPullRequestOnGitHub?: () => void
   onDeleteBranch?: (branchName: string) => void
   onCheckoutInNewWorktree?: (branch: Branch) => void
+  /** Whether the branch is pinned to the top of the branch list */
+  isPinned?: boolean
+  onTogglePinned?: (branch: Branch) => void
 }
 
 export function generateBranchContextMenuItems(
@@ -21,8 +24,23 @@ export function generateBranchContextMenuItems(
     onViewPullRequestOnGitHub,
     onDeleteBranch,
     onCheckoutInNewWorktree,
+    isPinned,
+    onTogglePinned,
   } = config
   const items = new Array<IMenuItem>()
+
+  if (onTogglePinned !== undefined) {
+    items.push({
+      label: isPinned
+        ? __DARWIN__
+          ? 'Unpin Branch'
+          : 'Unpin branch'
+        : __DARWIN__
+        ? 'Pin Branch'
+        : 'Pin branch',
+      action: () => onTogglePinned(branch),
+    })
+  }
 
   if (onRenameBranch !== undefined) {
     items.push({

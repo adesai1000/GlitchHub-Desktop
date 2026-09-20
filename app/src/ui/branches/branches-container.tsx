@@ -7,6 +7,7 @@ import {
 } from '../../models/repository'
 import { Branch } from '../../models/branch'
 import { BranchesTab } from '../../models/branches-tab'
+import { TagList } from './tag-list'
 import { PopupType } from '../../models/popup'
 
 import { Dispatcher } from '../dispatcher'
@@ -202,22 +203,45 @@ export class BranchesContainer extends React.Component<
     return null
   }
 
-  private renderTabBar() {
-    if (!this.props.repository.gitHubRepository) {
-      return null
-    }
+  private get hasPullRequestsTab() {
+    return this.props.repository.gitHubRepository !== null
+  }
 
+  /** The tab bar hides the pull requests tab for non-GitHub repositories */
+  private tabToVisualIndex(tab: BranchesTab) {
+    return !this.hasPullRequestsTab && tab > BranchesTab.PullRequests
+      ? tab - 1
+      : tab
+  }
+
+  private visualIndexToTab(index: number): BranchesTab {
+    return !this.hasPullRequestsTab && index >= BranchesTab.PullRequests
+      ? index + 1
+      : index
+  }
+
+  private get effectiveTab(): BranchesTab {
+    const tab = this.props.selectedTab
+    return tab === BranchesTab.PullRequests && !this.hasPullRequestsTab
+      ? BranchesTab.Branches
+      : tab
+  }
+
+  private renderTabBar() {
     return (
       <TabBar
         onTabClicked={this.onTabClicked}
-        selectedIndex={this.props.selectedTab}
+        selectedIndex={this.tabToVisualIndex(this.effectiveTab)}
         allowDragOverSwitching={true}
       >
         <span id="branches-tab">Branches</span>
-        <span id="pull-requests-tab" className="pull-request-tab">
-          {__DARWIN__ ? 'Pull Requests' : 'Pull requests'}
-          {this.renderOpenPullRequestsBubble()}
-        </span>
+        {this.hasPullRequestsTab && (
+          <span id="pull-requests-tab" className="pull-request-tab">
+            {__DARWIN__ ? 'Pull Requests' : 'Pull requests'}
+            {this.renderOpenPullRequestsBubble()}
+          </span>
+        )}
+        <span id="tags-tab">Tags</span>
       </TabBar>
     )
   }
@@ -245,12 +269,13 @@ export class BranchesContainer extends React.Component<
   }
 
   private renderSelectedTab() {
-    const { selectedTab, repository } = this.props
-
+    const tab = this.effectiveTab
     const ariaLabelledBy =
-      selectedTab === BranchesTab.Branches || !repository.gitHubRepository
-        ? 'branches-tab'
-        : 'pull-requests-tab'
+      tab === BranchesTab.PullRequests
+        ? 'pull-requests-tab'
+        : tab === BranchesTab.Tags
+        ? 'tags-tab'
+        : 'branches-tab'
 
     return (
       <div
@@ -264,11 +289,7 @@ export class BranchesContainer extends React.Component<
   }
 
   private renderSelectedTabContent() {
-    let tab = this.props.selectedTab
-
-    if (!this.props.repository.gitHubRepository) {
-      tab = BranchesTab.Branches
-    }
+    const tab = this.effectiveTab
 
     switch (tab) {
       case BranchesTab.Branches:
@@ -304,6 +325,14 @@ export class BranchesContainer extends React.Component<
       case BranchesTab.PullRequests: {
         return this.renderPullRequests()
       }
+      case BranchesTab.Tags:
+        return (
+          <TagList
+            key="tag-list"
+            repository={this.props.repository}
+            dispatcher={this.props.dispatcher}
+          />
+        )
       default:
         return assertNever(tab, `Unknown Branches tab: ${tab}`)
     }
@@ -421,8 +450,8 @@ export class BranchesContainer extends React.Component<
     )
   }
 
-  private onTabClicked = (tab: BranchesTab) => {
-    this.props.dispatcher.changeBranchesTab(tab)
+  private onTabClicked = (index: number) => {
+    this.props.dispatcher.changeBranchesTab(this.visualIndexToTab(index))
   }
 
   private onMergeClick = () => {

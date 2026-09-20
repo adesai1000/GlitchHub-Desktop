@@ -527,6 +527,13 @@ dialog {
   &#preferences {
     width: 600px;
 
+    // The Scripts tab holds a table of script names and commands that needs
+    // more room than the other tabs.
+    &.scripts-tab-active {
+      width: 860px;
+      max-width: calc(100vw - 40px);
+    }
+
     @media (max-height: 650px) {
       .dialog-content,
       .tab-bar,

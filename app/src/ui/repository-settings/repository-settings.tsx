@@ -31,6 +31,17 @@ import {
 import { Account } from '../../models/account'
 import { Octicon } from '../octicons'
 import * as octicons from '../octicons/octicons.generated'
+import { RepositoryScripts } from './repository-scripts'
+import { RepositoryEditor } from './repository-editor'
+import { getAvailableEditors } from '../../lib/editors/lookup'
+import { getRepositoryExternalEditor } from '../../lib/repository-editor'
+import {
+  discoverRepositoryScripts,
+  getRepositoryScriptsConfig,
+  IRepositoryScripts,
+  IRepositoryScriptsConfig,
+  setRepositoryScriptsConfig,
+} from '../../lib/scripts/repository-scripts'
 
 interface IRepositorySettingsProps {
   readonly initialSelectedTab?: RepositorySettingsTab
@@ -38,6 +49,8 @@ interface IRepositorySettingsProps {
   readonly remote: IRemote | null
   readonly repository: Repository
   readonly repositoryAccount: Account | null
+  /** The editor chosen in Settings, shown as the default in the Editor tab */
+  readonly selectedExternalEditor: string | null
   readonly onDismissed: () => void
 }
 
@@ -45,11 +58,20 @@ export enum RepositorySettingsTab {
   Remote = 0,
   IgnoredFiles,
   GitConfig,
+  Scripts,
+  Editor,
   ForkSettings,
 }
 
 interface IRepositorySettingsState {
   readonly selectedTab: RepositorySettingsTab
+  /** Scripts found in package.json, undefined while loading */
+  readonly scripts: IRepositoryScripts | null | undefined
+  readonly scriptsConfig: IRepositoryScriptsConfig
+  readonly scriptsConfigHasChanged: boolean
+  readonly availableEditors: ReadonlyArray<string>
+  readonly editorOverride: string | null
+  readonly editorOverrideHasChanged: boolean
   readonly remote: IRemote | null
   readonly ignoreText: string | null
   readonly ignoreTextHasChanged: boolean
@@ -78,6 +100,12 @@ export class RepositorySettings extends React.Component<
     this.state = {
       selectedTab:
         this.props.initialSelectedTab || RepositorySettingsTab.Remote,
+      scripts: undefined,
+      scriptsConfig: getRepositoryScriptsConfig(props.repository),
+      scriptsConfigHasChanged: false,
+      availableEditors: [],
+      editorOverride: getRepositoryExternalEditor(props.repository),
+      editorOverrideHasChanged: false,
       remote: props.remote,
       ignoreText: null,
       ignoreTextHasChanged: false,
@@ -195,6 +223,14 @@ export class RepositorySettings extends React.Component<
               <Octicon className="icon" symbol={octicons.gitCommit} />
               {__DARWIN__ ? 'Git Config' : 'Git config'}
             </span>
+            <span>
+              <Octicon className="icon" symbol={octicons.play} />
+              Scripts
+            </span>
+            <span>
+              <Octicon className="icon" symbol={octicons.pencil} />
+              Editor
+            </span>
             {showForkSettings && (
               <span>
                 <Octicon className="icon" symbol={octicons.repoForked} />
@@ -273,9 +309,55 @@ export class RepositorySettings extends React.Component<
         )
       }
 
+      case RepositorySettingsTab.Scripts: {
+        return (
+          <RepositoryScripts
+            scripts={this.state.scripts}
+            config={this.state.scriptsConfig}
+            onConfigChanged={this.onScriptsConfigChanged}
+          />
+        )
+      }
+
+      case RepositorySettingsTab.Editor: {
+        return (
+          <RepositoryEditor
+            availableEditors={this.state.availableEditors}
+            defaultEditor={this.props.selectedExternalEditor}
+            editor={this.state.editorOverride}
+            onEditorChanged={this.onEditorOverrideChanged}
+          />
+        )
+      }
+
       default:
         return assertNever(tab, `Unknown tab type: ${tab}`)
     }
+  }
+
+  public componentDidMount() {
+    this.loadScripts()
+    this.loadAvailableEditors()
+  }
+
+  private async loadAvailableEditors() {
+    const editors = await getAvailableEditors()
+    this.setState({ availableEditors: editors.map(e => e.editor) })
+  }
+
+  private onEditorOverrideChanged = (editorOverride: string | null) => {
+    this.setState({ editorOverride, editorOverrideHasChanged: true })
+  }
+
+  private async loadScripts() {
+    const scripts = await discoverRepositoryScripts(this.props.repository.path)
+    this.setState({ scripts })
+  }
+
+  private onScriptsConfigChanged = (
+    scriptsConfig: IRepositoryScriptsConfig
+  ) => {
+    this.setState({ scriptsConfig, scriptsConfigHasChanged: true })
   }
 
   private onPublish = () => {
@@ -292,6 +374,20 @@ export class RepositorySettings extends React.Component<
   private onSubmit = async () => {
     this.setState({ disabled: true, errors: undefined })
     const errors = new Array<JSX.Element | string>()
+
+    if (this.state.scriptsConfigHasChanged) {
+      setRepositoryScriptsConfig(
+        this.props.repository,
+        this.state.scriptsConfig
+      )
+    }
+
+    if (this.state.editorOverrideHasChanged) {
+      this.props.dispatcher.setRepositoryExternalEditor(
+        this.props.repository,
+        this.state.editorOverride
+      )
+    }
 
     if (this.state.remote && this.props.remote) {
       const trimmedUrl = this.state.remote.url.trim()

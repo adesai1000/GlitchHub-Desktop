@@ -61,3 +61,34 @@ describe('Branches grouping', () => {
     assert.equal(items[0].branch, otherBranch)
   })
 })
+
+describe('groupBranches pinning and sorting', () => {
+  it('puts pinned branches in their own group and sorts others by date', () => {
+    const mk = (name: string, sha: string) =>
+      new Branch(name, null, { sha }, BranchType.Local, `refs/heads/${name}`)
+    const a = mk('a-old', 'sha-a')
+    const b = mk('b-new', 'sha-b')
+    const c = mk('c-pinned', 'sha-c')
+    const dates = new Map<string, Date>([
+      ['sha-a', new Date(2020, 0, 1)],
+      ['sha-b', new Date(2024, 0, 1)],
+    ])
+
+    const groups = groupBranches(
+      null,
+      null,
+      [a, b, c],
+      [],
+      new Set(['c-pinned']),
+      'date',
+      dates
+    )
+    assert.deepStrictEqual(
+      groups.map(g => [g.identifier, g.items.map(i => i.branch.name)]),
+      [
+        ['pinned', ['c-pinned']],
+        ['other', ['b-new', 'a-old']],
+      ]
+    )
+  })
+})

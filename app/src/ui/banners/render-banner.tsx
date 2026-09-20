@@ -19,6 +19,7 @@ import { SuccessfulSquash } from './successful-squash'
 import { SuccessBanner } from './success-banner'
 import { ConflictsFoundBanner } from './conflicts-found-banner'
 import { OSVersionNoLongerSupportedBanner } from './os-version-no-longer-supported-banner'
+import { ScriptFinished } from './script-finished'
 
 export function renderBanner(
   banner: Banner,
@@ -171,6 +172,19 @@ export function renderBanner(
       )
     case BannerType.OSVersionNoLongerSupported:
       return <OSVersionNoLongerSupportedBanner onDismissed={onDismissed} />
+    case BannerType.ScriptFinished:
+      return (
+        <ScriptFinished
+          key="script-finished"
+          repository={banner.repository}
+          runId={banner.runId}
+          scriptName={banner.scriptName}
+          status={banner.status}
+          exitCode={banner.exitCode}
+          dispatcher={dispatcher}
+          onDismissed={onDismissed}
+        />
+      )
     default:
       return assertNever(banner, `Unknown popup type: ${banner}`)
   }

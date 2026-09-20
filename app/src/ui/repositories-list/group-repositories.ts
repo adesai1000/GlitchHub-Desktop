@@ -13,6 +13,12 @@ import { IAheadBehind } from '../../models/branch'
 import { assertNever } from '../../lib/fatal-error'
 import { isDotCom } from '../../lib/endpoint-capabilities'
 import { Owner } from '../../models/owner'
+import {
+  compareWithOrder,
+  RepositoryListOrder,
+} from '../../lib/repository-list-order'
+
+const emptyOrder: RepositoryListOrder = new Map()
 
 export type RepositoryListGroup =
   | {
@@ -77,7 +83,8 @@ type RepoGroupItem = { group: RepositoryListGroup; repos: Repositoryish[] }
 export function groupRepositories(
   repositories: ReadonlyArray<Repositoryish>,
   localRepositoryStateLookup: ReadonlyMap<number, ILocalRepositoryState>,
-  recentRepositories: ReadonlyArray<number>
+  recentRepositories: ReadonlyArray<number>,
+  customOrder: RepositoryListOrder = emptyOrder
 ): ReadonlyArray<IFilterListGroup<IRepositoryListItem, RepositoryListGroup>> {
   const includeRecentGroup = repositories.length > recentRepositoriesThreshold
   const recentSet = includeRecentGroup ? new Set(recentRepositories) : undefined
@@ -110,7 +117,8 @@ export function groupRepositories(
         group,
         repos,
         localRepositoryStateLookup,
-        groups
+        groups,
+        customOrder.get(getGroupKey(group))
       ),
     }))
 }
@@ -124,7 +132,8 @@ const toSortedListItems = (
   group: RepositoryListGroup,
   repositories: ReadonlyArray<Repositoryish>,
   localRepositoryStateLookup: ReadonlyMap<number, ILocalRepositoryState>,
-  groups: Map<string, RepoGroupItem>
+  groups: Map<string, RepoGroupItem>,
+  order?: ReadonlyArray<number>
 ): IRepositoryListItem[] => {
   const groupNames = new Map<string, number>()
   const allNames = new Map<string, number>()
@@ -166,7 +175,12 @@ const toSortedListItems = (
         changedFilesCount: repoState?.changedFilesCount ?? 0,
       }
     })
-    .sort(({ repository: x }, { repository: y }) =>
-      caseInsensitiveCompare(getDisplayTitle(x), getDisplayTitle(y))
+    .sort(
+      compareWithOrder(
+        order,
+        item => item.repository.id,
+        ({ repository: x }, { repository: y }) =>
+          caseInsensitiveCompare(getDisplayTitle(x), getDisplayTitle(y))
+      )
     )
 }

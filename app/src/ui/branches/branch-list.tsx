@@ -17,6 +17,12 @@ import {
 import { NoBranches } from './no-branches'
 import { SelectionDirection, ClickSource } from '../lib/list'
 import { generateBranchContextMenuItems } from './branch-list-item-context-menu'
+import {
+  BranchSortOrder,
+  getBranchSortOrder,
+  getPinnedBranches,
+  togglePinnedBranch,
+} from '../../lib/branches/branch-preferences'
 import { showContextualMenu } from '../../lib/menu-item'
 import { SectionFilterList } from '../lib/section-filter-list'
 import memoizeOne from 'memoize-one'
@@ -138,6 +144,9 @@ interface IBranchListProps {
 
 interface IBranchListState {
   readonly commitAuthorDates: ReadonlyMap<string, Date>
+  /** Names of the branches pinned in this repository */
+  readonly pinnedBranchNames: ReadonlySet<string>
+  readonly sortOrder: BranchSortOrder
 }
 
 const commitDateCache = new Map<string, Date>()
@@ -185,7 +194,10 @@ export class BranchList extends React.Component<
       this.props.defaultBranch,
       this.props.currentBranch,
       this.props.allBranches,
-      this.props.recentBranches
+      this.props.recentBranches,
+      this.state.pinnedBranchNames,
+      this.state.sortOrder,
+      this.state.commitAuthorDates
     )
   }
 
@@ -197,6 +209,8 @@ export class BranchList extends React.Component<
     super(props)
     this.state = {
       commitAuthorDates: new Map<string, Date>(),
+      pinnedBranchNames: getPinnedBranches(props.repository),
+      sortOrder: getBranchSortOrder(),
     }
   }
 
@@ -210,6 +224,17 @@ export class BranchList extends React.Component<
     if (prevProps.allBranches !== this.props.allBranches) {
       this.populateCommitDates()
     }
+    if (prevProps.repository.id !== this.props.repository.id) {
+      this.setState({
+        pinnedBranchNames: getPinnedBranches(this.props.repository),
+      })
+    }
+  }
+
+  private onTogglePinned = (branch: Branch) => {
+    this.setState({
+      pinnedBranchNames: togglePinnedBranch(this.props.repository, branch.name),
+    })
   }
 
   private populateCommitDates = () => {
@@ -289,14 +314,6 @@ export class BranchList extends React.Component<
     const { onRenameBranch, onDeleteBranch, onCheckoutInNewWorktree } =
       this.props
 
-    if (
-      onRenameBranch === undefined &&
-      onDeleteBranch === undefined &&
-      onCheckoutInNewWorktree === undefined
-    ) {
-      return
-    }
-
     const { branch } = item
 
     const items = generateBranchContextMenuItems({
@@ -304,6 +321,8 @@ export class BranchList extends React.Component<
       onRenameBranch,
       onDeleteBranch,
       onCheckoutInNewWorktree,
+      isPinned: this.state.pinnedBranchNames.has(branch.name),
+      onTogglePinned: this.onTogglePinned,
     })
 
     showContextualMenu(items)
@@ -355,6 +374,7 @@ export class BranchList extends React.Component<
   private parseHeader(label: string): BranchGroupIdentifier | null {
     switch (label) {
       case 'default':
+      case 'pinned':
       case 'recent':
       case 'other':
         return label
@@ -388,6 +408,8 @@ export class BranchList extends React.Component<
   private getGroupLabel(identifier: BranchGroupIdentifier) {
     if (identifier === 'default') {
       return __DARWIN__ ? 'Default Branch' : 'Default branch'
+    } else if (identifier === 'pinned') {
+      return __DARWIN__ ? 'Pinned Branches' : 'Pinned branches'
     } else if (identifier === 'recent') {
       return __DARWIN__ ? 'Recent Branches' : 'Recent branches'
     } else if (identifier === 'other') {

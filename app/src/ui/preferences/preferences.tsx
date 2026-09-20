@@ -40,6 +40,27 @@ import {
 } from '../../lib/helpers/default-branch'
 import { Prompts } from './prompts'
 import { Repository } from '../../models/repository'
+import { CloningRepository } from '../../models/cloning-repository'
+import { Scripts } from './scripts'
+import {
+  BranchSortOrder,
+  getBranchSortOrder,
+  setBranchSortOrder,
+} from '../../lib/branches/branch-preferences'
+import {
+  discoverRepositoryScripts,
+  getAlwaysConfirmScripts,
+  getPreferredPackageManager,
+  getRepositoryScriptsConfig,
+  getScriptsToolbarButtonVisible,
+  IRepositoryScripts,
+  IRepositoryScriptsConfig,
+  PackageManager,
+  setAlwaysConfirmScripts,
+  setPreferredPackageManager,
+  setRepositoryScriptsConfig,
+  setScriptsToolbarButtonVisible,
+} from '../../lib/scripts/repository-scripts'
 import { Notifications } from './notifications'
 import { Accessibility } from './accessibility'
 import { CopilotPreferences } from './copilot'
@@ -109,8 +130,10 @@ interface IPreferencesProps {
   readonly selectedTheme: ApplicationTheme
   readonly selectedTabSize: number
   readonly selectedTextSize: number
+  readonly diffWrapLines: boolean
   readonly alwaysShowWorktreeList: boolean
   readonly expandWholeFileByDefault: boolean
+  readonly repositories: ReadonlyArray<Repository | CloningRepository>
   readonly useCustomEditor: boolean
   readonly customEditor: ICustomIntegration | null
   readonly useCustomShell: boolean
@@ -173,8 +196,20 @@ interface IPreferencesState {
   readonly initiallySelectedTheme: ApplicationTheme
   readonly initiallySelectedTabSize: number
   readonly initiallySelectedTextSize: number
+  readonly initiallyDiffWrapLines: boolean
+  readonly branchSortOrder: BranchSortOrder
   readonly alwaysShowWorktreeList: boolean
   readonly expandWholeFileByDefault: boolean
+
+  readonly scriptsToolbarButtonVisible: boolean
+  readonly scriptsAlwaysConfirm: boolean
+  readonly scriptsPreferredPackageManager: PackageManager | undefined
+  /** The repository whose scripts are being edited in the Scripts tab */
+  readonly scriptsRepository: Repository | null
+  readonly scriptsForRepository: IRepositoryScripts | null | undefined
+  readonly scriptsConfig: IRepositoryScriptsConfig
+  /** Per-repository script configs edited but not yet saved */
+  readonly scriptsDirtyConfigs: ReadonlyMap<number, IRepositoryScriptsConfig>
 
   readonly isLoadingGitConfig: boolean
 
@@ -215,6 +250,13 @@ export class Preferences extends React.Component<
   public constructor(props: IPreferencesProps) {
     super(props)
 
+    const initialScriptsRepository =
+      props.repository instanceof Repository
+        ? props.repository
+        : props.repositories.find(
+            (r): r is Repository => r instanceof Repository
+          ) ?? null
+
     this.state = {
       selectedIndex: this.props.initialSelectedTab || PreferencesTab.Accounts,
       committerName: '',
@@ -252,8 +294,20 @@ export class Preferences extends React.Component<
       initiallySelectedTheme: this.props.selectedTheme,
       initiallySelectedTabSize: this.props.selectedTabSize,
       initiallySelectedTextSize: this.props.selectedTextSize,
+      initiallyDiffWrapLines: this.props.diffWrapLines,
+      branchSortOrder: getBranchSortOrder(),
       alwaysShowWorktreeList: this.props.alwaysShowWorktreeList,
       expandWholeFileByDefault: this.props.expandWholeFileByDefault,
+      scriptsToolbarButtonVisible: getScriptsToolbarButtonVisible(),
+      scriptsAlwaysConfirm: getAlwaysConfirmScripts(),
+      scriptsPreferredPackageManager: getPreferredPackageManager(),
+      scriptsRepository: initialScriptsRepository,
+      scriptsForRepository: undefined,
+      scriptsConfig:
+        initialScriptsRepository !== null
+          ? getRepositoryScriptsConfig(initialScriptsRepository)
+          : { enabled: [], confirm: [] },
+      scriptsDirtyConfigs: new Map(),
       isLoadingGitConfig: true,
       underlineLinks: this.props.underlineLinks,
       showDiffCheckMarks: this.props.showDiffCheckMarks,
@@ -378,6 +432,9 @@ export class Preferences extends React.Component<
     if (this.state.initiallySelectedTextSize !== this.props.selectedTextSize) {
       this.onSelectedTextSizeChanged(this.state.initiallySelectedTextSize)
     }
+    if (this.state.initiallyDiffWrapLines !== this.props.diffWrapLines) {
+      this.onDiffWrapLinesChanged(this.state.initiallyDiffWrapLines)
+    }
 
     this.props.onDismissed()
   }
@@ -386,6 +443,11 @@ export class Preferences extends React.Component<
     return (
       <Dialog
         id="preferences"
+        className={
+          this.state.selectedIndex === PreferencesTab.Scripts
+            ? 'scripts-tab-active'
+            : undefined
+        }
         title={__DARWIN__ ? 'Settings' : 'Options'}
         onDismissed={this.onCancel}
         onSubmit={this.onSave}
@@ -414,6 +476,10 @@ export class Preferences extends React.Component<
             <span id={this.getTabId(PreferencesTab.Git)}>
               <Octicon className="icon" symbol={octicons.gitCommit} />
               Git
+            </span>
+            <span id={this.getTabId(PreferencesTab.Scripts)}>
+              <Octicon className="icon" symbol={octicons.play} />
+              Scripts
             </span>
             <span id={this.getTabId(PreferencesTab.Appearance)}>
               <Octicon className="icon" symbol={octicons.paintbrush} />
@@ -458,6 +524,9 @@ export class Preferences extends React.Component<
         break
       case PreferencesTab.Git:
         suffix = 'git'
+        break
+      case PreferencesTab.Scripts:
+        suffix = 'scripts'
         break
       case PreferencesTab.Appearance:
         suffix = 'appearance'
@@ -654,6 +723,10 @@ export class Preferences extends React.Component<
             onSelectedTabSizeChanged={this.onSelectedTabSizeChanged}
             selectedTextSize={this.props.selectedTextSize}
             onSelectedTextSizeChanged={this.onSelectedTextSizeChanged}
+            diffWrapLines={this.props.diffWrapLines}
+            onDiffWrapLinesChanged={this.onDiffWrapLinesChanged}
+            branchSortOrder={this.state.branchSortOrder}
+            onBranchSortOrderChanged={this.onBranchSortOrderChanged}
             alwaysShowWorktreeList={this.state.alwaysShowWorktreeList}
             onAlwaysShowWorktreeListChanged={
               this.onAlwaysShowWorktreeListChanged
@@ -736,6 +809,29 @@ export class Preferences extends React.Component<
             onShowCommitLengthWarningChanged={
               this.onShowCommitLengthWarningChanged
             }
+          />
+        )
+        break
+      }
+      case PreferencesTab.Scripts: {
+        View = (
+          <Scripts
+            toolbarButtonVisible={this.state.scriptsToolbarButtonVisible}
+            onToolbarButtonVisibleChanged={
+              this.onScriptsToolbarButtonVisibleChanged
+            }
+            alwaysConfirm={this.state.scriptsAlwaysConfirm}
+            onAlwaysConfirmChanged={this.onScriptsAlwaysConfirmChanged}
+            preferredPackageManager={this.state.scriptsPreferredPackageManager}
+            onPreferredPackageManagerChanged={
+              this.onScriptsPreferredPackageManagerChanged
+            }
+            repositories={this.getScriptableRepositories()}
+            selectedRepository={this.state.scriptsRepository}
+            onSelectedRepositoryChanged={this.onScriptsRepositoryChanged}
+            scripts={this.state.scriptsForRepository}
+            config={this.state.scriptsConfig}
+            onConfigChanged={this.onScriptsConfigChanged}
           />
         )
         break
@@ -997,6 +1093,14 @@ export class Preferences extends React.Component<
     this.props.dispatcher.setSelectedTextSize(textSize)
   }
 
+  private onDiffWrapLinesChanged = (wrap: boolean) => {
+    this.props.dispatcher.setDiffWrapLines(wrap)
+  }
+
+  private onBranchSortOrderChanged = (branchSortOrder: BranchSortOrder) => {
+    this.setState({ branchSortOrder })
+  }
+
   private onAlwaysShowWorktreeListChanged = (
     alwaysShowWorktreeList: boolean
   ) => {
@@ -1007,6 +1111,59 @@ export class Preferences extends React.Component<
     expandWholeFileByDefault: boolean
   ) => {
     this.setState({ expandWholeFileByDefault })
+  }
+
+  public componentDidMount() {
+    if (this.state.scriptsRepository !== null) {
+      this.loadScriptsForRepository(this.state.scriptsRepository)
+    }
+  }
+
+  private getScriptableRepositories(): ReadonlyArray<Repository> {
+    return this.props.repositories
+      .filter((r): r is Repository => r instanceof Repository)
+      .sort((a, b) => a.name.localeCompare(b.name))
+  }
+
+  private onScriptsToolbarButtonVisibleChanged = (visible: boolean) => {
+    this.setState({ scriptsToolbarButtonVisible: visible })
+  }
+
+  private onScriptsAlwaysConfirmChanged = (confirm: boolean) => {
+    this.setState({ scriptsAlwaysConfirm: confirm })
+  }
+
+  private onScriptsPreferredPackageManagerChanged = (
+    pm: PackageManager | undefined
+  ) => {
+    this.setState({ scriptsPreferredPackageManager: pm })
+  }
+
+  private onScriptsRepositoryChanged = (repository: Repository) => {
+    const dirty = this.state.scriptsDirtyConfigs.get(repository.id)
+    this.setState({
+      scriptsRepository: repository,
+      scriptsForRepository: undefined,
+      scriptsConfig: dirty ?? getRepositoryScriptsConfig(repository),
+    })
+    this.loadScriptsForRepository(repository)
+  }
+
+  private async loadScriptsForRepository(repository: Repository) {
+    const scripts = await discoverRepositoryScripts(repository.path)
+    if (this.state.scriptsRepository?.id === repository.id) {
+      this.setState({ scriptsForRepository: scripts })
+    }
+  }
+
+  private onScriptsConfigChanged = (config: IRepositoryScriptsConfig) => {
+    const repository = this.state.scriptsRepository
+    if (repository === null) {
+      return
+    }
+    const scriptsDirtyConfigs = new Map(this.state.scriptsDirtyConfigs)
+    scriptsDirtyConfigs.set(repository.id, config)
+    this.setState({ scriptsConfig: config, scriptsDirtyConfigs })
   }
 
   private renderFooter() {
@@ -1173,6 +1330,18 @@ export class Preferences extends React.Component<
     dispatcher.setDiffCheckMarksSetting(this.state.showDiffCheckMarks)
     dispatcher.setAlwaysShowWorktreeList(this.state.alwaysShowWorktreeList)
     dispatcher.setExpandWholeFileByDefault(this.state.expandWholeFileByDefault)
+
+    setBranchSortOrder(this.state.branchSortOrder)
+
+    setScriptsToolbarButtonVisible(this.state.scriptsToolbarButtonVisible)
+    setAlwaysConfirmScripts(this.state.scriptsAlwaysConfirm)
+    setPreferredPackageManager(this.state.scriptsPreferredPackageManager)
+    for (const [id, config] of this.state.scriptsDirtyConfigs) {
+      const repository = this.getScriptableRepositories().find(r => r.id === id)
+      if (repository !== undefined) {
+        setRepositoryScriptsConfig(repository, config)
+      }
+    }
 
     dispatcher.setSelectedCopilotModelsByAccount(
       this.state.selectedCopilotModelsByAccount

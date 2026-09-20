@@ -20,6 +20,7 @@ import { Tip } from '../models/tip'
 import { Commit } from '../models/commit'
 import { CommittedFileChange, WorkingDirectoryStatus } from '../models/status'
 import { WorktreeEntry } from '../models/worktree'
+import { ScriptRunHistory } from './scripts/script-runner'
 import { CloningRepository } from '../models/cloning-repository'
 import { IMenu } from '../models/app-menu'
 import { IRemote } from '../models/remote'
@@ -329,6 +330,15 @@ export interface IAppState {
   /** The selected text size preference, in pixels */
   readonly selectedTextSize: number
 
+  /** Whether long lines in diffs wrap, or scroll horizontally */
+  readonly diffWrapLines: boolean
+
+  /**
+   * Scripts (from package.json) that are running or have run, keyed by
+   * repository id, newest first.
+   */
+  readonly scriptRuns: ScriptRunHistory
+
   /** Whether to show the worktree dropdown even without linked worktrees. */
   readonly alwaysShowWorktreeList: boolean
 
@@ -450,6 +460,7 @@ export enum FoldoutType {
   AddMenu,
   PushPull,
   Worktree,
+  RunScript,
 }
 
 export type AppMenuFoldout = {
@@ -474,6 +485,7 @@ export type Foldout =
   | AppMenuFoldout
   | { type: FoldoutType.PushPull }
   | { type: FoldoutType.Worktree }
+  | { type: FoldoutType.RunScript }
 
 export enum RepositorySectionTab {
   Changes,

@@ -62,6 +62,8 @@ import { showContextualMenu } from '../../lib/menu-item'
 import { getTokens } from './get-tokens'
 import { DiffSearchInput } from './diff-search-input'
 import { textSizeChangedEvent } from '../lib/text-size'
+import memoizeOne from 'memoize-one'
+import { diffWrapChangedEvent, getDiffWrapLines } from '../lib/diff-wrap'
 import {
   expandTextDiffHunk,
   DiffExpansionKind,
@@ -253,6 +255,21 @@ export class SideBySideDiff extends React.Component<
    */
   private lastAutoExpandedDiff: ITextDiff | null = null
 
+  /** Width of one monospace character in the diff, measured lazily. */
+  private charWidth: number | null = null
+
+  private getLongestLineLength = memoizeOne((diff: ITextDiff) => {
+    let longest = 0
+    for (const hunk of diff.hunks) {
+      for (const line of hunk.lines) {
+        if (line.text.length > longest) {
+          longest = line.text.length
+        }
+      }
+    }
+    return longest
+  })
+
   private textSelectionStartRow: number | undefined = undefined
   private textSelectionEndRow: number | undefined = undefined
 
@@ -303,6 +320,7 @@ export class SideBySideDiff extends React.Component<
     // Row heights are measured once and cached, so when the text size
     // preference changes (see ui/lib/text-size.ts) they need re-measuring.
     document.addEventListener(textSizeChangedEvent, this.onTextSizeChanged)
+    document.addEventListener(diffWrapChangedEvent, this.onDiffWrapChanged)
 
     document.addEventListener('cut', this.onCutOrCopy)
     document.addEventListener('copy', this.onCutOrCopy)
@@ -439,6 +457,7 @@ export class SideBySideDiff extends React.Component<
     document.removeEventListener('mouseup', this.onEndSelection)
     document.removeEventListener('find-text', this.showSearch)
     document.removeEventListener(textSizeChangedEvent, this.onTextSizeChanged)
+    document.removeEventListener(diffWrapChangedEvent, this.onDiffWrapChanged)
     document.removeEventListener(
       'selectionchange',
       this.onDocumentSelectionChange
@@ -666,34 +685,44 @@ export class SideBySideDiff extends React.Component<
           />
           <AutoSizer onResize={this.clearListRowsHeightCache}>
             {({ height, width }) => (
-              <List
-                deferredMeasurementCache={listRowsHeightCache}
-                width={width}
-                height={height}
-                rowCount={rows.length}
-                rowHeight={this.getRowHeight}
-                rowRenderer={this.renderRow}
-                onRowsRendered={this.onRowsRendered}
-                ref={this.virtualListRef}
-                overscanIndicesGetter={this.overscanIndicesGetter}
-                // The following properties are passed to the list
-                // to make sure that it gets re-rendered when any of
-                // them change.
-                isSearching={isSearching}
-                selectedSearchResult={this.state.selectedSearchResult}
-                searchQuery={this.state.searchQuery}
-                showSideBySideDiff={this.props.showSideBySideDiff}
-                beforeTokens={this.state.beforeTokens}
-                afterTokens={this.state.afterTokens}
-                temporarySelection={this.state.temporarySelection}
-                hoveredHunk={this.state.hoveredHunk}
-                showDiffCheckMarks={this.props.showDiffCheckMarks}
-                isSelectable={canSelect(this.props.file)}
-                fileSelection={this.getSelection()}
-                // rows are memoized and include things like the
-                // noNewlineIndicator
-                rows={rows}
-              />
+              <div
+                className="diff-scroll-container"
+                style={{
+                  width,
+                  height,
+                  overflowX: 'auto',
+                  overflowY: 'hidden',
+                }}
+              >
+                <List
+                  deferredMeasurementCache={listRowsHeightCache}
+                  width={this.getListWidth(width)}
+                  height={height}
+                  rowCount={rows.length}
+                  rowHeight={this.getRowHeight}
+                  rowRenderer={this.renderRow}
+                  onRowsRendered={this.onRowsRendered}
+                  ref={this.virtualListRef}
+                  overscanIndicesGetter={this.overscanIndicesGetter}
+                  // The following properties are passed to the list
+                  // to make sure that it gets re-rendered when any of
+                  // them change.
+                  isSearching={isSearching}
+                  selectedSearchResult={this.state.selectedSearchResult}
+                  searchQuery={this.state.searchQuery}
+                  showSideBySideDiff={this.props.showSideBySideDiff}
+                  beforeTokens={this.state.beforeTokens}
+                  afterTokens={this.state.afterTokens}
+                  temporarySelection={this.state.temporarySelection}
+                  hoveredHunk={this.state.hoveredHunk}
+                  showDiffCheckMarks={this.props.showDiffCheckMarks}
+                  isSelectable={canSelect(this.props.file)}
+                  fileSelection={this.getSelection()}
+                  // rows are memoized and include things like the
+                  // noNewlineIndicator
+                  rows={rows}
+                />
+              </div>
             )}
           </AutoSizer>
         </div>
@@ -1018,9 +1047,58 @@ export class SideBySideDiff extends React.Component<
   }
 
   private onTextSizeChanged = () => {
+    this.charWidth = null
     this.clearListRowsHeightCache()
     this.rowSelectableGroupStaticDataCache.clear()
     this.virtualListRef.current?.recomputeRowHeights()
+  }
+
+  private onDiffWrapChanged = () => {
+    this.clearListRowsHeightCache()
+    this.virtualListRef.current?.recomputeRowHeights()
+    this.forceUpdate()
+  }
+
+  private measureCharWidth(): number {
+    if (this.charWidth !== null) {
+      return this.charWidth
+    }
+    const fallback = 7
+    if (this.diffContainer === null) {
+      return fallback
+    }
+    const style = getComputedStyle(this.diffContainer)
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('2d')
+    if (context === null) {
+      return fallback
+    }
+    context.font = `${style.fontSize} ${style.fontFamily}`
+    const sample = 'M'.repeat(100)
+    const width = context.measureText(sample).width / sample.length
+    this.charWidth = width > 0 ? width : fallback
+    return this.charWidth
+  }
+
+  /**
+   * When long lines don't wrap the list is made as wide as the longest line
+   * so that it can scroll horizontally, see the diff-no-wrap styles.
+   */
+  private getListWidth(availableWidth: number) {
+    if (getDiffWrapLines()) {
+      return availableWidth
+    }
+
+    // The text after the +/- prefix, plus room for the prefix itself
+    const textWidth =
+      (this.getLongestLineLength(this.state.diff) + 4) * this.measureCharWidth()
+    // Line number gutters, hunk handle and some breathing room
+    const chrome = this.props.showSideBySideDiff ? 2 * 60 + 24 : 2 * 55 + 24
+    const contentWidth = this.props.showSideBySideDiff
+      ? 2 * textWidth + chrome
+      : textWidth + chrome
+
+    return Math.max(availableWidth, Math.ceil(contentWidth))
   }
 
   private async initDiffSyntaxMode() {

@@ -1,0 +1,392 @@
+// Styles for running package.json scripts: the toolbar dropdown, the output
+// dialog, the confirmation dialog, the banner and the settings editors.
+
+@keyframes run-script-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.run-script-button .octicon.spin,
+.run-script-foldout .octicon.spin,
+#script-output .octicon.spin {
+  animation: run-script-spin 1s linear infinite;
+}
+
+.run-script-foldout {
+  display: flex;
+  flex-direction: column;
+  max-height: 480px;
+
+  // Same look as the Branches / Pull Requests tabs in the branch dropdown
+  > .tab-bar {
+    flex-shrink: 0;
+    border-top: var(--base-border);
+
+    .history-tab {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+
+      .count {
+        display: flex;
+        background: var(--tab-bar-count-background-color);
+        color: var(--tab-bar-count-color);
+        margin-left: var(--spacing-half);
+        height: 13px;
+        line-height: 13px;
+        padding: 0 6px;
+        border-radius: 7px;
+        font-size: var(--font-size-xs);
+        font-weight: var(--font-weight-semibold);
+      }
+    }
+  }
+
+  .running-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing);
+    margin: var(--spacing) var(--spacing) 0;
+    padding: var(--spacing-half) var(--spacing);
+    border: var(--base-border);
+    border-radius: var(--border-radius);
+    background: var(--box-alt-background-color);
+
+    .running-bar-text {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .empty-message {
+    padding: var(--spacing-double) var(--spacing);
+    color: var(--text-secondary-color);
+    text-align: center;
+  }
+
+  .history-list {
+    list-style: none;
+    margin: 0;
+    padding: var(--spacing-half) 0;
+    overflow-y: auto;
+
+    li {
+      margin: 0;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing);
+      width: 100%;
+      text-align: left;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      padding: var(--spacing-half) var(--spacing);
+      height: auto;
+
+      &:hover {
+        background: var(--box-selected-background-color);
+      }
+
+      &.succeeded > .octicon {
+        color: var(--dialog-information-color);
+      }
+
+      &.failed > .octicon {
+        color: var(--error-color);
+      }
+
+      .history-item-main {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        flex: 1;
+      }
+
+      .history-item-name {
+        font-family: var(--font-family-monospace);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .history-item-meta {
+        font-size: var(--font-size-sm);
+        color: var(--text-secondary-color);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+  }
+
+  .script-list {
+    list-style: none;
+    margin: 0;
+    padding: var(--spacing-half) 0;
+    overflow-y: auto;
+
+    li {
+      margin: 0;
+    }
+
+    .script-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-half);
+      width: 100%;
+      text-align: left;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      padding: var(--spacing-half) var(--spacing);
+      height: auto;
+      font-family: var(--font-family-monospace);
+
+      &:hover:not(:disabled) {
+        background: var(--box-selected-background-color);
+      }
+
+      .script-item-name {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .confirm-marker {
+        color: var(--text-secondary-color);
+      }
+    }
+  }
+
+  .run-script-footer {
+    padding: var(--spacing);
+    border-top: var(--base-border);
+    text-align: center;
+  }
+}
+
+#script-output {
+  width: 820px;
+  max-width: calc(100vw - 40px);
+
+  .script-output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing);
+    margin-bottom: var(--spacing);
+
+    .command {
+      font-family: var(--font-family-monospace);
+      color: var(--text-secondary-color);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-half);
+      flex-shrink: 0;
+
+      &.succeeded {
+        color: var(--dialog-information-color);
+      }
+
+      &.failed {
+        color: var(--error-color);
+      }
+    }
+  }
+
+  .script-output-terminal {
+    border: var(--base-border);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-half);
+    background: #000;
+    overflow: hidden;
+  }
+
+  .script-output-buttons {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--spacing);
+
+    .button-component {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-half);
+      height: var(--button-height);
+      line-height: 1;
+      margin: 0;
+
+      .octicon {
+        flex-shrink: 0;
+      }
+    }
+  }
+}
+
+#confirm-run-script {
+  .confirm-run-script-command {
+    margin: 0;
+    padding: var(--spacing);
+    border-radius: var(--border-radius);
+    background: var(--box-alt-background-color);
+    font-family: var(--font-family-monospace);
+    white-space: pre-wrap;
+    word-break: break-all;
+    user-select: text;
+  }
+}
+
+#script-finished.script-failed {
+  background: var(--error-color);
+  color: var(--error-text-color, #fff);
+}
+
+.repository-scripts-editor {
+  .scripts-summary {
+    color: var(--text-secondary-color);
+  }
+
+  .scripts-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    border: var(--base-border);
+    border-radius: var(--border-radius);
+
+    th,
+    td {
+      padding: var(--spacing-half) var(--spacing);
+      text-align: left;
+      vertical-align: top;
+      border-bottom: var(--base-border);
+    }
+
+    th {
+      font-weight: var(--font-weight-semibold);
+      background: var(--box-alt-background-color);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .show-column,
+    .confirm-column {
+      width: 70px;
+      white-space: nowrap;
+      text-align: center;
+
+      .checkbox-component {
+        justify-content: center;
+        margin: 0;
+      }
+    }
+
+    .script-column {
+      min-width: 0;
+    }
+
+    .script-name {
+      font-family: var(--font-family-monospace);
+      font-weight: var(--font-weight-semibold);
+    }
+
+    .script-command {
+      font-family: var(--font-family-monospace);
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary-color);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    tr:not(.enabled) .script-command {
+      opacity: 0.7;
+    }
+  }
+}
+
+.scripts-empty {
+  color: var(--text-secondary-color);
+}
+
+#preferences .scripts-section {
+  margin-bottom: var(--spacing-double);
+
+  h2 {
+    margin-bottom: var(--spacing);
+  }
+
+  .checkbox-component {
+    margin-bottom: var(--spacing);
+  }
+
+  .select-component {
+    margin-bottom: var(--spacing);
+  }
+}
+
+// Tags tab in the branch dropdown
+.tags-list {
+  width: 365px;
+  min-height: 0;
+  flex: 1;
+
+  .tag-list-item {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 var(--spacing);
+    gap: var(--spacing-half);
+
+    .icon {
+      flex-shrink: 0;
+      color: var(--text-secondary-color);
+    }
+
+    .name {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .description {
+      flex-shrink: 0;
+      font-family: var(--font-family-monospace);
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary-color);
+    }
+  }
+
+  .no-tags {
+    padding: var(--spacing-double) var(--spacing);
+    color: var(--text-secondary-color);
+    text-align: center;
+  }
+}
+
+.branches-container.resizable .tags-list {
+  width: 100%;
+}

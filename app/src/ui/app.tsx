@@ -21,6 +21,8 @@ import { shouldRenderApplicationMenu } from './lib/features'
 import { matchExistingRepository } from '../lib/repository-matching'
 import { getVersion, getName } from './lib/app-proxy'
 import { applyTextSize } from './lib/text-size'
+import { applyDiffWrapLines } from './lib/diff-wrap'
+import { getRepositoryExternalEditor } from '../lib/repository-editor'
 import {
   getOS,
   isOSNoLongerSupportedByElectron,
@@ -228,6 +230,10 @@ import { DeleteWorktreeDialog } from './worktrees/delete-worktree-dialog'
 import { DeleteWorktreeFailedDialog } from './worktrees/delete-worktree-failed-dialog'
 import { WorktreeEntry } from '../models/worktree'
 import { shouldShowWorktreeDropdown } from '../lib/worktree-dropdown'
+import { RunScriptDropdown } from './toolbar/run-script-dropdown'
+import { ScriptOutputDialog } from './scripts/script-output-dialog'
+import { ConfirmRunScriptDialog } from './scripts/confirm-run-script-dialog'
+import { getScriptsToolbarButtonVisible } from '../lib/scripts/repository-scripts'
 
 const MinuteInMilliseconds = 1000 * 60
 const HourInMilliseconds = MinuteInMilliseconds * 60
@@ -1054,10 +1060,14 @@ export class App extends React.Component<IAppProps, IAppState> {
     if (prevState.selectedTextSize !== this.state.selectedTextSize) {
       applyTextSize(this.state.selectedTextSize)
     }
+    if (prevState.diffWrapLines !== this.state.diffWrapLines) {
+      applyDiffWrapLines(this.state.diffWrapLines)
+    }
   }
 
   public componentDidMount() {
     applyTextSize(this.state.selectedTextSize)
+    applyDiffWrapLines(this.state.diffWrapLines)
 
     document.ondragover = e => {
       if (e.dataTransfer != null) {
@@ -1383,6 +1393,14 @@ export class App extends React.Component<IAppProps, IAppState> {
    * `undefined` if the user has selected a custom editor.
    */
   private get externalEditorLabel() {
+    const repository = this.getRepository()
+    const override =
+      repository instanceof Repository
+        ? getRepositoryExternalEditor(repository)
+        : null
+    if (override !== null) {
+      return override
+    }
     return this.state.useCustomEditor
       ? undefined
       : this.state.selectedExternalEditor ?? undefined
@@ -1770,6 +1788,7 @@ export class App extends React.Component<IAppProps, IAppState> {
             selectedTheme={this.state.selectedTheme}
             selectedTabSize={this.state.selectedTabSize}
             selectedTextSize={this.state.selectedTextSize}
+            diffWrapLines={this.state.diffWrapLines}
             useCustomEditor={this.state.useCustomEditor}
             customEditor={this.state.customEditor}
             useCustomShell={this.state.useCustomShell}
@@ -1780,6 +1799,7 @@ export class App extends React.Component<IAppProps, IAppState> {
             showDiffCheckMarks={this.state.showDiffCheckMarks}
             alwaysShowWorktreeList={this.state.alwaysShowWorktreeList}
             expandWholeFileByDefault={this.state.expandWholeFileByDefault}
+            repositories={this.state.repositories}
             selectedCopilotModelsByAccount={
               this.state.selectedCopilotModelsByAccount
             }
@@ -1847,6 +1867,7 @@ export class App extends React.Component<IAppProps, IAppState> {
             dispatcher={this.props.dispatcher}
             repository={repository}
             repositoryAccount={repositoryAccount}
+            selectedExternalEditor={this.state.selectedExternalEditor}
             onDismissed={onPopupDismissedFn}
           />
         )
@@ -3020,6 +3041,37 @@ export class App extends React.Component<IAppProps, IAppState> {
           />
         )
       }
+      case PopupType.ScriptOutput: {
+        const runs = this.state.scriptRuns.get(popup.repository.id) ?? []
+        const run =
+          popup.runId !== undefined
+            ? runs.find(r => r.id === popup.runId)
+            : runs[0]
+        return (
+          <ScriptOutputDialog
+            key={`script-output-${popup.repository.hash}-${
+              popup.runId ?? 'latest'
+            }`}
+            repository={popup.repository}
+            run={run}
+            dispatcher={this.props.dispatcher}
+            onDismissed={onPopupDismissedFn}
+          />
+        )
+      }
+      case PopupType.ConfirmRunScript: {
+        const { repository, scriptName, command } = popup
+        return (
+          <ConfirmRunScriptDialog
+            key="confirm-run-script"
+            repository={repository}
+            scriptName={scriptName}
+            command={command}
+            dispatcher={this.props.dispatcher}
+            onDismissed={onPopupDismissedFn}
+          />
+        )
+      }
       default:
         return assertNever(popup, `Unknown popup type: ${popup}`)
     }
@@ -3744,6 +3796,43 @@ export class App extends React.Component<IAppProps, IAppState> {
     }
   }
 
+  private onRunScriptDropdownStateChanged = (newState: DropdownState) => {
+    if (newState === 'open') {
+      this.props.dispatcher.showFoldout({ type: FoldoutType.RunScript })
+    } else {
+      this.props.dispatcher.closeFoldout(FoldoutType.RunScript)
+    }
+  }
+
+  private renderRunScriptToolbarButton(): JSX.Element | null {
+    if (!getScriptsToolbarButtonVisible()) {
+      return null
+    }
+
+    const selection = this.state.selectedState
+
+    if (selection == null || selection.type !== SelectionType.Repository) {
+      return null
+    }
+
+    const repository = selection.repository
+    const currentFoldout = this.state.currentFoldout
+    const isOpen =
+      currentFoldout !== null && currentFoldout.type === FoldoutType.RunScript
+
+    return (
+      <RunScriptDropdown
+        key={`run-script-${repository.hash}`}
+        dispatcher={this.props.dispatcher}
+        repository={repository}
+        runs={this.state.scriptRuns.get(repository.id) ?? []}
+        isOpen={isOpen}
+        onDropDownStateChanged={this.onRunScriptDropdownStateChanged}
+        enableFocusTrap={this.state.currentPopup === null}
+      />
+    )
+  }
+
   private onWorktreeDropdownStateChanged = (newState: DropdownState) => {
     if (newState === 'open') {
       this.props.dispatcher.showFoldout({ type: FoldoutType.Worktree })
@@ -3918,6 +4007,7 @@ export class App extends React.Component<IAppProps, IAppState> {
         </div>
         {this.renderWorktreeToolbarButton()}
         {this.renderBranchToolbarButton()}
+        {this.renderRunScriptToolbarButton()}
         {this.renderPushPullToolbarButton()}
       </Toolbar>
     )

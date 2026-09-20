@@ -22,6 +22,13 @@ interface IRepositoryListItemContextMenuConfig {
   onRemoveRepositoryAlias: (repository: Repository) => void
   onCreateWorktree?: (repository: Repository) => void
   onShowWorktrees?: (repository: Repository) => void
+  /** Reordering within the repository's group of the list */
+  onMoveRepository?: (
+    repository: Repositoryish,
+    direction: 'up' | 'down'
+  ) => void
+  canMoveUp?: boolean
+  canMoveDown?: boolean
 }
 
 export const generateRepositoryListContextMenu = (
@@ -41,6 +48,7 @@ export const generateRepositoryListContextMenu = (
   const items: ReadonlyArray<IMenuItem> = [
     ...buildAliasMenuItems(config),
     ...buildWorktreeMenuItems(config),
+    ...buildMoveMenuItems(config),
     {
       label: __DARWIN__ ? 'Copy Repo Name' : 'Copy repo name',
       action: () => writeClipboardText(repository.name),
@@ -78,6 +86,28 @@ export const generateRepositoryListContextMenu = (
   ]
 
   return items
+}
+
+const buildMoveMenuItems = (
+  config: IRepositoryListItemContextMenuConfig
+): ReadonlyArray<IMenuItem> => {
+  const { repository, onMoveRepository } = config
+  if (onMoveRepository === undefined) {
+    return []
+  }
+  return [
+    {
+      label: __DARWIN__ ? 'Move Up' : 'Move up',
+      action: () => onMoveRepository(repository, 'up'),
+      enabled: config.canMoveUp === true,
+    },
+    {
+      label: __DARWIN__ ? 'Move Down' : 'Move down',
+      action: () => onMoveRepository(repository, 'down'),
+      enabled: config.canMoveDown === true,
+    },
+    { type: 'separator' },
+  ]
 }
 
 const buildAliasMenuItems = (
