@@ -1,7 +1,7 @@
 {
   "name": "desktop",
   "productName": "GlitchHub Desktop",
-  "bundleID": "com.github.GitHubClient",
+  "bundleID": "com.glitchhub.GlitchHubDesktop",
   "companyName": "GitHub, Inc.",
   "version": "1.0.0",
   "main": "./main.js",
