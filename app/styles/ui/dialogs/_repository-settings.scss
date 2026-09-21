@@ -5,6 +5,18 @@
     min-height: 305px;
   }
 
+  // The Scripts tab shows the same script table as Settings > Scripts and
+  // needs the same room.
+  &.scripts-tab-active {
+    width: 860px;
+    max-width: calc(100vw - 40px);
+
+    .dialog-content {
+      max-height: calc(100vh - 150px);
+      overflow-y: auto;
+    }
+  }
+
   .no-remote {
     justify-content: space-between;
 

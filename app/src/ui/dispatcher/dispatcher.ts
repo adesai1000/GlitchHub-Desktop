@@ -1011,6 +1011,14 @@ export class Dispatcher {
     return this.appStore._resetWorktreeDropdownWidth()
   }
 
+  public setRunScriptDropdownWidth(width: number): Promise<void> {
+    return this.appStore._setRunScriptDropdownWidth(width)
+  }
+
+  public resetRunScriptDropdownWidth(): Promise<void> {
+    return this.appStore._resetRunScriptDropdownWidth()
+  }
+
   /**
    * Switch the repository to a different worktree path.
    *

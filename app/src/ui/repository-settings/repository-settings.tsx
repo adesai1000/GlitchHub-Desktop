@@ -198,6 +198,11 @@ export class RepositorySettings extends React.Component<
     return (
       <Dialog
         id="repository-settings"
+        className={
+          this.state.selectedTab === RepositorySettingsTab.Scripts
+            ? 'scripts-tab-active'
+            : undefined
+        }
         title={__DARWIN__ ? 'Repository Settings' : 'Repository settings'}
         onDismissed={this.props.onDismissed}
         onSubmit={this.onSubmit}

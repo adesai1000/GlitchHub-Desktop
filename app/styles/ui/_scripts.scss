@@ -261,6 +261,14 @@
   color: var(--error-text-color, #fff);
 }
 
+// The description style lives in the preferences stylesheet; repeat it for
+// the Repository Settings dialog so both Scripts tabs look the same.
+#repository-settings .appearance-section-description {
+  margin: 0 0 var(--spacing-double) 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary-color);
+}
+
 .repository-scripts-editor {
   .scripts-summary {
     color: var(--text-secondary-color);
@@ -330,7 +338,8 @@
   color: var(--text-secondary-color);
 }
 
-#preferences .scripts-section {
+#preferences .scripts-section,
+#repository-settings .scripts-section {
   margin-bottom: var(--spacing-double);
 
   h2 {

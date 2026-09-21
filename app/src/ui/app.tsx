@@ -3829,6 +3829,7 @@ export class App extends React.Component<IAppProps, IAppState> {
         isOpen={isOpen}
         onDropDownStateChanged={this.onRunScriptDropdownStateChanged}
         enableFocusTrap={this.state.currentPopup === null}
+        runScriptDropdownWidth={this.state.runScriptDropdownWidth}
       />
     )
   }

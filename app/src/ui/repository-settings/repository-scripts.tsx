@@ -17,16 +17,24 @@ export class RepositoryScripts extends React.Component<IRepositoryScriptsProps> 
   public render() {
     return (
       <DialogContent>
-        <p id="repository-scripts-description">
-          Scripts you enable here appear in the <strong>Run script</strong>{' '}
-          button in the toolbar and run in this repository's folder with your
-          shell environment.
-        </p>
-        <RepositoryScriptsEditor
-          scripts={this.props.scripts}
-          config={this.props.config}
-          onConfigChanged={this.props.onConfigChanged}
-        />
+        <div className="scripts-section">
+          <h2>
+            {__DARWIN__ ? 'Scripts in the Toolbar' : 'Scripts in the toolbar'}
+          </h2>
+          <p
+            id="repository-scripts-description"
+            className="appearance-section-description"
+          >
+            Scripts you enable here appear in the <strong>Run script</strong>{' '}
+            button in the toolbar and run in this repository's folder with your
+            shell environment.
+          </p>
+          <RepositoryScriptsEditor
+            scripts={this.props.scripts}
+            config={this.props.config}
+            onConfigChanged={this.props.onConfigChanged}
+          />
+        </div>
       </DialogContent>
     )
   }

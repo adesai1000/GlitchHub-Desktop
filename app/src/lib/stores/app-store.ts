@@ -389,6 +389,7 @@ import {
   discoverRepositoryScripts,
   getRepositoryScriptsConfig,
   getScriptRunCommand,
+  getScriptsToolbarButtonVisible,
   shouldConfirmScript,
 } from '../scripts/repository-scripts'
 import {
@@ -503,6 +504,9 @@ const worktreeDropdownWidthConfigKey: string = 'worktree-dropdown-width'
 
 const defaultPushPullButtonWidth: number = 230
 const pushPullButtonWidthConfigKey: string = 'push-pull-button-width'
+
+const defaultRunScriptDropdownWidth: number = 230
+const runScriptDropdownWidthConfigKey: string = 'run-script-dropdown-width'
 
 const askToMoveToApplicationsFolderDefault: boolean = true
 const confirmRepoRemovalDefault: boolean = true
@@ -664,6 +668,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
   private pullRequestFileListWidth = constrain(defaultPullRequestFileListWidth)
   private branchDropdownWidth = constrain(defaultBranchDropdownWidth)
   private worktreeDropdownWidth = constrain(defaultWorktreeDropdownWidth)
+  private runScriptDropdownWidth = constrain(defaultRunScriptDropdownWidth)
   private pushPullButtonWidth = constrain(defaultPushPullButtonWidth)
 
   private windowState: WindowState | null = null
@@ -1325,6 +1330,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       sidebarWidth: this.sidebarWidth,
       branchDropdownWidth: this.branchDropdownWidth,
       worktreeDropdownWidth: this.worktreeDropdownWidth,
+      runScriptDropdownWidth: this.runScriptDropdownWidth,
       pushPullButtonWidth: this.pushPullButtonWidth,
       commitSummaryWidth: this.commitSummaryWidth,
       stashedFilesWidth: this.stashedFilesWidth,
@@ -2500,6 +2506,9 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.worktreeDropdownWidth = constrain(
       getNumber(worktreeDropdownWidthConfigKey, defaultWorktreeDropdownWidth)
     )
+    this.runScriptDropdownWidth = constrain(
+      getNumber(runScriptDropdownWidthConfigKey, defaultRunScriptDropdownWidth)
+    )
     this.pushPullButtonWidth = constrain(
       getNumber(pushPullButtonWidthConfigKey, defaultPushPullButtonWidth)
     )
@@ -2741,17 +2750,33 @@ export class AppStore extends TypedBaseStore<IAppState> {
    * Calculate the constraints of our resizable panes whenever the window
    * dimensions change.
    */
+  /**
+   * Whether the run script dropdown is (probably) shown in the toolbar. It
+   * also hides itself for repositories without package.json scripts, which
+   * we can't know synchronously here, so this errs on reserving the space.
+   */
+  private isRunScriptDropdownVisible(): boolean {
+    return (
+      getScriptsToolbarButtonVisible() &&
+      this.selectedRepository instanceof Repository
+    )
+  }
+
   private updateResizableConstraints() {
     const showWorktreeDropdown = this.isWorktreeDropdownVisible()
+    const showRunScriptDropdown = this.isRunScriptDropdownVisible()
 
-    // The combined width of the toolbar buttons (worktree, branch, push/pull).
-    // Since the repository list toolbar button width is tied to the width of
-    // the sidebar we can't let it push these buttons off screen.
+    // The combined width of the toolbar buttons (worktree, branch, run
+    // script, push/pull). Since the repository list toolbar button width is
+    // tied to the width of the sidebar we can't let it push these buttons
+    // off screen.
     const toolbarButtonsMinWidth =
       defaultPushPullButtonWidth +
       defaultBranchDropdownWidth +
-      (showWorktreeDropdown ? defaultWorktreeDropdownWidth : 0)
-    const numButtons = 2 + (showWorktreeDropdown ? 1 : 0)
+      (showWorktreeDropdown ? defaultWorktreeDropdownWidth : 0) +
+      (showRunScriptDropdown ? defaultRunScriptDropdownWidth : 0)
+    const numButtons =
+      2 + (showWorktreeDropdown ? 1 : 0) + (showRunScriptDropdown ? 1 : 0)
 
     // Start with all the available width
     let available = window.innerWidth
@@ -2804,6 +2829,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     const branchDropdownMax =
       available -
       (showWorktreeDropdown ? clamp(this.worktreeDropdownWidth) : 0) -
+      (showRunScriptDropdown ? defaultRunScriptDropdownWidth : 0) -
       defaultPushPullButtonWidth
     const minimumBranchDropdownWidth =
       defaultBranchDropdownWidth > available / numButtons
@@ -2815,10 +2841,23 @@ export class AppStore extends TypedBaseStore<IAppState> {
       branchDropdownMax
     )
 
+    // The run script dropdown sits between the branch and push/pull buttons
+    const runScriptDropdownMax =
+      available -
+      clamp(this.branchDropdownWidth) -
+      (showWorktreeDropdown ? clamp(this.worktreeDropdownWidth) : 0) -
+      defaultPushPullButtonWidth
+    this.runScriptDropdownWidth = constrain(
+      this.runScriptDropdownWidth,
+      Math.min(available / numButtons - 10, 170),
+      runScriptDropdownMax
+    )
+
     const pushPullButtonMaxWidth =
       available -
       clamp(this.branchDropdownWidth) -
-      (showWorktreeDropdown ? clamp(this.worktreeDropdownWidth) : 0)
+      (showWorktreeDropdown ? clamp(this.worktreeDropdownWidth) : 0) -
+      (showRunScriptDropdown ? clamp(this.runScriptDropdownWidth) : 0)
     const minimumPushPullToolBarWidth =
       defaultPushPullButtonWidth > available / numButtons
         ? available / numButtons
@@ -6266,6 +6305,30 @@ export class AppStore extends TypedBaseStore<IAppState> {
       value: width,
     }
     setNumber(worktreeDropdownWidthConfigKey, width)
+    this.updateResizableConstraints()
+    this.emitUpdate()
+
+    return Promise.resolve()
+  }
+
+  public _setRunScriptDropdownWidth(width: number): Promise<void> {
+    this.runScriptDropdownWidth = {
+      ...this.runScriptDropdownWidth,
+      value: width,
+    }
+    setNumber(runScriptDropdownWidthConfigKey, width)
+    this.updateResizableConstraints()
+    this.emitUpdate()
+
+    return Promise.resolve()
+  }
+
+  public _resetRunScriptDropdownWidth(): Promise<void> {
+    this.runScriptDropdownWidth = {
+      ...this.runScriptDropdownWidth,
+      value: defaultRunScriptDropdownWidth,
+    }
+    localStorage.removeItem(runScriptDropdownWidthConfigKey)
     this.updateResizableConstraints()
     this.emitUpdate()
 

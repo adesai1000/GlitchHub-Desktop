@@ -4,7 +4,9 @@ import * as octicons from '../octicons/octicons.generated'
 import { Octicon, OcticonSymbol } from '../octicons'
 import { Repository } from '../../models/repository'
 import { ToolbarDropdown, DropdownState } from './dropdown'
-import { FoldoutType } from '../../lib/app-state'
+import { FoldoutType, IConstrainedValue } from '../../lib/app-state'
+import { Resizable } from '../resizable'
+import { enableResizingToolbarButtons } from '../../lib/feature-flag'
 import { PopupType } from '../../models/popup'
 import { RepositorySettingsTab } from '../repository-settings/repository-settings'
 import {
@@ -27,6 +29,7 @@ interface IRunScriptDropdownProps {
   readonly isOpen: boolean
   readonly onDropDownStateChanged: (state: DropdownState) => void
   readonly enableFocusTrap: boolean
+  readonly runScriptDropdownWidth: IConstrainedValue
 }
 
 enum RunScriptTab {
@@ -225,6 +228,14 @@ export class RunScriptDropdown extends React.Component<
     this.props.dispatcher.clearRepositoryScriptHistory(this.props.repository)
   }
 
+  private onResize = (width: number) => {
+    this.props.dispatcher.setRunScriptDropdownWidth(width)
+  }
+
+  private onReset = () => {
+    this.props.dispatcher.resetRunScriptDropdownWidth()
+  }
+
   private onConfigure = () => {
     this.props.dispatcher.closeFoldout(FoldoutType.RunScript)
     this.props.dispatcher.showPopup({
@@ -369,7 +380,9 @@ export class RunScriptDropdown extends React.Component<
       ? `${latest.scriptName}: ${statusLabel(latest).toLowerCase()}`
       : scripts?.packageManager ?? 'package.json'
 
-    return (
+    const { runScriptDropdownWidth } = this.props
+
+    const toolbarDropdown = (
       <ToolbarDropdown
         className={`run-script-button${running ? ' running' : ''}`}
         icon={running ? octicons.sync : octicons.play}
@@ -382,8 +395,33 @@ export class RunScriptDropdown extends React.Component<
         dropdownState={isOpen ? 'open' : 'closed'}
         showDisclosureArrow={true}
         enableFocusTrap={enableFocusTrap}
-        foldoutStyleOverrides={{ width: 400 }}
+        foldoutStyleOverrides={
+          enableResizingToolbarButtons()
+            ? {
+                width: Math.max(runScriptDropdownWidth.value, 365),
+                maxWidth: Math.max(runScriptDropdownWidth.max, 365),
+                minWidth: 365,
+              }
+            : { width: 400 }
+        }
       />
+    )
+
+    if (!enableResizingToolbarButtons()) {
+      return toolbarDropdown
+    }
+
+    return (
+      <Resizable
+        width={runScriptDropdownWidth.value}
+        onReset={this.onReset}
+        onResize={this.onResize}
+        maximumWidth={runScriptDropdownWidth.max}
+        minimumWidth={runScriptDropdownWidth.min}
+        description="Run script dropdown button"
+      >
+        {toolbarDropdown}
+      </Resizable>
     )
   }
 }
