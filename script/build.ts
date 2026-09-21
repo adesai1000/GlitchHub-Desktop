@@ -211,10 +211,13 @@ function packageApp() {
     darwinDarkModeSupport: true,
     osxSign: {
       optionsForFile: (path: string) => ({
-        hardenedRuntime: true,
+        // The hardened runtime's library validation rejects ad-hoc signed
+        // frameworks ("different Team IDs"), so it's only on for builds
+        // signed with a real identity.
+        hardenedRuntime: !adHocSign,
         entitlements: entitlementsPath,
       }),
-      type: isPublishableBuild ? 'distribution' : 'development',
+      type: adHocSign ? 'development' : 'distribution',
       // For development, we will use '-' as the identifier so that codesign
       // will sign the app to run locally. We need to disable 'identity-validation'
       // or otherwise it will replace '-' with one of the regular codesigning
