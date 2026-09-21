@@ -9,6 +9,21 @@ It is the same [Electron](https://www.electronjs.org/) app, written in
 tracking upstream's `development` branch. Everything upstream ships is here,
 plus the extras below.
 
+## Download
+
+Grab the latest build from the
+[releases page](https://github.com/adesai1000/GlitchHub-Desktop/releases/latest).
+It is a macOS app for Apple silicon, shipped as a zip: unzip it and drag
+GlitchHub Desktop into Applications.
+
+The build is not signed with an Apple developer certificate yet, so the first
+time you open it macOS will say it can't be verified. Right-click the app,
+choose **Open**, then **Open** again in the dialog. You only have to do that
+once. Your repositories and sign-in from GitHub Desktop are not shared with it;
+it keeps its own profile folder.
+
+If you like it, a star on the repo helps other people find it.
+
 ## What's different
 
 | Feature | Where to find it | Upstream request |
@@ -24,6 +39,7 @@ plus the extras below.
 | Reorder the repository list | Right-click a repository → Move Up / Move Down | [#11608](https://github.com/desktop/desktop/issues/11608) |
 | Resizable Run script button | Drag its right edge, double-click to reset | |
 | Choose or install your own app icon (macOS) | Settings → Appearance → App Icon | |
+| No telemetry, no crash reports, no update pings | Always on | |
 | Settings that scroll at any text size | Settings dialog | |
 | Its own name, icon and profile folder | Everywhere | |
 
@@ -87,6 +103,17 @@ branch, worktree and fetch buttons are.
 - **Reorder the repository list** ([#11608](https://github.com/desktop/desktop/issues/11608)):
   right-click a repository and choose _Move Up_ or _Move Down_. The order is
   remembered per group.
+
+### Nothing phones home
+
+The official app posts daily usage statistics, opt-in pings and crash reports
+to GitHub, and asks GitHub's update server for new builds. GlitchHub Desktop
+does none of that: the reporting code is compiled out, the Usage checkbox in
+Settings → Advanced is replaced by a note that your data stays private, and
+the About dialog points at the releases page instead of checking for updates.
+That last part also stops the fork from ever updating itself into the
+official app. Talking to GitHub for your repositories, pull requests, sign-in
+and notifications works exactly as before; only the reporting is gone.
 
 ### Its own name and icon, and yours
 

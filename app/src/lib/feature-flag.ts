@@ -3,6 +3,23 @@ import { Account } from '../models/account'
 const Disable = false
 
 /**
+ * Where GlitchHub Desktop builds are published. Shown in the About dialog in
+ * place of the update checker.
+ */
+export const GlitchHubReleasesURL =
+  'https://github.com/adesai1000/GlitchHub-Desktop/releases'
+
+/**
+ * Whether to talk to GitHub's own services for the official app: the update
+ * server (which would replace this fork with the official build) and the
+ * usage statistics endpoint. Off for GlitchHub Desktop; new builds come from
+ * the releases page instead.
+ */
+export function enableUpstreamServices(): boolean {
+  return process.env.GLITCHHUB_UPSTREAM_SERVICES === '1'
+}
+
+/**
  * Enables the application to opt-in for preview features based on runtime
  * checks. This is backed by the GITHUB_DESKTOP_PREVIEW_FEATURES environment
  * variable, which is checked for non-development environments.

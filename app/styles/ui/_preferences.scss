@@ -278,6 +278,14 @@
 
   .example-link {
     cursor: default !important;
+
+    &.underline {
+      text-decoration: underline !important;
+    }
+
+    &.no-underline {
+      text-decoration: none !important;
+    }
   }
 
   .theme-selector {

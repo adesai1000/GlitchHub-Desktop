@@ -9,6 +9,10 @@ import {
   DefaultDialogFooter,
 } from '../dialog'
 import { LinkButton } from '../lib/link-button'
+import {
+  enableUpstreamServices,
+  GlitchHubReleasesURL,
+} from '../../lib/feature-flag'
 import { IUpdateState, UpdateStatus } from '../lib/update-store'
 import { Loading } from '../lib/loading'
 import { RelativeTime } from '../relative-time'
@@ -90,8 +94,9 @@ class UpdateInfo extends React.Component<IUpdateInfoProps> {
 export class About extends React.Component<IAboutProps> {
   private get canCheckForUpdates() {
     return (
-      __RELEASE_CHANNEL__ !== 'development' ||
-      this.props.allowDevelopment === true
+      enableUpstreamServices() &&
+      (__RELEASE_CHANNEL__ !== 'development' ||
+        this.props.allowDevelopment === true)
     )
   }
 
@@ -144,6 +149,15 @@ export class About extends React.Component<IAboutProps> {
   private renderUpdateDetails() {
     if (__LINUX__) {
       return null
+    }
+
+    if (!enableUpstreamServices()) {
+      return (
+        <p>
+          GlitchHub Desktop doesn't update itself. New builds are published on
+          the <LinkButton uri={GlitchHubReleasesURL}>releases page</LinkButton>.
+        </p>
+      )
     }
 
     if (!this.canCheckForUpdates) {

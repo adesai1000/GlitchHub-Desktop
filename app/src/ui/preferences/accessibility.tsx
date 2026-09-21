@@ -1,6 +1,10 @@
 import * as React from 'react'
+import { LinkButton } from '../lib/link-button'
 import { DialogContent } from '../dialog'
 import { Checkbox, CheckboxValue } from '../lib/checkbox'
+
+/** Never gonna give you up. */
+const ExampleLinkUri = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
 
 interface IAccessibilityPreferencesProps {
   readonly underlineLinks: boolean
@@ -64,16 +68,16 @@ export class Accessibility extends React.Component<
   }
 
   private renderExampleLink() {
-    // The example link is rendered with inline style to override the global
-    // underline setting since this is a non-interactive visual preview.
-    const style = {
-      textDecoration: this.props.underlineLinks ? 'underline' : 'none',
-    }
+    // The example link overrides the global underline setting so it always
+    // previews the current choice. It is also, quietly, a real link.
+    const className = this.props.underlineLinks
+      ? 'example-link underline'
+      : 'example-link no-underline'
 
     return (
-      <span className="link-button-component example-link" style={style}>
+      <LinkButton uri={ExampleLinkUri} className={className}>
         This is an example link
-      </span>
+      </LinkButton>
     )
   }
 

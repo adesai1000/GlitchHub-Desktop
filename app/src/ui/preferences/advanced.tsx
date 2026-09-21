@@ -3,6 +3,7 @@ import { DialogContent } from '../dialog'
 import { Checkbox, CheckboxValue } from '../lib/checkbox'
 import { LinkButton } from '../lib/link-button'
 import { SamplesURL } from '../../lib/stats'
+import { enableUpstreamServices } from '../../lib/feature-flag'
 import { isWindowsOpenSSHAvailable } from '../../lib/ssh/ssh'
 
 interface IAdvancedPreferencesProps {
@@ -113,15 +114,22 @@ export class Advanced extends React.Component<
         </div>
         <div className="advanced-section">
           <h2>Usage</h2>
-          <Checkbox
-            label={this.reportDesktopUsageLabel()}
-            value={
-              this.state.optOutOfUsageTracking
-                ? CheckboxValue.Off
-                : CheckboxValue.On
-            }
-            onChange={this.onReportingOptOutChanged}
-          />
+          {enableUpstreamServices() ? (
+            <Checkbox
+              label={this.reportDesktopUsageLabel()}
+              value={
+                this.state.optOutOfUsageTracking
+                  ? CheckboxValue.Off
+                  : CheckboxValue.On
+              }
+              onChange={this.onReportingOptOutChanged}
+            />
+          ) : (
+            <p className="settings-description usage-privacy">
+              Your usage data stays private. GlitchHub Desktop doesn't send
+              usage statistics, crash reports or update checks anywhere.
+            </p>
+          )}
         </div>
         <h2>Network and credentials</h2>
         {this.renderSSHSettings()}

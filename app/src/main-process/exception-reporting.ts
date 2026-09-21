@@ -1,3 +1,4 @@
+import { enableUpstreamServices } from '../lib/feature-flag'
 import { app, net } from 'electron'
 import { getArchitecture } from '../lib/get-architecture'
 import { computeBundleHash } from '../lib/compute-bundle-hash'
@@ -35,7 +36,7 @@ export async function reportError(
   extra?: { [key: string]: string },
   nonFatal?: boolean
 ) {
-  if (__DEV__) {
+  if (__DEV__ || !enableUpstreamServices()) {
     return
   }
 

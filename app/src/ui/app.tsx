@@ -22,6 +22,7 @@ import { matchExistingRepository } from '../lib/repository-matching'
 import { getVersion, getName } from './lib/app-proxy'
 import { applyTextSize } from './lib/text-size'
 import { applyDiffWrapLines } from './lib/diff-wrap'
+import { enableUpstreamServices } from '../lib/feature-flag'
 import { getRepositoryExternalEditor } from '../lib/repository-editor'
 import {
   getOS,
@@ -394,13 +395,16 @@ export class App extends React.Component<IAppProps, IAppState> {
     // the app. So defer it until we have some breathing space.
     this.props.appStore.loadEmoji()
 
-    this.props.dispatcher.reportStats()
-    setInterval(() => this.props.dispatcher.reportStats(), SendStatsInterval)
+    if (enableUpstreamServices()) {
+      this.props.dispatcher.reportStats()
+      setInterval(() => this.props.dispatcher.reportStats(), SendStatsInterval)
+    }
 
     this.props.dispatcher.installGlobalLFSFilters(false)
 
     // We only want to automatically check for updates on beta and prod
     if (
+      enableUpstreamServices() &&
       __RELEASE_CHANNEL__ !== 'development' &&
       __RELEASE_CHANNEL__ !== 'test'
     ) {
@@ -654,7 +658,11 @@ export class App extends React.Component<IAppProps, IAppState> {
     inBackground: boolean,
     skipGuidCheck: boolean = false
   ) {
-    if (__LINUX__ || __RELEASE_CHANNEL__ === 'development') {
+    if (
+      __LINUX__ ||
+      __RELEASE_CHANNEL__ === 'development' ||
+      !enableUpstreamServices()
+    ) {
       return
     }
 

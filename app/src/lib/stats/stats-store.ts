@@ -43,7 +43,7 @@ import { ValidNotificationPullRequestReviewState } from '../valid-notification-p
 import { useExternalCredentialHelperKey } from '../trampoline/use-external-credential-helper'
 import { getUserAgent } from '../http'
 import { getHooksEnvEnabled } from '../hooks/config'
-import { enableNewStatsEndpoint } from '../feature-flag'
+import { enableNewStatsEndpoint, enableUpstreamServices } from '../feature-flag'
 import { parseModelKey } from '../copilot/byok'
 import { DefaultCopilotModel } from '../stores/copilot-store'
 
@@ -656,11 +656,12 @@ export class StatsStore implements IStatsStore {
   ) {
     const storedValue = getHasOptedOutOfStats()
 
-    this.optOut = storedValue || false
+    // Opted out unless the user chose otherwise and reporting is possible
+    this.optOut = storedValue ?? !enableUpstreamServices()
 
     // If the user has set an opt out value but we haven't sent the ping yet,
     // give it a shot now.
-    if (!getBoolean(HasSentOptInPingKey, false)) {
+    if (enableUpstreamServices() && !getBoolean(HasSentOptInPingKey, false)) {
       this.sendOptInStatusPing(this.optOut, storedValue)
     }
 
@@ -687,7 +688,7 @@ export class StatsStore implements IStatsStore {
     accounts: ReadonlyArray<Account>,
     repositories: ReadonlyArray<Repository>
   ) {
-    if (this.optOut) {
+    if (this.optOut || !enableUpstreamServices()) {
       return
     }
 
@@ -722,7 +723,7 @@ export class StatsStore implements IStatsStore {
     accounts: ReadonlyArray<Account>,
     repositories: ReadonlyArray<Repository>
   ): Promise<boolean> {
-    if (this.optOut) {
+    if (this.optOut || !enableUpstreamServices()) {
       return false
     }
 
@@ -1404,6 +1405,9 @@ export class StatsStore implements IStatsStore {
     optOut: boolean,
     previousValue: boolean | undefined
   ): Promise<void> {
+    if (!enableUpstreamServices()) {
+      return
+    }
     // The analytics pipeline expects us to submit `optIn` but we track `optOut`
     // so we need to invert the value before we send it.
     const optIn = !optOut
