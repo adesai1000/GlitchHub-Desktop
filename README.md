@@ -11,6 +11,21 @@ plus the extras below.
 
 ## What's different
 
+| Feature | Where to find it | Upstream request |
+| --- | --- | --- |
+| Expand whole file in diffs by default | Settings → Appearance → Diff Expansion | [#20548](https://github.com/desktop/desktop/issues/20548) |
+| Text size slider | Settings → Appearance → Text Size | |
+| Turn off line wrapping in diffs | Settings → Appearance → Diff Expansion | [#11052](https://github.com/desktop/desktop/issues/11052) |
+| Run `package.json` scripts from the toolbar, with history | **Run script** toolbar button; Repository Settings → Scripts; Settings → Scripts | |
+| Default editor per repository | Repository Settings → Editor | [#12195](https://github.com/desktop/desktop/issues/12195) |
+| Sort branches by last update | Settings → Appearance → Branch List | [#5155](https://github.com/desktop/desktop/issues/5155), [#21358](https://github.com/desktop/desktop/issues/21358) |
+| Pin branches | Right-click a branch → Pin Branch | [#15767](https://github.com/desktop/desktop/issues/15767) |
+| Search tags | Branch dropdown → Tags tab | [#15702](https://github.com/desktop/desktop/issues/15702) |
+| Reorder the repository list | Right-click a repository → Move Up / Move Down | [#11608](https://github.com/desktop/desktop/issues/11608) |
+| Resizable Run script button | Drag its right edge, double-click to reset | |
+| Settings that scroll at any text size | Settings dialog | |
+| Its own name, icon and profile folder | Everywhere | |
+
 ### Expand whole file in diffs by default
 
 Upstream issue [#20548](https://github.com/desktop/desktop/issues/20548),
@@ -45,6 +60,11 @@ Settings → **Scripts**, which has a repository picker) lists every script with
 a _Show_ checkbox and a _Confirm_ checkbox for the ones that deserve a second
 look, like a production deploy. The package manager is detected from the lock
 file (npm, yarn, pnpm or bun) and can be overridden globally.
+
+The button has two tabs, like the branch dropdown: **Scripts** to start a run
+and **History**, which keeps the last 20 runs per repository with their status,
+duration and full output. The button itself is resizable, the same way the
+branch, worktree and fetch buttons are.
 
 ### Smaller things the official app declined
 
