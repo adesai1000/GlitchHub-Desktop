@@ -43,6 +43,12 @@ import { Repository } from '../../models/repository'
 import { CloningRepository } from '../../models/cloning-repository'
 import { Scripts } from './scripts'
 import {
+  appIconFileExtensions,
+  getBuiltInAppIcons,
+  IAppIcon,
+} from '../../lib/app-icons'
+import { showOpenDialog } from '../main-process-proxy'
+import {
   BranchSortOrder,
   getBranchSortOrder,
   setBranchSortOrder,
@@ -128,6 +134,8 @@ interface IPreferencesProps {
   readonly selectedExternalEditor: string | null
   readonly selectedShell: Shell
   readonly selectedTheme: ApplicationTheme
+  readonly selectedAppIconId: string
+  readonly installedAppIcons: ReadonlyArray<IAppIcon>
   readonly selectedTabSize: number
   readonly selectedTextSize: number
   readonly diffWrapLines: boolean
@@ -194,6 +202,7 @@ interface IPreferencesState {
   readonly repositoryIndicatorsEnabled: boolean
 
   readonly initiallySelectedTheme: ApplicationTheme
+  readonly initiallySelectedAppIconId: string
   readonly initiallySelectedTabSize: number
   readonly initiallySelectedTextSize: number
   readonly initiallyDiffWrapLines: boolean
@@ -292,6 +301,7 @@ export class Preferences extends React.Component<
       selectedShell: this.props.selectedShell,
       repositoryIndicatorsEnabled: this.props.repositoryIndicatorsEnabled,
       initiallySelectedTheme: this.props.selectedTheme,
+      initiallySelectedAppIconId: this.props.selectedAppIconId,
       initiallySelectedTabSize: this.props.selectedTabSize,
       initiallySelectedTextSize: this.props.selectedTextSize,
       initiallyDiffWrapLines: this.props.diffWrapLines,
@@ -425,6 +435,14 @@ export class Preferences extends React.Component<
   private onCancel = () => {
     if (this.state.initiallySelectedTheme !== this.props.selectedTheme) {
       this.onSelectedThemeChanged(this.state.initiallySelectedTheme)
+    }
+    if (
+      this.state.initiallySelectedAppIconId !== this.props.selectedAppIconId &&
+      this.getAllAppIcons().some(
+        i => i.id === this.state.initiallySelectedAppIconId
+      )
+    ) {
+      this.onSelectedAppIconChanged(this.state.initiallySelectedAppIconId)
     }
     if (this.state.initiallySelectedTabSize !== this.props.selectedTabSize) {
       this.onSelectedTabSizeChanged(this.state.initiallySelectedTabSize)
@@ -719,6 +737,11 @@ export class Preferences extends React.Component<
           <Appearance
             selectedTheme={this.props.selectedTheme}
             onSelectedThemeChanged={this.onSelectedThemeChanged}
+            appIcons={this.getAllAppIcons()}
+            selectedAppIconId={this.props.selectedAppIconId}
+            onSelectedAppIconChanged={this.onSelectedAppIconChanged}
+            onInstallAppIcon={this.onInstallAppIcon}
+            onRemoveAppIcon={this.onRemoveAppIcon}
             selectedTabSize={this.props.selectedTabSize}
             onSelectedTabSizeChanged={this.onSelectedTabSizeChanged}
             selectedTextSize={this.props.selectedTextSize}
@@ -1019,6 +1042,29 @@ export class Preferences extends React.Component<
 
   private onCustomShellChanged = (customShell: ICustomIntegration) => {
     this.setState({ customShell })
+  }
+
+  private getAllAppIcons(): ReadonlyArray<IAppIcon> {
+    return [...getBuiltInAppIcons(__dirname), ...this.props.installedAppIcons]
+  }
+
+  private onSelectedAppIconChanged = (id: string) => {
+    this.props.dispatcher.setSelectedAppIcon(id)
+  }
+
+  private onInstallAppIcon = async () => {
+    const path = await showOpenDialog({
+      title: __DARWIN__ ? 'Choose an Icon' : 'Choose an icon',
+      properties: ['openFile'],
+      filters: [{ name: 'Icons', extensions: [...appIconFileExtensions] }],
+    })
+    if (path !== null) {
+      await this.props.dispatcher.installAppIcon(path)
+    }
+  }
+
+  private onRemoveAppIcon = (id: string) => {
+    this.props.dispatcher.removeAppIcon(id)
   }
 
   private onSelectedThemeChanged = (theme: ApplicationTheme) => {

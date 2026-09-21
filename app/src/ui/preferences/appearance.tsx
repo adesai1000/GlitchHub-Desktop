@@ -28,12 +28,20 @@ import {
 } from './diff-expansion-swatches'
 import { TextSizeSlider } from '../lib/text-size-slider'
 import { BranchSortOrder } from '../../lib/branches/branch-preferences'
+import { IAppIcon } from '../../lib/app-icons'
+import { AppIconPicker } from './app-icon-picker'
 
 type DiffExpansionOption = 'changes-only' | 'whole-file'
 
 interface IAppearanceProps {
   readonly selectedTheme: ApplicationTheme
   readonly onSelectedThemeChanged: (theme: ApplicationTheme) => void
+  /** Built-in and installed app icons, in display order */
+  readonly appIcons: ReadonlyArray<IAppIcon>
+  readonly selectedAppIconId: string
+  readonly onSelectedAppIconChanged: (id: string) => void
+  readonly onInstallAppIcon: () => void
+  readonly onRemoveAppIcon: (id: string) => void
   readonly selectedTabSize: number
   readonly onSelectedTabSizeChanged: (tabSize: number) => void
   readonly selectedTextSize: number
@@ -176,6 +184,30 @@ export class Appearance extends React.Component<
           </span>
         )
     }
+  }
+
+  private renderAppIcon() {
+    if (!__DARWIN__) {
+      return null
+    }
+
+    return (
+      <div className="appearance-section app-icon-section">
+        <h2 id="app-icon-heading">App Icon</h2>
+        <p className="appearance-section-description">
+          Pick the icon shown in the Dock and the Finder. Changes apply right
+          away. Icons you install stay on this Mac.
+        </p>
+        <AppIconPicker
+          icons={this.props.appIcons}
+          selectedId={this.props.selectedAppIconId}
+          onSelectionChanged={this.props.onSelectedAppIconChanged}
+          onInstall={this.props.onInstallAppIcon}
+          onRemove={this.props.onRemoveAppIcon}
+          ariaLabelledBy="app-icon-heading"
+        />
+      </div>
+    )
   }
 
   private renderTextSize() {
@@ -440,6 +472,7 @@ export class Appearance extends React.Component<
     return (
       <DialogContent>
         {this.renderSelectedTheme()}
+        {this.renderAppIcon()}
         {this.renderTextSize()}
         {this.renderDiffExpansion()}
         {this.renderBranchList()}

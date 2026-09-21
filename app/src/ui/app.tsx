@@ -1786,6 +1786,8 @@ export class App extends React.Component<IAppProps, IAppState> {
             onDismissed={onPopupDismissedFn}
             selectedShell={this.state.selectedShell}
             selectedTheme={this.state.selectedTheme}
+            selectedAppIconId={this.state.selectedAppIconId}
+            installedAppIcons={this.state.installedAppIcons}
             selectedTabSize={this.state.selectedTabSize}
             selectedTextSize={this.state.selectedTextSize}
             diffWrapLines={this.state.diffWrapLines}

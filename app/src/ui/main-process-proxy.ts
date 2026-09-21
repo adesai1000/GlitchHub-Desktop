@@ -332,6 +332,9 @@ export const showCertificateTrustDialog = sendProxy(
  */
 export const getPath = invokeProxy('get-path', 1)
 
+/** Tell the main process to use a custom app icon (null for the default) */
+export const setAppIcon = invokeProxy('set-app-icon', 1)
+
 /**
  * Tell the main process to obtain the applications architecture
  */

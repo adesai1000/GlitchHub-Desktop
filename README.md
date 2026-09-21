@@ -23,6 +23,7 @@ plus the extras below.
 | Search tags | Branch dropdown → Tags tab | [#15702](https://github.com/desktop/desktop/issues/15702) |
 | Reorder the repository list | Right-click a repository → Move Up / Move Down | [#11608](https://github.com/desktop/desktop/issues/11608) |
 | Resizable Run script button | Drag its right edge, double-click to reset | |
+| Choose or install your own app icon (macOS) | Settings → Appearance → App Icon | |
 | Settings that scroll at any text size | Settings dialog | |
 | Its own name, icon and profile folder | Everywhere | |
 
@@ -87,11 +88,17 @@ branch, worktree and fetch buttons are.
   right-click a repository and choose _Move Up_ or _Move Down_. The order is
   remembered per group.
 
-### Its own name and icon
+### Its own name and icon, and yours
 
 The app is called GlitchHub Desktop, with its own icon, so it can live next to
 the official app without the two being confused. It uses a separate profile
 folder too.
+
+Settings → Appearance → **App Icon** lets you pick the icon shown in the Dock
+and the Finder. _Glitch_ is the default and _Boring_ is the vanilla GitHub
+Desktop icon. **Install Icon…** takes any `.icns` or 1024 px PNG and keeps it
+in your profile, so icons can be shared as plain files. Changes apply right
+away; picking Glitch again clears the custom icon. macOS only for now.
 
 ## Building it
 

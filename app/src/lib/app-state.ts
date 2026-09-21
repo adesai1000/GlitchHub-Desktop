@@ -21,6 +21,7 @@ import { Commit } from '../models/commit'
 import { CommittedFileChange, WorkingDirectoryStatus } from '../models/status'
 import { WorktreeEntry } from '../models/worktree'
 import { ScriptRunHistory } from './scripts/script-runner'
+import { IAppIcon } from './app-icons'
 import { CloningRepository } from '../models/cloning-repository'
 import { IMenu } from '../models/app-menu'
 import { IRemote } from '../models/remote'
@@ -323,6 +324,12 @@ export interface IAppState {
 
   /** The selected appearance (aka theme) preference */
   readonly selectedTheme: ApplicationTheme
+
+  /** Id of the app icon in use, see lib/app-icons */
+  readonly selectedAppIconId: string
+
+  /** Icons the user installed, in addition to the built-in ones */
+  readonly installedAppIcons: ReadonlyArray<IAppIcon>
 
   /** The currently applied appearance (aka theme) */
   readonly currentTheme: ApplicableTheme

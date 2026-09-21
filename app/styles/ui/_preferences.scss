@@ -410,3 +410,201 @@
     width: 100px;
   }
 }
+
+// Settings > Appearance > App Icon
+#preferences .app-icon-section {
+  margin-top: var(--spacing-double);
+  margin-bottom: var(--spacing-double);
+
+  h2 {
+    margin-bottom: var(--spacing);
+  }
+}
+
+.app-icon-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing);
+
+  .app-icon-group-label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-secondary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  // Three across fits the Appearance tab at the dialog's default width
+  .app-icon-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--spacing);
+  }
+
+  .app-icon-card {
+    position: relative;
+    border: var(--base-border);
+    border-radius: var(--border-radius);
+    background: var(--box-alt-background-color);
+    min-height: 108px;
+
+    &.selected {
+      border-color: var(--box-selected-active-background-color);
+      box-shadow: inset 0 0 0 1px var(--box-selected-active-background-color);
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--spacing);
+      padding: var(--spacing) var(--spacing-half);
+      cursor: pointer;
+    }
+
+    img {
+      width: 56px;
+      height: 56px;
+      display: block;
+    }
+
+    .app-icon-name {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-half);
+      font-size: var(--font-size);
+
+      input {
+        margin: 0;
+      }
+    }
+
+    .app-icon-remove {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 20px;
+      height: 20px;
+      padding: 0;
+      border-radius: 10px;
+      border: var(--base-border);
+      background: var(--background-color);
+      color: var(--text-secondary-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+
+      &:hover {
+        color: var(--text-color);
+      }
+    }
+
+    &.app-icon-install {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-half);
+      border-style: dashed;
+      background: transparent;
+      color: var(--text-color);
+      font-family: inherit;
+      cursor: pointer;
+
+      .octicon {
+        color: var(--text-secondary-color);
+      }
+
+      .app-icon-hint {
+        font-size: var(--font-size-xs);
+        color: var(--text-secondary-color);
+      }
+
+      &:hover {
+        background: var(--box-alt-background-color);
+      }
+    }
+  }
+
+  // A mock Dock right under the description, showing the selected icon
+  .app-icon-dock {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    width: fit-content;
+    padding: 6px 10px;
+    margin-top: var(--spacing-double);
+    margin-bottom: var(--spacing-half);
+    border-radius: 14px;
+    background: rgba(127, 127, 127, 0.18);
+    border: 1px solid rgba(127, 127, 127, 0.3);
+
+    .dock-tile {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--text-secondary-color);
+      opacity: 0.35;
+    }
+
+    .dock-app {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      // Room for the running-app dot below the icon
+      padding-bottom: 6px;
+      margin-bottom: -6px;
+
+      img {
+        width: 40px;
+        height: 40px;
+        display: block;
+      }
+
+      .dock-running-dot {
+        position: absolute;
+        bottom: 0;
+        width: 4px;
+        height: 4px;
+        border-radius: 2px;
+        background: var(--text-color);
+        opacity: 0.8;
+      }
+
+      // The name bubble macOS shows when hovering a Dock icon
+      .dock-tooltip {
+        position: absolute;
+        bottom: calc(100% + 10px);
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 5px 12px;
+        border-radius: 8px;
+        background: rgba(40, 40, 44, 0.96);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: #ffffff;
+        font-size: var(--font-size);
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 120ms ease-in;
+        z-index: 1;
+
+        &::after {
+          content: '';
+          position: absolute;
+          top: 100%;
+          left: 50%;
+          transform: translateX(-50%);
+          border: 6px solid transparent;
+          border-top-color: rgba(40, 40, 44, 0.96);
+        }
+      }
+
+      &:hover .dock-tooltip {
+        opacity: 1;
+      }
+    }
+  }
+}

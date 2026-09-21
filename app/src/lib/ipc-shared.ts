@@ -137,4 +137,6 @@ export type RequestResponseChannels = {
   ) => Promise<string | null>
   'get-notifications-permission': () => Promise<DesktopNotificationPermission>
   'request-notifications-permission': () => Promise<boolean>
+  /** Use the PNG at the path as the app icon, or null for the built-in one */
+  'set-app-icon': (iconPath: string | null) => Promise<void>
 }

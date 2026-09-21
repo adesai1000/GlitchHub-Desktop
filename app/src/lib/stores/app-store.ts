@@ -386,6 +386,17 @@ import {
   setRepositoryExternalEditor,
 } from '../repository-editor'
 import {
+  defaultAppIconId,
+  getBuiltInAppIcons,
+  getInstalledAppIcons,
+  getSelectedAppIconId,
+  IAppIcon,
+  installAppIcon,
+  removeInstalledAppIcon,
+  setSelectedAppIconId,
+} from '../app-icons'
+import { getPath, setAppIcon } from '../../ui/main-process-proxy'
+import {
   discoverRepositoryScripts,
   getRepositoryScriptsConfig,
   getScriptRunCommand,
@@ -730,6 +741,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
   private selectedBranchesTab = BranchesTab.Branches
   private selectedTheme = ApplicationTheme.System
+  private selectedAppIconId = defaultAppIconId
+  private installedAppIcons: ReadonlyArray<IAppIcon> = []
   private currentTheme: ApplicableTheme = ApplicationTheme.Light
   private selectedTabSize = tabSizeDefault
   private selectedTextSize = textSizeDefault
@@ -1371,6 +1384,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
       selectedCloneRepositoryTab: this.selectedCloneRepositoryTab,
       selectedBranchesTab: this.selectedBranchesTab,
       selectedTheme: this.selectedTheme,
+      selectedAppIconId: this.selectedAppIconId,
+      installedAppIcons: this.installedAppIcons,
       currentTheme: this.currentTheme,
       selectedTabSize: this.selectedTabSize,
       selectedTextSize: this.selectedTextSize,
@@ -2626,6 +2641,13 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.expandWholeFileByDefault = getExpandWholeFileByDefault()
 
     this.selectedTheme = getPersistedThemeName()
+
+    this.installedAppIcons = getInstalledAppIcons()
+    this.selectedAppIconId = getSelectedAppIconId()
+    // The Finder icon persists on its own but the Dock tile is per launch
+    this.applySelectedAppIcon().catch(e =>
+      log.warn('Unable to apply the selected app icon', e)
+    )
     // Make sure the persisted theme is applied
     setPersistedTheme(this.selectedTheme)
 
@@ -8941,6 +8963,65 @@ export class AppStore extends TypedBaseStore<IAppState> {
   /**
    * Set the application-wide theme
    */
+  private getAppIcon(id: string): IAppIcon | undefined {
+    return [...getBuiltInAppIcons(__dirname), ...this.installedAppIcons].find(
+      icon => icon.id === id
+    )
+  }
+
+  private async applySelectedAppIcon() {
+    if (!__DARWIN__) {
+      return
+    }
+    const icon = this.getAppIcon(this.selectedAppIconId)
+    if (icon === undefined) {
+      // The icon was removed from disk; fall back to the default
+      this.selectedAppIconId = defaultAppIconId
+      setSelectedAppIconId(defaultAppIconId)
+    }
+    await setAppIcon(
+      icon === undefined || icon.id === defaultAppIconId ? null : icon.path
+    )
+  }
+
+  /** Use the app icon with the given id for the Dock and the bundle */
+  public async _setSelectedAppIcon(id: string): Promise<void> {
+    if (id === this.selectedAppIconId) {
+      return
+    }
+    this.selectedAppIconId = id
+    setSelectedAppIconId(id)
+    this.emitUpdate()
+    try {
+      await this.applySelectedAppIcon()
+    } catch (e) {
+      this.emitError(e)
+    }
+  }
+
+  /** Copies an icon file into the profile and selects it */
+  public async _installAppIcon(sourcePath: string): Promise<void> {
+    try {
+      const userData = await getPath('userData')
+      const icon = await installAppIcon(sourcePath, userData)
+      this.installedAppIcons = getInstalledAppIcons()
+      this.emitUpdate()
+      await this._setSelectedAppIcon(icon.id)
+    } catch (e) {
+      this.emitError(e)
+    }
+  }
+
+  /** Removes an installed icon, reverting to the default if it was in use */
+  public async _removeAppIcon(id: string): Promise<void> {
+    await removeInstalledAppIcon(id)
+    this.installedAppIcons = getInstalledAppIcons()
+    this.emitUpdate()
+    if (this.selectedAppIconId === id) {
+      await this._setSelectedAppIcon(defaultAppIconId)
+    }
+  }
+
   public _setSelectedTheme(theme: ApplicationTheme) {
     setPersistedTheme(theme)
     this.selectedTheme = theme

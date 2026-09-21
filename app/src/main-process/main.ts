@@ -1,4 +1,5 @@
 import '../lib/logging/main/install'
+import { setAppIcon } from './app-icon'
 
 import {
   app,
@@ -606,6 +607,9 @@ app.on('ready', () => {
    * An event sent by the renderer asking for the app's architecture
    */
   ipcMain.handle('get-path', async (_, path) => app.getPath(path))
+
+  /** The renderer asking to change the Dock and Finder icon of the app */
+  ipcMain.handle('set-app-icon', (_, iconPath) => setAppIcon(iconPath))
 
   /**
    * An event sent by the renderer asking for the app's architecture

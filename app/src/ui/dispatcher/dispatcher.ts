@@ -2711,6 +2711,21 @@ export class Dispatcher {
     return this.appStore._setSelectedTheme(theme)
   }
 
+  /** Use the app icon with the given id (built-in or installed) */
+  public setSelectedAppIcon(id: string) {
+    return this.appStore._setSelectedAppIcon(id)
+  }
+
+  /** Install a .png or .icns file as an app icon and select it */
+  public installAppIcon(sourcePath: string) {
+    return this.appStore._installAppIcon(sourcePath)
+  }
+
+  /** Remove an installed app icon */
+  public removeAppIcon(id: string) {
+    return this.appStore._removeAppIcon(id)
+  }
+
   /**
    * Set the application-wide tab size
    */
