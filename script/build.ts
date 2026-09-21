@@ -158,6 +158,7 @@ function packageApp() {
 
   // get notarization deets, unless we're not going to publish this
   const osxNotarize = isPublishableBuild ? getNotarizationOptions() : undefined
+  const adHocSign = isDevelopmentBuild || osxNotarize === undefined
 
   if (
     isPublishableBuild &&
@@ -218,8 +219,12 @@ function packageApp() {
       // will sign the app to run locally. We need to disable 'identity-validation'
       // or otherwise it will replace '-' with one of the regular codesigning
       // identities in our system.
-      identity: isDevelopmentBuild ? '-' : undefined,
-      identityValidation: !isDevelopmentBuild,
+      //
+      // GlitchHub Desktop releases are built without an Apple developer
+      // certificate, so they're signed ad-hoc too unless notarization
+      // credentials (and therefore a real identity) are available.
+      identity: adHocSign ? '-' : undefined,
+      identityValidation: !adHocSign,
     },
     osxNotarize,
     protocols: [
