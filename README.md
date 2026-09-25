@@ -1,8 +1,6 @@
 # GlitchHub Desktop
 
-GitHub doesn't deliver the open source features people ask for, so this is my
-own fork of [GitHub Desktop](https://github.com/desktop/desktop) with the
-features I want, so in classic Larry David fashion, I'm doing a spite fork and adding the features the community has been asking for.
+GitHub doesn't deliver the open source features people ask for, so in classic Larry David fashion, I'm doing a spite fork and adding the features the community has been asking for.
 
 It is the same [Electron](https://www.electronjs.org/) app, written in
 [TypeScript](https://www.typescriptlang.org) with [React](https://reactjs.org/),
