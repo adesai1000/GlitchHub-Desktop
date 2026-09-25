@@ -19,8 +19,10 @@ GlitchHub Desktop into Applications.
 The build is not signed with an Apple developer certificate yet, so the first
 time you open it macOS will say it can't be verified. Right-click the app,
 choose **Open**, then **Open** again in the dialog. You only have to do that
-once. Your repositories and sign-in from GitHub Desktop are not shared with it;
-it keeps its own profile folder.
+once. Your repository list and settings from GitHub Desktop are not shared
+with it; it keeps its own profile folder. The sign-in token is shared, though,
+see [Troubleshooting](#troubleshooting) if an organization's repositories
+stop working.
 
 If you like it, a star on the repo helps other people find it.
 
@@ -126,6 +128,60 @@ and the Finder. _Glitch_ is the default and _Boring_ is the vanilla GitHub
 Desktop icon. **Install Icon…** takes any `.icns` or 1024 px PNG and keeps it
 in your profile, so icons can be shared as plain files. Changes apply right
 away; picking Glitch again clears the custom icon. macOS only for now.
+
+## Troubleshooting
+
+### "The repository does not seem to exist anymore"
+
+If fetching or pushing a repository that belongs to an organization fails with
+this message while the same commands work in a terminal, the organization has
+turned on *OAuth App access restrictions* and hasn't approved the OAuth app
+that GlitchHub Desktop signs in through. GitHub answers every request from an
+unapproved app with a 404, which the app renders as this message. The
+terminal works because `gh`, SSH keys and personal access tokens aren't OAuth
+apps.
+
+GlitchHub Desktop signs in through the **GitHub Desktop Dev** OAuth app, not
+the production **GitHub Desktop** app, so an organization that has approved
+the official app still has to approve this one. There are two ways to fix it.
+
+**Ask the organization to approve the app.** On github.com, go to
+**Settings > Applications > Authorized OAuth Apps > GitHub Desktop Dev**. Under
+**Organization access**, click **Grant** if you own the organization, or
+**Request** and have an owner approve it under the organization's
+**Settings > Third-party access**. This is a one-time fix and it survives
+signing out and back in.
+
+**Use a personal access token instead.** Classic tokens aren't subject to the
+restriction. Do this if you can't get the app approved:
+
+1. On github.com, go to **Settings > Developer settings > Personal access
+   tokens > Tokens (classic)** and generate a token with the `repo`, `user`
+   and `workflow` scopes. Use a classic token; fine-grained tokens don't
+   report their scopes back to the app.
+2. If the organization enforces SAML single sign-on, click **Configure SSO**
+   next to the new token and authorize it for the organization.
+3. Sign in to GlitchHub Desktop as usual so the account exists, then quit
+   the app.
+4. Replace the stored token in the keychain. Replace `LOGIN` with your GitHub
+   username and `TOKEN` with the token:
+
+   ```shellsession
+   $ security add-generic-password -U -s "GitHub - https://api.github.com" -a LOGIN -w "TOKEN"
+   ```
+
+5. Start the app. macOS asks whether GlitchHub Desktop may read the keychain
+   item; click **Always Allow**.
+
+Two things to know about the token route. The app keeps that keychain item
+under the same name as the official GitHub Desktop, so both apps now use the
+token; that's fine, it works for both. And signing out and back in writes a
+fresh OAuth token over it, so repeat step 4 afterwards.
+
+If the message appears for one repository only and a token doesn't help,
+check its remote: **Repository > Repository settings > Remote**, or
+`git remote -v` in a terminal. A URL with no owner and name, such as
+`https://github.com/`, produces the same message.
 
 ## Building it
 
