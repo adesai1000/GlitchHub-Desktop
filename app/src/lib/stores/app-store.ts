@@ -4955,10 +4955,13 @@ export class AppStore extends TypedBaseStore<IAppState> {
    * @param repository
    * @param showConfirmationDialog  Whether to show a confirmation
    *                                dialog if an existing stash exists.
+   * @param filesToStash  The files to stash. When omitted, all changes
+   *                      in the working directory are stashed.
    */
   public async _createStashForCurrentBranch(
     repository: Repository,
-    showConfirmationDialog: boolean
+    showConfirmationDialog: boolean,
+    filesToStash?: ReadonlyArray<WorkingDirectoryFileChange>
   ): Promise<boolean> {
     const repositoryState = this.repositoryStateCache.get(repository)
     const tip = repositoryState.branchesState.tip
@@ -4974,11 +4977,18 @@ export class AppStore extends TypedBaseStore<IAppState> {
         type: PopupType.ConfirmOverwriteStash,
         branchToCheckout: null,
         repository,
+        filesToStash,
       })
       return false
     }
 
-    if (await this.createStashAndDropPreviousEntry(repository, currentBranch)) {
+    if (
+      await this.createStashAndDropPreviousEntry(
+        repository,
+        currentBranch,
+        filesToStash
+      )
+    ) {
       this.statsStore.increment('stashCreatedOnCurrentBranchCount')
       await this._refreshRepository(repository)
       return true
@@ -9287,13 +9297,14 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
   private async createStashAndDropPreviousEntry(
     repository: Repository,
-    branch: Branch
+    branch: Branch,
+    filesToStash?: ReadonlyArray<WorkingDirectoryFileChange>
   ) {
     const entry = await getLastDesktopStashEntryForBranch(repository, branch)
     const gitStore = this.gitStoreCache.get(repository)
 
     const createdStash = await gitStore.performFailableOperation(() =>
-      this.createStashEntry(repository, branch)
+      this.createStashEntry(repository, branch, filesToStash)
     )
 
     if (createdStash === true && entry !== null) {
@@ -9307,12 +9318,25 @@ export class AppStore extends TypedBaseStore<IAppState> {
     return createdStash === true
   }
 
-  private async createStashEntry(repository: Repository, branch: Branch) {
-    const { changesState } = this.repositoryStateCache.get(repository)
-    const { workingDirectory } = changesState
-    const untrackedFiles = getUntrackedFiles(workingDirectory)
+  private async createStashEntry(
+    repository: Repository,
+    branch: Branch,
+    filesToStash?: ReadonlyArray<WorkingDirectoryFileChange>
+  ) {
+    if (filesToStash === undefined) {
+      const { changesState } = this.repositoryStateCache.get(repository)
+      const { workingDirectory } = changesState
+      const untrackedFiles = getUntrackedFiles(workingDirectory)
 
-    return createDesktopStashEntry(repository, branch, untrackedFiles)
+      return createDesktopStashEntry(repository, branch, untrackedFiles)
+    }
+
+    const untrackedFiles = filesToStash.filter(
+      f => f.status.kind === AppFileStatusKind.Untracked
+    )
+    const paths = filesToStash.map(f => f.path)
+
+    return createDesktopStashEntry(repository, branch, untrackedFiles, paths)
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */

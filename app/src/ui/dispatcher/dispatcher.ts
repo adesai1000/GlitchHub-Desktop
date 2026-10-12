@@ -2897,14 +2897,18 @@ export class Dispatcher {
    * @param repository
    * @param showConfirmationDialog  Whether to show a confirmation dialog if an
    *                                existing stash exists (defaults to true).
+   * @param filesToStash  The files to stash. When omitted, all changes in the
+   *                      working directory are stashed.
    */
   public createStashForCurrentBranch(
     repository: Repository,
-    showConfirmationDialog: boolean = true
+    showConfirmationDialog: boolean = true,
+    filesToStash?: ReadonlyArray<WorkingDirectoryFileChange>
   ) {
     return this.appStore._createStashForCurrentBranch(
       repository,
-      showConfirmationDialog
+      showConfirmationDialog,
+      filesToStash
     )
   }
 

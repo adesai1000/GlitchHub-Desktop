@@ -285,6 +285,8 @@ export type PopupDetail =
       type: PopupType.ConfirmOverwriteStash
       repository: Repository
       branchToCheckout: Branch | null
+      /** The files to stash. When omitted, all changes are stashed. */
+      filesToStash?: ReadonlyArray<WorkingDirectoryFileChange>
     }
   | {
       type: PopupType.ConfirmDiscardStash

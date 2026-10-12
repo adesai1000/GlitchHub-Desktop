@@ -6,11 +6,14 @@ import { Dispatcher } from '../dispatcher'
 import { Row } from '../lib/row'
 import { OkCancelButtonGroup } from '../dialog/ok-cancel-button-group'
 import { UncommittedChangesStrategy } from '../../models/uncommitted-changes-strategy'
+import { WorkingDirectoryFileChange } from '../../models/status'
 
 interface IOverwriteStashProps {
   readonly dispatcher: Dispatcher
   readonly repository: Repository
   readonly branchToCheckout: Branch | null
+  /** The files to stash. When omitted, all changes are stashed. */
+  readonly filesToStash?: ReadonlyArray<WorkingDirectoryFileChange>
   readonly onDismissed: () => void
 }
 
@@ -48,7 +51,9 @@ export class OverwriteStash extends React.Component<
         <DialogContent>
           <Row id="overwrite-stash-warning-message">
             Are you sure you want to proceed? This will overwrite your existing
-            stash with your current changes.
+            stash with your{' '}
+            {this.props.filesToStash === undefined ? 'current' : 'selected'}{' '}
+            changes.
           </Row>
         </DialogContent>
         <DialogFooter>
@@ -59,7 +64,13 @@ export class OverwriteStash extends React.Component<
   }
 
   private onSubmit = async () => {
-    const { dispatcher, repository, branchToCheckout, onDismissed } = this.props
+    const {
+      dispatcher,
+      repository,
+      branchToCheckout,
+      filesToStash,
+      onDismissed,
+    } = this.props
     this.setState({ isLoading: true })
 
     try {
@@ -67,7 +78,11 @@ export class OverwriteStash extends React.Component<
         const strategy = UncommittedChangesStrategy.StashOnCurrentBranch
         await dispatcher.checkoutBranch(repository, branchToCheckout, strategy)
       } else {
-        await dispatcher.createStashForCurrentBranch(repository, false)
+        await dispatcher.createStashForCurrentBranch(
+          repository,
+          false,
+          filesToStash
+        )
       }
     } finally {
       this.setState({ isLoading: false })

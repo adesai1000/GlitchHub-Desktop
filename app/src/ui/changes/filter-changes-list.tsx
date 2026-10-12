@@ -578,6 +578,45 @@ export class FilterChangesList extends React.Component<
     }
   }
 
+  private getStashSelectedChangesMenuItem = (
+    files: ReadonlyArray<WorkingDirectoryFileChange>
+  ): IMenuItem => {
+    const { repository, branch, stashEntry, conflictState, workingDirectory } =
+      this.props
+
+    const label =
+      files.length === 1
+        ? __DARWIN__
+          ? 'Stash Changes'
+          : 'Stash changes'
+        : __DARWIN__
+        ? `Stash ${files.length} Selected Changes`
+        : `Stash ${files.length} selected changes`
+
+    const hasConflicts =
+      conflictState !== null || hasConflictedFiles(workingDirectory)
+
+    // Git can't stash the old path of a staged rename on its own, so stashing
+    // only the new path splits the rename and the stash conflicts when restored
+    const hasRenames = files.some(
+      f => f.status.kind === AppFileStatusKind.Renamed
+    )
+
+    return {
+      // Stashing overwrites the branch's existing stash, which asks for
+      // confirmation first
+      label: stashEntry !== null ? `${label}…` : label,
+      action: () =>
+        this.props.dispatcher.createStashForCurrentBranch(
+          repository,
+          true,
+          files
+        ),
+      enabled:
+        files.length > 0 && branch !== null && !hasConflicts && !hasRenames,
+    }
+  }
+
   private getCopyPathMenuItem = (
     file: WorkingDirectoryFileChange
   ): IMenuItem => {
@@ -693,6 +732,7 @@ export class FilterChangesList extends React.Component<
 
     const items: IMenuItem[] = [
       this.getDiscardChangesMenuItem(paths),
+      this.getStashSelectedChangesMenuItem(selectedFiles),
       { type: 'separator' },
     ]
     if (paths.length === 1) {

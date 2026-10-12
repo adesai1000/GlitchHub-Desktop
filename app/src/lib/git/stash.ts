@@ -139,11 +139,15 @@ export function createDesktopStashMessage(branchName: string) {
 
 /**
  * Stash the working directory changes for the current branch
+ *
+ * @param paths When provided, only the changes to these paths are stashed.
+ *              Otherwise all working directory changes are stashed.
  */
 export async function createDesktopStashEntry(
   repository: Repository,
   branch: Branch | string,
-  untrackedFilesToStage: ReadonlyArray<WorkingDirectoryFileChange>
+  untrackedFilesToStage: ReadonlyArray<WorkingDirectoryFileChange>,
+  paths?: ReadonlyArray<string>
 ): Promise<boolean> {
   // We must ensure that no untracked files are present before stashing
   // See https://github.com/desktop/desktop/pull/8085
@@ -156,47 +160,61 @@ export async function createDesktopStashEntry(
 
   const branchName = typeof branch === 'string' ? branch : branch.name
   const message = createDesktopStashMessage(branchName)
-  const args = ['stash', 'push', '-m', message]
+  // Paths are passed through stdin to avoid command line length limits, and
+  // are matched literally so that names like `[id].tsx` aren't treated as globs
+  const args =
+    paths === undefined
+      ? ['stash', 'push', '-m', message]
+      : [
+          '--literal-pathspecs',
+          'stash',
+          'push',
+          '-m',
+          message,
+          '--pathspec-from-file=-',
+          '--pathspec-file-nul',
+        ]
+  const stdin = paths?.join('\0')
 
-  const result = await git(args, repository.path, 'createStashEntry').catch(
-    e => {
-      // Note: 2024: Here be dragons. As I converted this code to get rid of the
-      // successExitCode use I got curious about the assumptions made in the
-      // following logic. It assumes that as long as the exit code for `git
-      // stash push` is 1 and there are no lines beginning with "error: " then
-      // a stash was created. That didn't hold up to a quick read of the stash
-      // code. For example, running git stash push in an unborn repository will
-      // get you an exit code of 1 but no stash was created:
-      //
-      // % git stash push -m foo ; echo $?
-      // You do not have the initial commit yet
-      // 1
-      //
-      // I'm not going to mess with this now but I felt the need to document
-      // my findings should I or any other brave soul choose to tackle this in
-      // the future.
-      if (e instanceof GitError && e.result.exitCode === 1) {
-        // search for any line starting with `error:` -  /m here to ensure this is
-        // applied to each line, without needing to split the text
-        const errorPrefixRe = /^error: /m
+  const result = await git(args, repository.path, 'createStashEntry', {
+    stdin,
+  }).catch(e => {
+    // Note: 2024: Here be dragons. As I converted this code to get rid of the
+    // successExitCode use I got curious about the assumptions made in the
+    // following logic. It assumes that as long as the exit code for `git
+    // stash push` is 1 and there are no lines beginning with "error: " then
+    // a stash was created. That didn't hold up to a quick read of the stash
+    // code. For example, running git stash push in an unborn repository will
+    // get you an exit code of 1 but no stash was created:
+    //
+    // % git stash push -m foo ; echo $?
+    // You do not have the initial commit yet
+    // 1
+    //
+    // I'm not going to mess with this now but I felt the need to document
+    // my findings should I or any other brave soul choose to tackle this in
+    // the future.
+    if (e instanceof GitError && e.result.exitCode === 1) {
+      // search for any line starting with `error:` -  /m here to ensure this is
+      // applied to each line, without needing to split the text
+      const errorPrefixRe = /^error: /m
 
-        const matches = errorPrefixRe.exec(coerceToString(e.result.stderr))
-        if (matches !== null && matches.length > 0) {
-          // rethrow, because these messages should prevent the stash from being created
-          return Promise.reject(e)
-        }
-
-        // if no error messages were emitted by Git, we should log but continue because
-        // a valid stash was created and this should not interfere with the checkout
-
-        log.info(
-          `[createDesktopStashEntry] a stash was created successfully but exit code ${result.exitCode} reported. stderr: ${result.stderr}`
-        )
-        return e.result
+      const matches = errorPrefixRe.exec(coerceToString(e.result.stderr))
+      if (matches !== null && matches.length > 0) {
+        // rethrow, because these messages should prevent the stash from being created
+        return Promise.reject(e)
       }
-      return Promise.reject(e)
+
+      // if no error messages were emitted by Git, we should log but continue because
+      // a valid stash was created and this should not interfere with the checkout
+
+      log.info(
+        `[createDesktopStashEntry] a stash was created successfully but exit code ${result.exitCode} reported. stderr: ${result.stderr}`
+      )
+      return e.result
     }
-  )
+    return Promise.reject(e)
+  })
 
   // Stash doesn't consider it an error that there aren't any local changes to save.
   if (result.stdout === 'No local changes to save\n') {

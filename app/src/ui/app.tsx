@@ -2246,13 +2246,14 @@ export class App extends React.Component<IAppProps, IAppState> {
         )
       }
       case PopupType.ConfirmOverwriteStash: {
-        const { repository, branchToCheckout: branchToCheckout } = popup
+        const { repository, branchToCheckout, filesToStash } = popup
         return (
           <OverwriteStash
             key="overwrite-stash"
             dispatcher={this.props.dispatcher}
             repository={repository}
             branchToCheckout={branchToCheckout}
+            filesToStash={filesToStash}
             onDismissed={onPopupDismissedFn}
           />
         )

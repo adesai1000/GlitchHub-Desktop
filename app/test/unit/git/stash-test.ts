@@ -102,6 +102,36 @@ describe('git/stash', () => {
 
       assert.equal(files.length, 0)
     })
+
+    it('stashes only the given paths and leaves other changes in place', async t => {
+      const repository = await setup(t)
+      await writeFile(join(repository.path, '[id].tsx'), '')
+      await writeFile(join(repository.path, 'i.tsx'), '')
+      await exec(['add', '.'], repository.path)
+      await exec(['commit', '-m', 'add files'], repository.path)
+
+      await appendFile(join(repository.path, 'README.md'), 'changed')
+      await appendFile(join(repository.path, '[id].tsx'), 'changed')
+      await appendFile(join(repository.path, 'i.tsx'), 'changed')
+      await writeFile(join(repository.path, 'not-tracked.txt'), 'untracked')
+
+      let status = await getStatusOrThrow(repository)
+      const untrackedFiles = status.workingDirectory.files.filter(
+        f => f.status.kind === AppFileStatusKind.Untracked
+      )
+
+      await createDesktopStashEntry(repository, 'master', untrackedFiles, [
+        '[id].tsx',
+        'not-tracked.txt',
+      ])
+
+      status = await getStatusOrThrow(repository)
+      const remaining = status.workingDirectory.files.map(f => f.path).sort()
+
+      // `[id].tsx` must match literally rather than as a glob matching `i.tsx`
+      assert.deepEqual(remaining, ['README.md', 'i.tsx'])
+      assert.equal((await getStashes(repository)).desktopEntries.length, 1)
+    })
   })
 
   describe('getLastDesktopStashEntryForBranch', () => {
