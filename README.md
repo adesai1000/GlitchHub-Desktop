@@ -22,6 +22,23 @@ with it; it keeps its own profile folder. The sign-in token is shared, though,
 see [Troubleshooting](#troubleshooting) if an organization's repositories
 stop working.
 
+### Updating
+
+The app doesn't update itself. To install a newer release:
+
+1. Quit GlitchHub Desktop.
+2. Download the zip for the new release from the
+   [releases page](https://github.com/adesai1000/GlitchHub-Desktop/releases/latest)
+   and unzip it.
+3. Drag the new GlitchHub Desktop into Applications and choose **Replace**.
+4. Right-click the app, choose **Open**, then **Open** again. Each downloaded
+   build has to be approved once.
+
+Your repositories, settings and sign-in live in the profile folder, not in the
+app, so they carry over. If macOS asks whether GlitchHub Desktop may use the
+keychain, click **Always Allow**; every build has a new signature, so the
+question comes back after an update.
+
 If you like it, a star on the repo helps other people find it.
 
 ## What's different
@@ -37,6 +54,7 @@ If you like it, a star on the repo helps other people find it.
 | Pin branches | Right-click a branch → Pin Branch | [#15767](https://github.com/desktop/desktop/issues/15767) |
 | Search tags | Branch dropdown → Tags tab | [#15702](https://github.com/desktop/desktop/issues/15702) |
 | Reorder the repository list | Right-click a repository → Move Up / Move Down | [#11608](https://github.com/desktop/desktop/issues/11608) |
+| Stash selected files | Right-click files in Changes → Stash Changes | [#11531](https://github.com/desktop/desktop/issues/11531) |
 | Resizable Run script button | Drag its right edge, double-click to reset | |
 | Choose or install your own app icon (macOS) | Settings → Appearance → App Icon | |
 | No telemetry, no crash reports, no update pings | Always on | |
@@ -103,6 +121,12 @@ branch, worktree and fetch buttons are.
 - **Reorder the repository list** ([#11608](https://github.com/desktop/desktop/issues/11608)):
   right-click a repository and choose _Move Up_ or _Move Down_. The order is
   remembered per group.
+- **Stash selected files** ([#11531](https://github.com/desktop/desktop/issues/11531)):
+  right-click a file in the Changes list, or a selection of files, and choose
+  _Stash Changes_. Only those files are stashed; everything else stays in the
+  working directory. Untracked files are included. Like _Stash All Changes_,
+  it replaces the branch's existing stash after asking. It's unavailable while
+  the selection includes a staged rename.
 
 ### Nothing phones home
 
