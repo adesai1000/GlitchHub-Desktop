@@ -1,0 +1,260 @@
+// The same width as the other toolbar buttons
+#desktop-app-toolbar .toolbar-button.claude-code-button {
+  width: 230px;
+}
+
+// The repository view, with the Claude Code panel to its right
+#claude-code-layout {
+  display: flex;
+  flex-direction: row;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+
+  // Whatever the main view is, it takes the room the panel leaves
+  > :first-child {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
+$claude-code-header-height: 34px;
+
+#claude-code-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  min-width: 0;
+  border-top: var(--base-border);
+  border-left: var(--base-border);
+  background: var(--background-color);
+
+  .claude-code-resize-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -3px;
+    z-index: 10;
+    width: 6px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: col-resize;
+  }
+
+  .claude-code-header {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: var(--spacing-half);
+    height: $claude-code-header-height;
+    padding: 0 var(--spacing-half) 0 var(--spacing);
+    border-bottom: var(--base-border);
+    background: var(--box-alt-background-color);
+
+    .claude-code-icon {
+      flex-shrink: 0;
+      color: #d97757;
+    }
+
+    .claude-code-tabs {
+      display: flex;
+      flex: 1 1 auto;
+      align-self: stretch;
+      min-width: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .claude-code-tab {
+      display: flex;
+      flex-shrink: 0;
+      align-items: center;
+      gap: var(--spacing-half);
+      max-width: 200px;
+      padding: 0 var(--spacing-third) 0 var(--spacing-half);
+      border-right: var(--base-border);
+      color: var(--text-secondary-color);
+      cursor: pointer;
+      user-select: none;
+
+      &:first-child {
+        border-left: var(--base-border);
+      }
+
+      &:hover {
+        background: var(--box-hover-background-color);
+
+        .claude-code-tab-close {
+          visibility: visible;
+        }
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--focus-color);
+        outline-offset: -2px;
+      }
+
+      &.active {
+        background: var(--background-color);
+        box-shadow: inset 0 2px 0 #d97757;
+        color: var(--text-color);
+
+        .claude-code-tab-close {
+          visibility: visible;
+        }
+      }
+    }
+
+    .claude-code-tab-status {
+      flex-shrink: 0;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-secondary-color);
+      opacity: 0.5;
+
+      &.running {
+        background: #d97757;
+        opacity: 1;
+      }
+    }
+
+    .claude-code-tab-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .claude-code-tab-close {
+      display: flex;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border: none;
+      border-radius: var(--border-radius);
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      visibility: hidden;
+
+      &:hover {
+        background: var(--box-hover-background-color);
+        color: var(--text-color);
+      }
+    }
+
+    .claude-code-header-button {
+      flex-shrink: 0;
+      height: auto;
+      padding: var(--spacing-third) var(--spacing-half);
+      border: none;
+      background: transparent;
+      box-shadow: none;
+      color: var(--text-secondary-color);
+
+      &:hover {
+        background: var(--box-hover-background-color);
+        color: var(--text-color);
+      }
+    }
+  }
+
+  // Asks for a restart after the Claude Code settings change
+  .claude-code-notice {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: var(--spacing);
+    padding: var(--spacing-half) var(--spacing);
+    border-bottom: var(--base-border);
+    background: var(--box-alt-background-color);
+    font-size: var(--font-size-sm);
+
+    span {
+      flex: 1 1 auto;
+    }
+  }
+
+  .claude-code-terminal {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: var(--spacing-half) 0 0 var(--spacing-half);
+    overflow: hidden;
+
+    .claude-code-terminal-element,
+    .xterm {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  // Covers the terminal with a message when Claude Code can't run
+  .claude-code-status {
+    position: absolute;
+    top: $claude-code-header-height;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing);
+    padding: var(--spacing-double);
+    background: var(--background-color);
+    text-align: center;
+
+    p {
+      max-width: 360px;
+      margin: 0;
+    }
+
+    .claude-code-status-actions {
+      display: flex;
+      gap: var(--spacing-half);
+    }
+
+    // After an exit the output stays readable, with a bar along the bottom
+    &.exited {
+      top: auto;
+      flex-direction: row;
+      justify-content: space-between;
+      padding: var(--spacing-half) var(--spacing);
+      border-top: var(--base-border);
+      background: var(--box-alt-background-color);
+    }
+  }
+}
+
+.claude-code-preferences {
+  .claude-code-preferences-group {
+    margin-top: var(--spacing);
+  }
+
+  .claude-code-preferences-path,
+  .claude-code-preferences-hint {
+    margin: var(--spacing-half) 0 0;
+    color: var(--text-secondary-color);
+    font-size: var(--font-size-sm);
+  }
+
+  // Paths have no spaces to wrap at
+  .claude-code-preferences-path {
+    word-break: break-all;
+  }
+
+  .claude-code-preferences-custom {
+    display: flex;
+    gap: var(--spacing-half);
+    margin-top: var(--spacing-half);
+
+    .text-box-component {
+      flex: 1 1 auto;
+    }
+  }
+}

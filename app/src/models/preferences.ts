@@ -4,6 +4,7 @@ export enum PreferencesTab {
   Copilot,
   Git,
   Scripts,
+  ClaudeCode,
   Appearance,
   Notifications,
   Prompts,

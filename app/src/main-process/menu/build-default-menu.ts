@@ -236,6 +236,12 @@ export function buildDefaultMenuTemplate({
         click: emit('toggle-changes-filter'),
       },
       {
+        label: __DARWIN__ ? 'Toggle Claude Code' : 'Toggle &Claude Code',
+        id: 'toggle-claude-code',
+        accelerator: 'CmdOrCtrl+Esc',
+        click: emit('toggle-claude-code'),
+      },
+      {
         label: __DARWIN__ ? 'Toggle Full Screen' : 'Toggle &full screen',
         role: 'togglefullscreen',
       },

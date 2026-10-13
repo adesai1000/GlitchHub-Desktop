@@ -235,6 +235,9 @@ import { RunScriptDropdown } from './toolbar/run-script-dropdown'
 import { ScriptOutputDialog } from './scripts/script-output-dialog'
 import { ConfirmRunScriptDialog } from './scripts/confirm-run-script-dialog'
 import { getScriptsToolbarButtonVisible } from '../lib/scripts/repository-scripts'
+import { ClaudeCodeToolbarButton } from './claude-code/claude-code-toolbar-button'
+import { ClaudeCodeLayout } from './claude-code/claude-code-layout'
+import { getClaudeCodeToolbarButtonVisible } from '../lib/claude-code/claude-code-settings'
 
 const MinuteInMilliseconds = 1000 * 60
 const HourInMilliseconds = MinuteInMilliseconds * 60
@@ -286,6 +289,7 @@ export class App extends React.Component<IAppProps, IAppState> {
   private updateIntervalHandle?: number
 
   private repositoryViewRef = React.createRef<RepositoryView>()
+  private claudeCodeLayoutRef = React.createRef<ClaudeCodeLayout>()
 
   /**
    * Gets a value indicating whether or not we're currently showing a
@@ -539,6 +543,8 @@ export class App extends React.Component<IAppProps, IAppState> {
         return this.showAbout()
       case 'go-to-commit-message':
         return this.goToCommitMessage()
+      case 'toggle-claude-code':
+        return this.toggleClaudeCode()
       case 'open-pull-request':
         return this.openPullRequest()
       case 'preview-pull-request':
@@ -3268,6 +3274,41 @@ export class App extends React.Component<IAppProps, IAppState> {
     this.props.dispatcher.refreshApiRepositories(account)
   }
 
+  private onShowClaudeCodePreferences = () => {
+    this.props.dispatcher.showPopup({
+      type: PopupType.Preferences,
+      initialSelectedTab: PreferencesTab.ClaudeCode,
+    })
+  }
+
+  private toggleClaudeCode = () => {
+    this.claudeCodeLayoutRef.current?.toggle()
+  }
+
+  /** The repository Claude Code runs in: the selected, non-missing one */
+  private getSelectedRepositoryForClaudeCode() {
+    const selection = this.state.selectedState
+    return selection?.type === SelectionType.Repository &&
+      !selection.repository.missing
+      ? selection.repository
+      : null
+  }
+
+  private renderClaudeCodeToolbarButton(): JSX.Element | null {
+    const repository = this.getSelectedRepositoryForClaudeCode()
+    if (!getClaudeCodeToolbarButtonVisible() || repository === null) {
+      return null
+    }
+
+    return (
+      <ClaudeCodeToolbarButton
+        key={`claude-code-${repository.hash}`}
+        repository={repository}
+        onClick={this.toggleClaudeCode}
+      />
+    )
+  }
+
   private onShowIntegrationsPreferences = () => {
     this.props.dispatcher.showPopup({
       type: PopupType.Preferences,
@@ -3412,7 +3453,13 @@ export class App extends React.Component<IAppProps, IAppState> {
       >
         {this.renderToolbar()}
         {this.renderBanner()}
-        {this.renderRepository()}
+        <ClaudeCodeLayout
+          ref={this.claudeCodeLayoutRef}
+          repository={this.getSelectedRepositoryForClaudeCode()}
+          onOpenSettings={this.onShowClaudeCodePreferences}
+        >
+          {this.renderRepository()}
+        </ClaudeCodeLayout>
         {this.renderPopups()}
         {this.renderDragElement()}
       </div>
@@ -4021,6 +4068,7 @@ export class App extends React.Component<IAppProps, IAppState> {
         {this.renderBranchToolbarButton()}
         {this.renderRunScriptToolbarButton()}
         {this.renderPushPullToolbarButton()}
+        {this.renderClaudeCodeToolbarButton()}
       </Toolbar>
     )
   }

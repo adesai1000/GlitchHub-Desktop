@@ -4,7 +4,10 @@ import webpack from 'webpack'
 import merge from 'webpack-merge'
 import { getReplacements } from './app-info'
 
-export const externals = ['7zip']
+// Externals are copied into the packaged app with their own node_modules
+// folder. node-pty must be: it launches a helper binary from beside its
+// native module.
+export const externals = ['7zip', 'node-pty']
 
 const outputDir = 'out'
 export const replacements = getReplacements()

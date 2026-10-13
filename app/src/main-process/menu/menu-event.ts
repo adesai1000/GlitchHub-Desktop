@@ -32,6 +32,7 @@ export type MenuEvent =
   | 'clone-repository'
   | 'show-about'
   | 'go-to-commit-message'
+  | 'toggle-claude-code'
   | 'open-pull-request'
   | 'install-darwin-cli'
   | 'install-windows-cli'

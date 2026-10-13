@@ -41,6 +41,7 @@ import {
 } from './dist-info'
 
 import {
+  chmodSync,
   cpSync,
   existsSync,
   mkdirSync,
@@ -339,6 +340,9 @@ function copyDependencies() {
   console.log('  Installing dependencies via yarn…')
   cp.execSync('yarn install', { cwd: outRoot, env: process.env })
 
+  console.log('  Making node-pty’s spawn helper executable…')
+  makeNodePtySpawnHelperExecutable(path.join(outRoot, 'node_modules'))
+
   console.log('  Copying desktop-askpass-trampoline…')
   const trampolineSource = path.resolve(
     projectRoot,
@@ -511,4 +515,24 @@ function getNotarizationOptions(): Options['osxNotarize'] {
   return appleId && appleIdPassword && teamId
     ? { appleId, appleIdPassword, teamId }
     : undefined
+}
+
+/**
+ * node-pty's published prebuilds lose the executable bit on its spawn helper,
+ * and without it every terminal fails to start with `posix_spawnp failed`.
+ */
+function makeNodePtySpawnHelperExecutable(nodeModules: string) {
+  const nodePty = path.join(nodeModules, 'node-pty')
+  const helpers = [
+    path.join(nodePty, 'build', 'Release', 'spawn-helper'),
+    ...['darwin-arm64', 'darwin-x64'].map(platform =>
+      path.join(nodePty, 'prebuilds', platform, 'spawn-helper')
+    ),
+  ]
+
+  for (const helper of helpers) {
+    if (existsSync(helper)) {
+      chmodSync(helper, 0o755)
+    }
+  }
 }

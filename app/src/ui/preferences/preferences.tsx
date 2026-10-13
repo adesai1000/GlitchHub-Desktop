@@ -42,6 +42,15 @@ import { Prompts } from './prompts'
 import { Repository } from '../../models/repository'
 import { CloningRepository } from '../../models/cloning-repository'
 import { Scripts } from './scripts'
+import { ClaudeCodePreferences } from './claude-code'
+import {
+  getClaudeCodeConfigDirectory,
+  getClaudeCodeExecutable,
+  getClaudeCodeToolbarButtonVisible,
+  setClaudeCodeConfigDirectory,
+  setClaudeCodeExecutable,
+  setClaudeCodeToolbarButtonVisible,
+} from '../../lib/claude-code/claude-code-settings'
 import {
   appIconFileExtensions,
   getBuiltInAppIcons,
@@ -211,6 +220,9 @@ interface IPreferencesState {
   readonly expandWholeFileByDefault: boolean
 
   readonly scriptsToolbarButtonVisible: boolean
+  readonly claudeCodeToolbarButtonVisible: boolean
+  readonly claudeCodeExecutable: string | null
+  readonly claudeCodeConfigDirectory: string | null
   readonly scriptsAlwaysConfirm: boolean
   readonly scriptsPreferredPackageManager: PackageManager | undefined
   /** The repository whose scripts are being edited in the Scripts tab */
@@ -309,6 +321,9 @@ export class Preferences extends React.Component<
       alwaysShowWorktreeList: this.props.alwaysShowWorktreeList,
       expandWholeFileByDefault: this.props.expandWholeFileByDefault,
       scriptsToolbarButtonVisible: getScriptsToolbarButtonVisible(),
+      claudeCodeToolbarButtonVisible: getClaudeCodeToolbarButtonVisible(),
+      claudeCodeExecutable: getClaudeCodeExecutable(),
+      claudeCodeConfigDirectory: getClaudeCodeConfigDirectory(),
       scriptsAlwaysConfirm: getAlwaysConfirmScripts(),
       scriptsPreferredPackageManager: getPreferredPackageManager(),
       scriptsRepository: initialScriptsRepository,
@@ -499,6 +514,10 @@ export class Preferences extends React.Component<
               <Octicon className="icon" symbol={octicons.play} />
               Scripts
             </span>
+            <span id={this.getTabId(PreferencesTab.ClaudeCode)}>
+              <Octicon className="icon" symbol={octicons.sparkle} />
+              Claude Code
+            </span>
             <span id={this.getTabId(PreferencesTab.Appearance)}>
               <Octicon className="icon" symbol={octicons.paintbrush} />
               Appearance
@@ -545,6 +564,9 @@ export class Preferences extends React.Component<
         break
       case PreferencesTab.Scripts:
         suffix = 'scripts'
+        break
+      case PreferencesTab.ClaudeCode:
+        suffix = 'claude-code'
         break
       case PreferencesTab.Appearance:
         suffix = 'appearance'
@@ -855,6 +877,21 @@ export class Preferences extends React.Component<
             scripts={this.state.scriptsForRepository}
             config={this.state.scriptsConfig}
             onConfigChanged={this.onScriptsConfigChanged}
+          />
+        )
+        break
+      }
+      case PreferencesTab.ClaudeCode: {
+        View = (
+          <ClaudeCodePreferences
+            toolbarButtonVisible={this.state.claudeCodeToolbarButtonVisible}
+            onToolbarButtonVisibleChanged={
+              this.onClaudeCodeToolbarButtonVisibleChanged
+            }
+            executable={this.state.claudeCodeExecutable}
+            onExecutableChanged={this.onClaudeCodeExecutableChanged}
+            configDirectory={this.state.claudeCodeConfigDirectory}
+            onConfigDirectoryChanged={this.onClaudeCodeConfigDirectoryChanged}
           />
         )
         break
@@ -1171,6 +1208,18 @@ export class Preferences extends React.Component<
       .sort((a, b) => a.name.localeCompare(b.name))
   }
 
+  private onClaudeCodeToolbarButtonVisibleChanged = (visible: boolean) => {
+    this.setState({ claudeCodeToolbarButtonVisible: visible })
+  }
+
+  private onClaudeCodeExecutableChanged = (executable: string | null) => {
+    this.setState({ claudeCodeExecutable: executable })
+  }
+
+  private onClaudeCodeConfigDirectoryChanged = (directory: string | null) => {
+    this.setState({ claudeCodeConfigDirectory: directory })
+  }
+
   private onScriptsToolbarButtonVisibleChanged = (visible: boolean) => {
     this.setState({ scriptsToolbarButtonVisible: visible })
   }
@@ -1380,6 +1429,9 @@ export class Preferences extends React.Component<
     setBranchSortOrder(this.state.branchSortOrder)
 
     setScriptsToolbarButtonVisible(this.state.scriptsToolbarButtonVisible)
+    setClaudeCodeToolbarButtonVisible(this.state.claudeCodeToolbarButtonVisible)
+    setClaudeCodeExecutable(this.state.claudeCodeExecutable)
+    setClaudeCodeConfigDirectory(this.state.claudeCodeConfigDirectory)
     setAlwaysConfirmScripts(this.state.scriptsAlwaysConfirm)
     setPreferredPackageManager(this.state.scriptsPreferredPackageManager)
     for (const [id, config] of this.state.scriptsDirtyConfigs) {
