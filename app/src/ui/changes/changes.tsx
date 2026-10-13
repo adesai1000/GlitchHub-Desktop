@@ -6,16 +6,33 @@ import {
   ImageDiffType,
   ITextDiff,
 } from '../../models/diff'
-import { WorkingDirectoryFileChange } from '../../models/status'
+import {
+  AppFileStatusKind,
+  WorkingDirectoryFileChange,
+} from '../../models/status'
 import { Repository } from '../../models/repository'
 import { Dispatcher } from '../dispatcher'
 import { SeamlessDiffSwitcher } from '../diff/seamless-diff-switcher'
 import { PopupType } from '../../models/popup'
+import { DiffTabs } from './diff-tabs'
 
 interface IChangesProps {
   readonly repository: Repository
   readonly file: WorkingDirectoryFileChange
   readonly diff: IDiff | null
+
+  /** The files open as tabs above the diff, in tab order */
+  readonly openDiffTabs: ReadonlyArray<WorkingDirectoryFileChange>
+
+  /** The label of the external editor, or undefined for the default label */
+  readonly externalEditorLabel?: string
+
+  /**
+   * Called to open a file in the external editor
+   *
+   * @param path The path of the file relative to the root of the repository
+   */
+  readonly onOpenInExternalEditor: (path: string) => void
   readonly dispatcher: Dispatcher
   readonly imageDiffType: ImageDiffType
 
@@ -112,6 +129,14 @@ export class Changes extends React.Component<IChangesProps, {}> {
           hideWhitespaceInDiff={this.props.hideWhitespaceInDiff}
           onHideWhitespaceInDiffChanged={this.onHideWhitespaceInDiffChanged}
           onDiffOptionsOpened={this.props.onDiffOptionsOpened}
+          tabs={
+            <DiffTabs
+              files={this.props.openDiffTabs}
+              activePath={this.props.file.path}
+              onSelectTab={this.onSelectTab}
+              onCloseTabs={this.onCloseTabs}
+            />
+          }
         />
 
         <SeamlessDiffSwitcher
@@ -133,9 +158,29 @@ export class Changes extends React.Component<IChangesProps, {}> {
           onOpenSubmodule={this.props.onOpenSubmodule}
           onChangeImageDiffType={this.props.onChangeImageDiffType}
           onHideWhitespaceInDiffChanged={this.onHideWhitespaceInDiffChanged}
+          externalEditorLabel={this.props.externalEditorLabel}
+          onOpenInExternalEditor={
+            this.props.file.status.kind === AppFileStatusKind.Deleted
+              ? undefined
+              : this.onOpenInExternalEditor
+          }
         />
       </div>
     )
+  }
+
+  private onSelectTab = (file: WorkingDirectoryFileChange) => {
+    this.props.dispatcher.selectWorkingDirectoryFiles(this.props.repository, [
+      file,
+    ])
+  }
+
+  private onCloseTabs = (paths: ReadonlyArray<string>) => {
+    this.props.dispatcher.closeChangesDiffTabs(this.props.repository, paths)
+  }
+
+  private onOpenInExternalEditor = () => {
+    this.props.onOpenInExternalEditor(this.props.file.path)
   }
 
   private onShowSideBySideDiffChanged = (showSideBySideDiff: boolean) => {

@@ -604,6 +604,9 @@ export class RepositoryView extends React.Component<
           dispatcher={this.props.dispatcher}
           file={selectedFile}
           diff={diff}
+          openDiffTabs={this.getOpenDiffTabFiles()}
+          externalEditorLabel={this.props.externalEditorLabel}
+          onOpenInExternalEditor={this.props.onOpenInExternalEditor}
           isCommitting={this.props.state.isCommitting}
           imageDiffType={this.props.imageDiffType}
           hideWhitespaceInDiff={this.props.hideWhitespaceInChangesDiff}
@@ -620,6 +623,13 @@ export class RepositoryView extends React.Component<
         />
       )
     }
+  }
+
+  /** The working directory files open as diff tabs, in tab order */
+  private getOpenDiffTabFiles() {
+    const { workingDirectory, openDiffTabs } = this.props.state.changesState
+    const filesByPath = new Map(workingDirectory.files.map(f => [f.path, f]))
+    return openDiffTabs.flatMap(path => filesByPath.get(path) ?? [])
   }
 
   private onOpenBinaryFile = (fullPath: string) => {

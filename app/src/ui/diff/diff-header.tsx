@@ -25,13 +25,28 @@ interface IDiffHeaderProps {
 
   /** Called when the user opens the diff options popover */
   readonly onDiffOptionsOpened: () => void
+
+  /**
+   * Tabs to show in place of the file's path and status. The tabs carry
+   * their own status icons.
+   */
+  readonly tabs?: JSX.Element
 }
 
 /** Displays information about a file */
 export class DiffHeader extends React.Component<IDiffHeaderProps, {}> {
   public render() {
-    const status = this.props.status
+    const { status, tabs } = this.props
     const fileStatus = mapStatus(status)
+
+    if (tabs !== undefined) {
+      return (
+        <div className="header with-tabs">
+          {tabs}
+          {this.renderDiffOptions()}
+        </div>
+      )
+    }
 
     return (
       <div className="header">

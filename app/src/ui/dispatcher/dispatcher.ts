@@ -328,6 +328,19 @@ export class Dispatcher {
   }
 
   /**
+   * Closes the given diff tabs in the changes view. If the file shown in the
+   * diff is among them, the nearest remaining tab is selected instead.
+   *
+   * @param paths The paths of the working directory files whose tabs to close
+   */
+  public closeChangesDiffTabs(
+    repository: Repository,
+    paths: ReadonlyArray<string>
+  ): Promise<void> {
+    return this.appStore._closeChangesDiffTabs(repository, paths)
+  }
+
+  /**
    * Changes the selection in the changes view to the stash entry view and
    * optionally selects a particular file from the current stash entry.
    *

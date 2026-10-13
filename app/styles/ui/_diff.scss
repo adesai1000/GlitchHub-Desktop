@@ -942,4 +942,101 @@
       margin-right: var(--spacing-half);
     }
   }
+
+  // The tabs run edge to edge and sit on the header's bottom border, so the
+  // active tab can open onto the diff below it
+  .header.with-tabs {
+    align-items: stretch;
+    padding: 0 var(--spacing) 0 0;
+
+    .diff-options-component {
+      align-self: center;
+      margin-left: var(--spacing-half);
+    }
+  }
+
+  .diff-tabs {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-bottom: -1px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+
+  .diff-tab {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: var(--spacing-half);
+    max-width: 260px;
+    height: 34px;
+    padding: 0 var(--spacing-half) 0 var(--spacing);
+    border-right: 1px solid var(--diff-border-color);
+    border-bottom: 1px solid var(--diff-border-color);
+    color: var(--text-secondary-color);
+    cursor: pointer;
+
+    span {
+      user-select: none;
+    }
+
+    .name,
+    .folder {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .folder {
+      font-size: var(--font-size-sm);
+    }
+
+    .close {
+      display: flex;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      padding: 0;
+      border: none;
+      border-radius: var(--border-radius);
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      // Hidden rather than removed so tabs don't change width on hover
+      visibility: hidden;
+
+      &:hover {
+        background: var(--box-hover-background-color);
+        color: var(--text-color);
+      }
+    }
+
+    &:hover {
+      background: var(--box-hover-background-color);
+
+      .close {
+        visibility: visible;
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--focus-color);
+      outline-offset: -2px;
+    }
+
+    &.active {
+      background: var(--background-color);
+      border-bottom-color: var(--background-color);
+      box-shadow: inset 0 2px 0 var(--tab-bar-active-color);
+      color: var(--text-color);
+
+      .close {
+        visibility: visible;
+      }
+    }
+  }
 }

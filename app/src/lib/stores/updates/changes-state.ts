@@ -27,6 +27,26 @@ import { assertNever } from '../../fatal-error'
 type ChangedFilesResult = {
   readonly workingDirectory: WorkingDirectoryStatus
   readonly selection: ChangesSelection
+  readonly openDiffTabs: ReadonlyArray<string>
+}
+
+/**
+ * Returns the diff tabs with the path of the selected file added at the end,
+ * if exactly one working directory file is selected and it isn't open yet.
+ */
+function withSelectedFileTab(
+  openDiffTabs: ReadonlyArray<string>,
+  workingDirectory: WorkingDirectoryStatus,
+  selectedFileIDs: ReadonlyArray<string>
+): ReadonlyArray<string> {
+  if (selectedFileIDs.length !== 1) {
+    return openDiffTabs
+  }
+
+  const file = workingDirectory.findFileWithID(selectedFileIDs[0])
+  return file === null || openDiffTabs.includes(file.path)
+    ? openDiffTabs
+    : [...openDiffTabs, file.path]
 }
 
 export function updateChangedFiles(
@@ -72,6 +92,10 @@ export function updateChangedFiles(
   // diff we had, if not we'll clear it.
   const workingDirectory = WorkingDirectoryStatus.fromFiles(mergedFiles)
 
+  // Tabs for files that were committed or discarded close on their own
+  const mergedFilePaths = new Set(mergedFiles.map(x => x.path))
+  const openDiffTabs = state.openDiffTabs.filter(p => mergedFilePaths.has(p))
+
   const selectionKind = state.selection.kind
   if (state.selection.kind === ChangesSelectionKind.WorkingDirectory) {
     // The previously selected files might not be available in the working
@@ -81,10 +105,22 @@ export function updateChangedFiles(
       mergedFileIds.has(id)
     )
 
-    // Select the first file if we don't have anything selected and we
-    // have something to select.
-    if (selectedFileIDs.length === 0 && mergedFiles.length > 0) {
-      selectedFileIDs = [mergedFiles[0].id]
+    // When the selected files went away, or there was nothing to show
+    // before, select a file. An open tab is preferred over the first file.
+    // An empty selection the user chose, by closing the last tab, is kept.
+    const lostSelection =
+      state.selection.selectedFileIDs.length > 0 ||
+      state.workingDirectory.files.length === 0
+    if (
+      selectedFileIDs.length === 0 &&
+      mergedFiles.length > 0 &&
+      lostSelection
+    ) {
+      const tabFile =
+        openDiffTabs.length > 0
+          ? mergedFiles.find(f => f.path === openDiffTabs[0])
+          : undefined
+      selectedFileIDs = [(tabFile ?? mergedFiles[0]).id]
     }
 
     const diff =
@@ -101,11 +137,17 @@ export function updateChangedFiles(
         selectedFileIDs,
         diff,
       },
+      openDiffTabs: withSelectedFileTab(
+        openDiffTabs,
+        workingDirectory,
+        selectedFileIDs
+      ),
     }
   } else if (state.selection.kind === ChangesSelectionKind.Stash) {
     return {
       workingDirectory,
       selection: state.selection,
+      openDiffTabs,
     }
   } else {
     return assertNever(
@@ -322,14 +364,14 @@ export function updateConflictState(
 export function selectWorkingDirectoryFiles(
   state: IChangesState,
   files?: ReadonlyArray<WorkingDirectoryFileChange>
-): Pick<IChangesState, 'selection'> {
+): Pick<IChangesState, 'selection' | 'openDiffTabs'> {
   let selectedFileIDs: Array<string>
 
   if (files === undefined) {
     if (state.selection.kind === ChangesSelectionKind.WorkingDirectory) {
       // No files provided, just a desire to make sure selection is
       // working directory. If it already is there's nothing for us to do.
-      return { selection: state.selection }
+      return { selection: state.selection, openDiffTabs: state.openDiffTabs }
     } else if (state.workingDirectory.files.length > 0) {
       // No files provided and the current selection is stash, pick the
       // first file we've got.
@@ -349,5 +391,10 @@ export function selectWorkingDirectoryFiles(
       selectedFileIDs,
       diff: null,
     },
+    openDiffTabs: withSelectedFileTab(
+      state.openDiffTabs,
+      state.workingDirectory,
+      selectedFileIDs
+    ),
   }
 }

@@ -3513,6 +3513,48 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.updateChangesWorkingDirectoryDiff(repository)
   }
 
+  /** This shouldn't be called directly. See `Dispatcher`. */
+  public async _closeChangesDiffTabs(
+    repository: Repository,
+    paths: ReadonlyArray<string>
+  ): Promise<void> {
+    const { changesState } = this.repositoryStateCache.get(repository)
+    const { openDiffTabs, selection, workingDirectory } = changesState
+    const remaining = openDiffTabs.filter(p => !paths.includes(p))
+
+    this.repositoryStateCache.updateChangesState(repository, () => ({
+      openDiffTabs: remaining,
+    }))
+
+    const selectedFile =
+      selection.kind === ChangesSelectionKind.WorkingDirectory &&
+      selection.selectedFileIDs.length === 1
+        ? workingDirectory.findFileWithID(selection.selectedFileIDs[0])
+        : null
+
+    if (selectedFile === null || !paths.includes(selectedFile.path)) {
+      this.emitUpdate()
+      return
+    }
+
+    // Like an editor, show the tab that took the closed tab's place, or the
+    // one before it when the last tab was closed
+    const closedIndex = openDiffTabs.indexOf(selectedFile.path)
+    const nextIndex = openDiffTabs.findIndex(
+      (p, i) => i > closedIndex && remaining.includes(p)
+    )
+    const nextPath =
+      nextIndex !== -1
+        ? openDiffTabs[nextIndex]
+        : remaining.findLast(p => openDiffTabs.indexOf(p) < closedIndex)
+    const nextFile = workingDirectory.files.find(f => f.path === nextPath)
+
+    await this._selectWorkingDirectoryFiles(
+      repository,
+      nextFile === undefined ? [] : [nextFile]
+    )
+  }
+
   /**
    * Loads or re-loads (refreshes) the diff for the currently selected file
    * in the working directory. This operation is a noop if there's no currently

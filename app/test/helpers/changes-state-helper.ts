@@ -15,6 +15,7 @@ export function createState<K extends keyof IChangesState>(
       selectedFileIDs: [],
       diff: null,
     },
+    openDiffTabs: [],
     commitMessage: DefaultCommitMessage,
     showCoAuthoredBy: false,
     coAuthors: [],

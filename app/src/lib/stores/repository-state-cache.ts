@@ -377,6 +377,7 @@ function getInitialRepositoryState(): IRepositoryState {
         selectedFileIDs: [],
         diff: null,
       },
+      openDiffTabs: [],
       commitMessage: DefaultCommitMessage,
       coAuthors: [],
       showCoAuthoredBy: false,

@@ -185,6 +185,77 @@ describe('updateChangedFiles', () => {
     })
   })
 
+  describe('openDiffTabs', () => {
+    it('opens a tab for the file it selects', () => {
+      const prevState = createState({})
+      const status = createStatus({
+        workingDirectory: WorkingDirectoryStatus.fromFiles(files),
+      })
+
+      const { openDiffTabs } = updateChangedFiles(prevState, status, false)
+
+      assert.deepEqual(openDiffTabs, ['app/package.json'])
+    })
+
+    it('closes tabs for files that are no longer changed', () => {
+      const prevState = createState({
+        workingDirectory: WorkingDirectoryStatus.fromFiles(files),
+        selection: {
+          kind: ChangesSelectionKind.WorkingDirectory,
+          selectedFileIDs: [files[0].id],
+          diff: null,
+        },
+        openDiffTabs: ['README.md', 'committed.ts'],
+      })
+      const status = createStatus({
+        workingDirectory: WorkingDirectoryStatus.fromFiles(files),
+      })
+
+      const { openDiffTabs } = updateChangedFiles(prevState, status, false)
+
+      assert.deepEqual(openDiffTabs, ['README.md'])
+    })
+
+    it('selects an open tab when the selected file goes away', () => {
+      const prevState = createState({
+        workingDirectory: WorkingDirectoryStatus.fromFiles(files),
+        selection: {
+          kind: ChangesSelectionKind.WorkingDirectory,
+          selectedFileIDs: ['id-of-committed-file'],
+          diff: null,
+        },
+        openDiffTabs: ['committed.ts', 'README.md'],
+      })
+      const status = createStatus({
+        workingDirectory: WorkingDirectoryStatus.fromFiles(files),
+      })
+
+      const { selection } = updateChangedFiles(prevState, status, false)
+
+      const { selectedFileIDs } = selection as ChangesWorkingDirectorySelection
+      assert.deepEqual(selectedFileIDs, [files[0].id])
+    })
+
+    it('keeps an empty selection after the last tab was closed', () => {
+      const prevState = createState({
+        workingDirectory: WorkingDirectoryStatus.fromFiles(files),
+      })
+      const status = createStatus({
+        workingDirectory: WorkingDirectoryStatus.fromFiles(files),
+      })
+
+      const { selection, openDiffTabs } = updateChangedFiles(
+        prevState,
+        status,
+        false
+      )
+
+      const { selectedFileIDs } = selection as ChangesWorkingDirectorySelection
+      assert.deepEqual(selectedFileIDs, [])
+      assert.deepEqual(openDiffTabs, [])
+    })
+  })
+
   describe('diff', () => {
     it('clears diff if selected file is not in previous state', () => {
       const workingDirectory = WorkingDirectoryStatus.fromFiles(files)

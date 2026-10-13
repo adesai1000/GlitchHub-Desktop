@@ -880,6 +880,13 @@ export interface IChangesState {
    */
   readonly selection: ChangesSelection
 
+  /**
+   * The paths of the working directory files open as tabs above the diff, in
+   * tab order. Paths rather than file IDs are kept because a file's ID
+   * changes along with its status.
+   */
+  readonly openDiffTabs: ReadonlyArray<string>
+
   /** `true` if the GitHub API reports that the branch is protected */
   readonly currentBranchProtected: boolean
 
