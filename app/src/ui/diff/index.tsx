@@ -108,6 +108,18 @@ interface IDiffProps {
 
   /** Called when the user changes the hide whitespace in diffs setting. */
   readonly onHideWhitespaceInDiffChanged: (checked: boolean) => void
+
+  /**
+   * The label of the external editor, or undefined for the default label.
+   * See `onOpenInExternalEditor`.
+   */
+  readonly externalEditorLabel?: string
+
+  /**
+   * Called to open the file in the external editor. The diff's context menu
+   * only offers the option when this is provided.
+   */
+  readonly onOpenInExternalEditor?: () => void
 }
 
 interface IDiffState {
@@ -302,6 +314,8 @@ export class Diff extends React.Component<IDiffProps, IDiffState> {
         }
         onHideWhitespaceInDiffChanged={this.props.onHideWhitespaceInDiffChanged}
         showDiffCheckMarks={this.props.showDiffCheckMarks}
+        externalEditorLabel={this.props.externalEditorLabel}
+        onOpenInExternalEditor={this.props.onOpenInExternalEditor}
       />
     )
   }

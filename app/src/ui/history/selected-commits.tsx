@@ -3,7 +3,7 @@ import { writeClipboardText } from '../main-process-proxy'
 import * as Path from 'path'
 
 import { Repository } from '../../models/repository'
-import { CommittedFileChange } from '../../models/status'
+import { AppFileStatusKind, CommittedFileChange } from '../../models/status'
 import { Commit } from '../../models/commit'
 import { IDiff, ImageDiffType } from '../../models/diff'
 
@@ -173,9 +173,22 @@ export class SelectedCommits extends React.Component<
           onChangeImageDiffType={this.props.onChangeImageDiffType}
           onHideWhitespaceInDiffChanged={this.onHideWhitespaceInDiffChanged}
           onOpenSubmodule={this.props.onOpenSubmodule}
+          externalEditorLabel={this.props.externalEditorLabel}
+          onOpenInExternalEditor={
+            file.status.kind === AppFileStatusKind.Deleted
+              ? undefined
+              : this.onOpenSelectedFileInExternalEditor
+          }
         />
       </div>
     )
+  }
+
+  private onOpenSelectedFileInExternalEditor = () => {
+    const { selectedFile } = this.props
+    if (selectedFile !== null) {
+      this.props.onOpenInExternalEditor(selectedFile.path)
+    }
   }
 
   private renderDiffHeader() {

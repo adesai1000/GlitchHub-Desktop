@@ -133,6 +133,22 @@ interface ISeamlessDiffSwitcherProps {
   // Used in getDerivedStateFromProps, no-unused-prop-types doesn't know that
   // eslint-disable-next-line react/no-unused-prop-types
   readonly onHideWhitespaceInDiffChanged: (checked: boolean) => void
+
+  /**
+   * The label of the external editor, or undefined for the default label.
+   * See `onOpenInExternalEditor`.
+   */
+  // Used in getDerivedStateFromProps, no-unused-prop-types doesn't know that
+  // eslint-disable-next-line react/no-unused-prop-types
+  readonly externalEditorLabel?: string
+
+  /**
+   * Called to open the file in the external editor. The diff's context menu
+   * only offers the option when this is provided.
+   */
+  // Used in getDerivedStateFromProps, no-unused-prop-types doesn't know that
+  // eslint-disable-next-line react/no-unused-prop-types
+  readonly onOpenInExternalEditor?: () => void
 }
 
 interface ISeamlessDiffSwitcherState {
@@ -383,6 +399,8 @@ export class SeamlessDiffSwitcher extends React.Component<
       onOpenSubmodule,
       onChangeImageDiffType,
       onHideWhitespaceInDiffChanged,
+      externalEditorLabel,
+      onOpenInExternalEditor,
     } = this.state.propSnapshot
 
     const className = classNames('seamless-diff-switcher', {
@@ -421,6 +439,10 @@ export class SeamlessDiffSwitcher extends React.Component<
             onChangeImageDiffType={isLoadingDiff ? noop : onChangeImageDiffType}
             onHideWhitespaceInDiffChanged={
               isLoadingDiff ? noop : onHideWhitespaceInDiffChanged
+            }
+            externalEditorLabel={externalEditorLabel}
+            onOpenInExternalEditor={
+              isLoadingDiff ? undefined : onOpenInExternalEditor
             }
           />
         ) : null}

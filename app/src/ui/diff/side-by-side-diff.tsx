@@ -75,6 +75,7 @@ import { findDOMNode } from 'react-dom'
 import escapeRegExp from 'lodash/escapeRegExp'
 import ReactDOM from 'react-dom'
 import { AriaLiveContainer } from '../accessibility/aria-live-container'
+import { DefaultEditorLabel } from '../lib/context-menu'
 
 const DefaultRowHeight = 20
 
@@ -160,6 +161,18 @@ interface ISideBySideDiffProps {
 
   /** Called when the user changes the hide whitespace in diffs setting. */
   readonly onHideWhitespaceInDiffChanged: (checked: boolean) => void
+
+  /**
+   * The label of the external editor, or undefined for the default label.
+   * See `onOpenInExternalEditor`.
+   */
+  readonly externalEditorLabel?: string
+
+  /**
+   * Called to open the file in the external editor. The diff's context menu
+   * only offers the option when this is provided.
+   */
+  readonly onOpenInExternalEditor?: () => void
 }
 
 interface ISideBySideDiffState {
@@ -1553,6 +1566,19 @@ export class SideBySideDiff extends React.Component<
     const expandMenuItem = this.buildExpandMenuItem()
     if (expandMenuItem !== null) {
       items.push({ type: 'separator' }, expandMenuItem)
+    }
+
+    const { externalEditorLabel, onOpenInExternalEditor } = this.props
+    if (onOpenInExternalEditor !== undefined) {
+      items.push(
+        { type: 'separator' },
+        {
+          label: externalEditorLabel
+            ? `Open in ${externalEditorLabel}`
+            : DefaultEditorLabel,
+          action: onOpenInExternalEditor,
+        }
+      )
     }
 
     showContextualMenu(items)
