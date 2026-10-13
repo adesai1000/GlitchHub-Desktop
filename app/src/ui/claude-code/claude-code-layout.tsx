@@ -50,8 +50,11 @@ export class ClaudeCodeLayout extends React.Component<
         {this.props.children}
         {this.state.isOpen && repository !== null && (
           <ClaudeCodePanel
-            // Each repository has its own session, so give each its own panel
-            key={repository.hash}
+            // Each repository has its own sessions, so give each its own
+            // panel. The key has to differ from the repository view's beside
+            // it, which uses the repository's hash: siblings with the same key
+            // leave a stale repository view on screen when the hash changes.
+            key={`claude-code-panel-${repository.id}`}
             repository={repository}
             width={this.state.width}
             onWidthChanged={this.onWidthChanged}
