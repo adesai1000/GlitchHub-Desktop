@@ -1,279 +1,123 @@
-<p align="center">
-  <img src="app/static/common/app-icons/stickshift.png" alt="StickShift icon" width="128" height="128">
-</p>
+# StickShift
 
-<h1 align="center">StickShift</h1>
+StickShift is an IDE for the agentic age. Your coding agent, your diffs, and your Git history live in one window: Claude Code runs in a panel next to your repository, its changes land in tabbed diffs, and you stage, commit, and push without switching apps. It's a [desktop app for macOS](https://github.com/adesai1000/StickShift/releases/latest), built on the open source [GitHub Desktop](https://github.com/desktop/desktop).
 
-<p align="center"><strong>An IDE for the agentic age.</strong></p>
+Works with the Claude Code you already have: the CLI, Homebrew, or the copy bundled with the Claude Code extension for VS Code, VSCodium, Cursor, or Windsurf. If it's set up on your computer, StickShift finds it and signs in with your existing account.
 
-StickShift puts your coding agent, your diffs, and your Git history in one
-window. Run Claude Code next to your repository, watch the changes it makes
-land in tabbed diffs, stage what you like, and commit and push without
-switching apps. You review and steer; the agent types.
+## "Wait, isn't this just GitHub Desktop?"
 
-It's a desktop app for macOS, written in [TypeScript](https://www.typescriptlang.org)
-with [React](https://reactjs.org/) on [Electron](https://www.electronjs.org/),
-and built on the open source [GitHub Desktop](https://github.com/desktop/desktop).
-It works with repositories on GitHub, GitHub Enterprise, and any other Git
-host.
+It started as a fork of it. GitHub Desktop is a great Git client, but the work changed: an agent writes the code now, and you review it. That meant a terminal for the agent, an editor for the files, and a Git client for the commits, all fighting for the same screen.
 
-## Download
+StickShift puts them in one place. You get everything GitHub Desktop ships, plus the features its users kept asking for and never got, and an agent panel built for reviewing and steering instead of typing. It's MIT licensed, so if it ever goes the wrong direction, you have everything you need to fork it.
 
-Get the latest build from the
-[releases page](https://github.com/adesai1000/StickShift/releases/latest).
-It's a macOS app for Apple silicon, shipped as a zip. Unzip it and drag
-StickShift into Applications.
-
-The build isn't signed with an Apple developer certificate yet, so the first
-time you open it, macOS says it can't be verified. Right-click the app,
-choose **Open**, then click **Open** again in the dialog. You only have to do
-that once per download.
-
-### Coming from GlitchHub Desktop
-
-StickShift used to be called GlitchHub Desktop. The first time StickShift
-starts, it copies your repository list, settings, and sign-ins from the
-GlitchHub Desktop profile, so you pick up where you left off. The old profile
-is left untouched. After you've checked that everything came across, you can
-delete GlitchHub Desktop from Applications.
-
-### Updating
-
-StickShift doesn't update itself. To install a newer release:
-
-1. Quit StickShift.
-2. Download the zip for the new release from the
-   [releases page](https://github.com/adesai1000/StickShift/releases/latest)
-   and unzip it.
-3. Drag the new StickShift into Applications and choose **Replace**.
-4. Right-click the app, choose **Open**, then click **Open** again.
-
-Your repositories, settings, and sign-in live in the profile folder, not in
-the app, so they carry over. If macOS asks whether StickShift can use the
-keychain, click **Always Allow**. Every build has a new signature, so the
-question comes back after an update.
-
-If StickShift is useful to you, a star on the repository helps other people
-find it.
-
-## Features
-
-| Feature | Where to find it |
-| --- | --- |
-| Claude Code in a panel next to your repository, with several sessions | **Claude Code** toolbar button, or <kbd>⌘</kbd>+<kbd>Esc</kbd> |
-| Tabs for the files you're reviewing | Changes view, above the diff |
-| Open the file in your editor from the diff | Right-click the diff → **Open in** _editor_ |
-| Stash selected files | Right-click files in Changes → **Stash Changes** |
-| Run `package.json` scripts from the toolbar, with history | **Run Script** toolbar button |
-| Expand whole files in diffs by default | Settings → Appearance → Diff Expansion |
-| Turn off line wrapping in diffs | Settings → Appearance → Diff Expansion |
-| Text size slider | Settings → Appearance → Text Size |
-| Default editor per repository | Repository Settings → Editor |
-| Sort branches by last update | Settings → Appearance → Branch List |
-| Pin branches | Right-click a branch → **Pin Branch** |
-| Search tags | Branch dropdown → Tags tab |
-| Reorder the repository list | Right-click a repository → **Move Up** or **Move Down** |
-| Choose or install your own app icon | Settings → Appearance → App Icon |
-| No telemetry, no crash reports, no update pings | Always on |
+## What you get
 
 ### Claude Code, built in
 
-Click **Claude Code** at the end of the toolbar, or press
-<kbd>⌘</kbd>+<kbd>Esc</kbd>, and a panel opens on the right with Claude Code
-running in the current repository. It's the real Claude Code CLI in a real
-terminal, so slash commands, permission prompts, and plan mode all work the
-way they do in your terminal or editor. Drag the panel's left edge to resize
-it; double-click the edge to reset its width.
+Press <kbd>⌘</kbd>+<kbd>Esc</kbd>, or click **Claude Code** at the end of the toolbar, and Claude Code opens in a panel next to your repository. It's the real CLI in a real terminal, so slash commands, plan mode, and permission prompts all work the way you're used to.
 
-- **Several sessions.** Click **+** in the panel to start another session.
-  Each one gets a tab, named after its conversation once Claude Code names
-  it. Close a tab with its **×** or a middle click. The toolbar button shows
-  how many sessions are running.
-- **Sessions keep running.** Hiding the panel or switching repositories
-  doesn't stop anything. Each repository keeps its own sessions, and they're
-  there when you come back.
-- **Your existing login.** StickShift runs the Claude Code you already have,
-  with the same configuration folder, so you're signed in to the same
-  account. If you aren't signed in yet, Claude Code walks you through it, and
-  links in the terminal open in your browser.
-- **Your environment.** Claude Code starts in the repository folder with your
-  login shell's environment, so it finds the same tools it finds in your
-  terminal.
-- **Typing.** Press <kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line in a
-  prompt.
+- **Several sessions.** Click **+** to start another one. Each session gets a tab named after its conversation.
+- **Always running.** Hiding the panel or switching repositories doesn't stop anything. Every repository keeps its own sessions.
+- **Your setup.** Sessions start in the repository folder with your login shell's environment and your Claude Code login.
+- **Your choice of Claude Code.** Settings → **Claude Code** runs the newest copy it finds, or the one you pick. It can also use a separate configuration folder, such as `~/.claude-work`.
 
-Settings → **Claude Code** chooses which installation to run. StickShift
-finds the copies on your computer: the native installer's
-`~/.local/bin/claude`, Homebrew, anything on your `PATH`, and the copies
-bundled with the Claude Code extension for VS Code, VSCodium, Cursor, and
-Windsurf. By default it runs the newest one; you can pick another or point
-it at any `claude` executable. The same tab can point Claude Code at a
-different configuration folder, such as `~/.claude-work`, if you keep
-separate logins.
+### Review like an editor
 
-Changes to those settings apply when a session starts. Sessions that are
-already running keep what they started with and show a notice; click
-**Restart** in the notice, or the restart button in the panel, to pick up the
-new settings.
+- **Tabs for changed files.** Every file you open from the Changes list gets a tab above the diff. Close tabs with **×**, a middle click, or the tab menu.
+- **Whole files, no wrapping.** Open every diff fully expanded, and let long lines scroll instead of wrap.
+- **Jump to your editor.** Right-click any diff and open the file in your editor, with a different default editor per repository if you like.
+- **Stash just some files.** Right-click files in the Changes list and stash only those.
 
-### Tabs above the diff
+### The rest of your workflow
 
-In the Changes view, every file you click in the list opens as a tab above
-the diff, so you can flip between the files you're reviewing the way you
-would in an editor. The list selection follows the active tab.
+- **Run scripts from the toolbar.** Run `package.json` scripts with live output, a **Stop** button, and a history of past runs.
+- **Branches your way.** Sort them by last update, pin the ones you use most, and search tags.
+- **A tidy sidebar.** Reorder your repositories, and scale all text from 10 px to 18 px.
+- **Nothing phones home.** No usage statistics, no crash reports, and no update checks.
 
-Close a tab with its **×** button, a middle click, or <kbd>Delete</kbd> while
-it has focus, and move between tabs with the arrow keys. Right-clicking a tab
-offers **Close**, **Close Others**, **Close to the Right**, and **Close All**.
-Tabs for files you commit or discard close on their own, and when two open
-files share a name, both tabs show their folder.
+## Installation
 
-### Run package.json scripts from the toolbar
+> [!WARNING]
+> StickShift runs Claude Code; it doesn't install it. Set it up and sign in before you open the panel:
+>
+> - Install [Claude Code](https://claude.com/product/claude-code), run `claude`, and sign in.
+> - Or install the Claude Code extension in VS Code, VSCodium, Cursor, or Windsurf. StickShift uses the copy that comes with it.
+>
+> StickShift runs on macOS on Apple silicon.
 
-The **Run Script** button runs a script from the repository's `package.json`
-in the repository folder, with your login shell's environment, and streams
-its output into a terminal view with a **Stop** button. Long-running scripts
-such as `dev` or `test:watch` keep running while you work.
+### Desktop app
 
-Nothing is exposed until you opt in. Repository Settings → **Scripts**, or
-Settings → **Scripts**, lists every script with a **Show** checkbox, and a
-**Confirm** checkbox for the ones that deserve a second look, like a
-production deploy. The package manager is detected from the lock file (npm,
-Yarn, pnpm, or Bun) and can be overridden. The button's **History** tab keeps
-the last 20 runs per repository, with their status, duration, and output.
+Download the latest zip from [GitHub Releases](https://github.com/adesai1000/StickShift/releases/latest), unzip it, and drag StickShift into Applications.
 
-### Diffs your way
+The app isn't signed with an Apple developer certificate yet, so macOS asks before the first launch: right-click StickShift, choose **Open**, then click **Open** again.
 
-- **Whole files by default.** Settings → Appearance → **Diff Expansion** →
-  _Whole file_ opens every diff fully expanded, in Changes, History, stash
-  previews, and the pull request dialog. The diff's context menu still
-  collapses or expands a single file.
-- **No wrapping.** Turn off _Wrap long lines_ in the same setting, and long
-  lines scroll sideways instead.
-- **Open in your editor.** Right-click the diff text and choose **Open in**
-  followed by your editor's name. It uses the editor from Settings →
-  Integrations, or the repository's own editor from Repository Settings →
-  **Editor**.
-- **Stash just some files.** Right-click a file in the Changes list, or a
-  selection of files, and choose **Stash Changes**. Only those files are
-  stashed, untracked ones included. Like **Stash All Changes**, it replaces
-  the branch's existing stash after asking.
+#### With the GitHub CLI
 
-### Smaller things
+```bash
+rm -rf /tmp/stickshift
+gh release download --repo adesai1000/StickShift --pattern '*.zip' --dir /tmp/stickshift
+rm -rf /Applications/StickShift.app
+ditto -x -k /tmp/stickshift/StickShift-*.zip /Applications
+open /Applications/StickShift.app
+```
 
-- **Text size.** Settings → Appearance → **Text Size** scales all text from
-  10 px to 18 px, live while you drag.
-- **Default editor per repository.** Repository Settings → **Editor**
-  overrides the editor from Settings for that repository.
-- **Branches.** Sort them by last update in Settings → Appearance → Branch
-  List, pin the ones you use most, and search tags from the branch dropdown.
-- **Repository order.** Right-click a repository and choose **Move Up** or
-  **Move Down**.
-- **App icon.** Settings → Appearance → **App Icon** sets the icon in the
-  Dock and the Finder. **Install Icon…** takes any `.icns` file or 1024 px PNG.
-- **Command line tool.** Choose **Install Command Line Tool** in the app menu
-  to get a `stickshift` command. Run `stickshift` in a repository to open it,
-  or `stickshift clone OWNER/REPO` to clone one.
+Run the same commands to update. Quit StickShift first.
 
-### Nothing phones home
+#### Command line tool
 
-StickShift sends no usage statistics, no crash reports, and no update checks.
-The reporting code is compiled out, and the About dialog points at the
-releases page instead of checking for updates. Talking to GitHub for your
-repositories, pull requests, sign-in, and notifications works as usual; only
-the reporting is gone.
+In StickShift, choose **StickShift > Install Command Line Tool**. Then:
+
+```bash
+stickshift                           # open the repository in the current folder
+stickshift open ~/code/my-project    # open a repository by path
+stickshift clone owner/repo          # clone a repository from GitHub
+```
+
+### Coming from GlitchHub Desktop
+
+StickShift used to be called GlitchHub Desktop. Quit GlitchHub Desktop, then open StickShift: on first launch it copies your repositories, settings, and sign-ins, and leaves the old app's data untouched. Once everything looks right, delete GlitchHub Desktop from Applications.
+
+## Some notes
+
+We're early. Expect bugs, and [open an issue](https://github.com/adesai1000/StickShift/issues) when you find one.
+
+There's no auto-update yet. Watch the repository for new releases, and update from [GitHub Releases](https://github.com/adesai1000/StickShift/releases).
+
+StickShift isn't affiliated with or endorsed by GitHub or Anthropic.
 
 ## Troubleshooting
 
 ### "The repository does not seem to exist anymore"
 
-If fetching or pushing a repository that belongs to a GitHub organization
-fails with this message while the same commands work in a terminal, the
-organization has turned on _OAuth App access restrictions_ and hasn't
-approved the OAuth app that StickShift signs in through. GitHub answers every
-request from an unapproved app with a 404, which the app shows as this
-message. The terminal works because `gh`, SSH keys, and personal access
-tokens aren't OAuth apps.
+If a repository that belongs to a GitHub organization fails with this message but works in a terminal, the organization restricts OAuth apps and hasn't approved the one StickShift signs in through, **GitHub Desktop Dev**. Fix it either way:
 
-StickShift signs in through the OAuth app named **GitHub Desktop Dev**, which
-comes from the open source project it's built on. There are two ways to fix
-the error.
+- **Approve the app.** On github.com, go to **Settings > Applications > Authorized OAuth Apps > GitHub Desktop Dev**, and under **Organization access**, click **Grant**, or **Request** if you don't own the organization.
+- **Use a classic personal access token.** Create one with the `repo`, `user`, and `workflow` scopes, authorize it for SAML single sign-on if the organization uses it, and store it in the keychain. Replace `LOGIN` with your GitHub username and `TOKEN` with the token:
 
-**Ask the organization to approve the app.** On github.com, go to
-**Settings > Applications > Authorized OAuth Apps > GitHub Desktop Dev**.
-Under **Organization access**, click **Grant** if you own the organization, or
-click **Request** and have an owner approve it under the organization's
-**Settings > Third-party access**. This is a one-time fix, and it survives
-signing out and back in.
+  ```bash
+  security add-generic-password -U -s "GitHub - https://api.github.com" -a LOGIN -w "TOKEN"
+  ```
 
-**Use a personal access token instead.** Classic tokens aren't subject to the
-restriction. Do this if you can't get the app approved:
-
-1. On github.com, go to **Settings > Developer settings > Personal access
-   tokens > Tokens (classic)** and generate a token with the `repo`, `user`,
-   and `workflow` scopes. Use a classic token; fine-grained tokens don't
-   report their scopes back to the app.
-2. If the organization enforces SAML single sign-on, click **Configure SSO**
-   next to the new token and authorize it for the organization.
-3. Sign in to StickShift as usual so the account exists, then quit the app.
-4. Replace the stored token in the keychain. Replace `LOGIN` with your GitHub
-   username and `TOKEN` with the token:
-
-   ```shellsession
-   $ security add-generic-password -U -s "GitHub - https://api.github.com" -a LOGIN -w "TOKEN"
-   ```
-
-5. Start the app. When macOS asks whether StickShift can read the keychain
-   item, click **Always Allow**.
-
-Signing out and back in writes a fresh OAuth token over the stored one, so
-repeat step 4 afterwards.
-
-If the message appears for one repository only and a token doesn't help,
-check its remote in **Repository > Repository Settings > Remote**, or run
-`git remote -v` in a terminal. A URL with no owner and name, such as
-`https://github.com/`, produces the same message.
+  Then start StickShift and click **Always Allow** when macOS asks about the keychain. Signing out and back in replaces the token, so repeat this afterwards.
 
 ### Claude Code doesn't start
 
-If the panel says StickShift couldn't find Claude Code, install it, or open
-Settings → **Claude Code** and choose its location. StickShift looks for it
-on your login shell's `PATH`, so a `claude` that works in your terminal is
-usually found automatically.
+If the panel says it couldn't find Claude Code, check that `claude` works in your terminal, or choose its location in Settings → **Claude Code**.
 
-## Building it
+## Building from source
 
-Follow the [setup guide](docs/contributing/setup.md) for the prerequisites:
-Node, Yarn, Python 3, and the Xcode command line tools. The repository pins
-Node 24.19 in `.node-version`. Use that exact version; older 24.x releases
-silently fail to package the app.
+StickShift needs Node 24.19 (pinned in `.node-version`), Yarn, Python 3, and the Xcode command line tools. Older Node 24 releases silently fail to package the app.
 
-```shellsession
-$ yarn                 # install dependencies
-$ yarn build:dev       # build the development app bundle
-$ yarn start           # launch it with hot reload for the UI
+```bash
+yarn              # install dependencies
+yarn build:dev    # build the development app
+yarn start        # launch it with hot reload
 ```
 
-Changes under `app/src` reload live. If the window doesn't refresh on its
-own, press <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>R</kbd> in the app. Changes to the
-main process or the packaging need `yarn build:dev` again.
+Changes under `app/src` reload live. Changes to the main process or the packaging need `yarn build:dev` again. To rebuild the icon after editing `app/static/logos/*/icon-logo.icon`, run `script/build-icon-assets.sh`; it needs a full Xcode install.
 
-To regenerate the macOS icon after editing `app/static/logos/*/icon-logo.icon`
-in Icon Composer, run `script/build-icon-assets.sh`. It needs a full Xcode
-install, not just the command line tools.
-
-## Built on GitHub Desktop
-
-StickShift is built on [GitHub Desktop](https://github.com/desktop/desktop)
-and merges its changes regularly. Report problems with StickShift in this
-repository's [issues](https://github.com/adesai1000/StickShift/issues),
-not to the GitHub Desktop maintainers.
+See the [setup guide](./docs/contributing/setup.md) for details.
 
 ## License
 
-**[MIT](LICENSE)**, the same license as GitHub Desktop. The license file keeps
-GitHub's copyright notice for the code StickShift is built on, as the MIT
-license requires.
-
-StickShift isn't affiliated with or endorsed by GitHub or Anthropic. GitHub
-is a trademark of GitHub, Inc., and Claude is a trademark of Anthropic, PBC.
+[MIT](./LICENSE), the same license as GitHub Desktop, whose copyright notice the license file keeps for the code StickShift is built on. GitHub is a trademark of GitHub, Inc., and Claude is a trademark of Anthropic, PBC.
