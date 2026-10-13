@@ -55,6 +55,8 @@ If you like it, a star on the repo helps other people find it.
 | Search tags | Branch dropdown → Tags tab | [#15702](https://github.com/desktop/desktop/issues/15702) |
 | Reorder the repository list | Right-click a repository → Move Up / Move Down | [#11608](https://github.com/desktop/desktop/issues/11608) |
 | Stash selected files | Right-click files in Changes → Stash Changes | [#11531](https://github.com/desktop/desktop/issues/11531) |
+| Tabs for open files above the diff | Changes view, above the diff | |
+| Open the file in your editor from the diff | Right-click the diff → Open in _editor_ | |
 | Resizable Run script button | Drag its right edge, double-click to reset | |
 | Choose or install your own app icon (macOS) | Settings → Appearance → App Icon | |
 | No telemetry, no crash reports, no update pings | Always on | |
@@ -101,6 +103,20 @@ and **History**, which keeps the last 20 runs per repository with their status,
 duration and full output. The button itself is resizable, the same way the
 branch, worktree and fetch buttons are.
 
+### Tabs above the diff
+
+In the Changes view, every file you click in the list opens as a tab above the
+diff, in place of the file's path, so you can flip between the files you're
+working on the way you would in an editor. The list selection follows the
+active tab.
+
+Close a tab with its **×** button, a middle click, or <kbd>Delete</kbd> while
+it has focus, and move between tabs with the arrow keys. Right-clicking a tab
+offers _Close_, _Close Others_, _Close to the Right_ and _Close All_. Closing
+the active tab shows the one next to it. Tabs for files you commit or discard
+close on their own, and when two open files share a name, both tabs show
+their folder. Tabs are kept per repository until you quit the app.
+
 ### Smaller things the official app declined
 
 - **Default editor per repository** ([#12195](https://github.com/desktop/desktop/issues/12195)):
@@ -121,6 +137,10 @@ branch, worktree and fetch buttons are.
 - **Reorder the repository list** ([#11608](https://github.com/desktop/desktop/issues/11608)):
   right-click a repository and choose _Move Up_ or _Move Down_. The order is
   remembered per group.
+- **Open the file in your editor from the diff**: right-click the diff text,
+  in Changes or History, and choose _Open in_ followed by your editor's name.
+  It uses the editor from Settings → Integrations, or the repository's own
+  editor if Repository Settings → **Editor** sets one.
 - **Stash selected files** ([#11531](https://github.com/desktop/desktop/issues/11531)):
   right-click a file in the Changes list, or a selection of files, and choose
   _Stash Changes_. Only those files are stashed; everything else stays in the
