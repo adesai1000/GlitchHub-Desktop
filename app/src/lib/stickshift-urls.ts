@@ -1,6 +1,6 @@
 /** StickShift's source code */
 export const StickShiftRepositoryURL =
-  'https://github.com/adesai1000/GlitchHub-Desktop'
+  'https://github.com/adesai1000/StickShift'
 
 /**
  * Where StickShift builds are published. Shown in the About dialog in

@@ -7,12 +7,12 @@
   "main": "./main.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/adesai1000/GlitchHub-Desktop.git"
+    "url": "https://github.com/adesai1000/StickShift.git"
   },
   "description": "An IDE for the agentic age",
   "author": {
     "name": "StickShift",
-    "url": "https://github.com/adesai1000/GlitchHub-Desktop"
+    "url": "https://github.com/adesai1000/StickShift"
   },
   "license": "MIT",
   "dependencies": {

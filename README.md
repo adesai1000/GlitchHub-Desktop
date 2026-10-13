@@ -20,7 +20,7 @@ host.
 ## Download
 
 Get the latest build from the
-[releases page](https://github.com/adesai1000/GlitchHub-Desktop/releases/latest).
+[releases page](https://github.com/adesai1000/StickShift/releases/latest).
 It's a macOS app for Apple silicon, shipped as a zip. Unzip it and drag
 StickShift into Applications.
 
@@ -43,7 +43,7 @@ StickShift doesn't update itself. To install a newer release:
 
 1. Quit StickShift.
 2. Download the zip for the new release from the
-   [releases page](https://github.com/adesai1000/GlitchHub-Desktop/releases/latest)
+   [releases page](https://github.com/adesai1000/StickShift/releases/latest)
    and unzip it.
 3. Drag the new StickShift into Applications and choose **Replace**.
 4. Right-click the app, choose **Open**, then click **Open** again.
@@ -266,7 +266,7 @@ install, not just the command line tools.
 
 StickShift is built on [GitHub Desktop](https://github.com/desktop/desktop)
 and merges its changes regularly. Report problems with StickShift in this
-repository's [issues](https://github.com/adesai1000/GlitchHub-Desktop/issues),
+repository's [issues](https://github.com/adesai1000/StickShift/issues),
 not to the GitHub Desktop maintainers.
 
 ## License
