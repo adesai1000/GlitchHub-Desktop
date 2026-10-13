@@ -8,6 +8,10 @@ import { TextBox } from '../lib/text-box'
 import { Button } from '../lib/button'
 import { showOpenDialog } from '../main-process-proxy'
 import {
+  isClaudeCodeConfigDirectory,
+  isDefaultClaudeCodeConfigDirectory,
+} from '../../lib/claude-code/claude-code-conversations'
+import {
   IClaudeCodeInstallation,
   findClaudeCodeConfigDirectories,
   findClaudeCodeInstallations,
@@ -38,6 +42,9 @@ interface IClaudeCodePreferencesState {
   readonly configDirectories: ReadonlyArray<string>
   readonly customExecutable: boolean
   readonly customConfigDirectory: boolean
+
+  /** Whether the chosen configuration folder lacks Claude Code's files */
+  readonly configDirectoryLooksWrong: boolean
 }
 
 /** The Claude Code tab of the Settings dialog */
@@ -54,6 +61,7 @@ export class ClaudeCodePreferences extends React.Component<
       configDirectories: [],
       customExecutable: false,
       customConfigDirectory: false,
+      configDirectoryLooksWrong: false,
     }
   }
 
@@ -78,6 +86,25 @@ export class ClaudeCodePreferences extends React.Component<
         configDirectory !== null &&
         !configDirectories.includes(configDirectory),
     })
+    this.checkConfigDirectory()
+  }
+
+  public componentDidUpdate(prevProps: IClaudeCodePreferencesProps) {
+    if (prevProps.configDirectory !== this.props.configDirectory) {
+      this.checkConfigDirectory()
+    }
+  }
+
+  /** Warns about a configuration folder Claude Code has never used */
+  private async checkConfigDirectory() {
+    const { configDirectory } = this.props
+    const looksWrong =
+      configDirectory !== null &&
+      !(await isClaudeCodeConfigDirectory(configDirectory))
+
+    if (!this.unmounted && configDirectory === this.props.configDirectory) {
+      this.setState({ configDirectoryLooksWrong: looksWrong })
+    }
   }
 
   public componentWillUnmount() {
@@ -188,8 +215,17 @@ export class ClaudeCodePreferences extends React.Component<
         <p className="claude-code-preferences-hint">
           Claude Code keeps its login, settings, and conversations here. The
           default folder is shared with the Claude Code CLI and your editor's
-          Claude Code extension, so you stay signed in.
+          Claude Code extension, so you stay signed in. This isn't the folder
+          Claude Code works in: to continue conversations you started in another
+          folder, such as the one above the repository, click <strong>+</strong>{' '}
+          in the Claude Code panel.
         </p>
+        {this.state.configDirectoryLooksWrong && (
+          <p className="claude-code-preferences-warning">
+            This folder doesn't look like a Claude Code configuration folder, so
+            Claude Code won't find your login or past conversations in it.
+          </p>
+        )}
         {customConfigDirectory && (
           <div className="claude-code-preferences-custom">
             <TextBox
@@ -242,12 +278,21 @@ export class ClaudeCodePreferences extends React.Component<
     const customConfigDirectory = value === CustomValue
     this.setState({ customConfigDirectory })
     if (!customConfigDirectory) {
-      this.props.onConfigDirectoryChanged(value === DefaultValue ? null : value)
+      this.setConfigDirectory(value === DefaultValue ? null : value)
     }
   }
 
   private onCustomConfigDirectoryChanged = (value: string) => {
-    this.props.onConfigDirectoryChanged(value.trim() === '' ? null : value)
+    this.setConfigDirectory(value.trim() === '' ? null : value)
+  }
+
+  /** Saves the folder, treating Claude Code's own default as no setting */
+  private setConfigDirectory(directory: string | null) {
+    this.props.onConfigDirectoryChanged(
+      directory !== null && isDefaultClaudeCodeConfigDirectory(directory)
+        ? null
+        : directory
+    )
   }
 
   private onChooseConfigDirectory = async () => {
@@ -255,7 +300,7 @@ export class ClaudeCodePreferences extends React.Component<
       properties: ['openDirectory', 'createDirectory', 'showHiddenFiles'],
     })
     if (path !== null) {
-      this.props.onConfigDirectoryChanged(path)
+      this.setConfigDirectory(path)
     }
   }
 }

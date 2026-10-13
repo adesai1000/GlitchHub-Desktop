@@ -1,4 +1,5 @@
 import * as React from 'react'
+import * as Path from 'path'
 import { Disposable } from 'event-kit'
 import classNames from 'classnames'
 import { Repository } from '../../models/repository'
@@ -6,9 +7,14 @@ import { Octicon } from '../octicons'
 import * as octicons from '../octicons/octicons.generated'
 import { Button } from '../lib/button'
 import { clamp } from '../../lib/clamp'
+import { IMenuItem, showContextualMenu } from '../../lib/menu-item'
+import { showOpenDialog } from '../main-process-proxy'
+import { findClaudeCodeFolders } from '../../lib/claude-code/claude-code-conversations'
+import { getClaudeCodeConfigDirectory } from '../../lib/claude-code/claude-code-settings'
 import {
   ClaudeCodeSession,
   ClaudeCodeSessions,
+  IClaudeCodeSessionOptions,
   getClaudeCodeSessions,
 } from './claude-code-session'
 
@@ -28,6 +34,9 @@ interface IClaudeCodePanelProps {
 interface IClaudeCodeSessionTabProps {
   readonly session: ClaudeCodeSession
   readonly isActive: boolean
+
+  /** The repository's folder, to point out sessions running elsewhere */
+  readonly repositoryPath: string
   readonly onSelect: (session: ClaudeCodeSession) => void
   readonly onClose: (session: ClaudeCodeSession) => void
 }
@@ -35,8 +44,12 @@ interface IClaudeCodeSessionTabProps {
 /** A tab for one Claude Code session, named after its conversation */
 class ClaudeCodeSessionTab extends React.Component<IClaudeCodeSessionTabProps> {
   public render() {
-    const { session, isActive } = this.props
+    const { session, isActive, repositoryPath } = this.props
     const isRunning = session.status.kind === 'running'
+    const folder =
+      Path.resolve(session.cwd) === Path.resolve(repositoryPath)
+        ? null
+        : Path.basename(session.cwd)
 
     return (
       <div
@@ -54,6 +67,9 @@ class ClaudeCodeSessionTab extends React.Component<IClaudeCodeSessionTabProps> {
           })}
         />
         <span className="claude-code-tab-title">{session.title}</span>
+        {folder !== null && (
+          <span className="claude-code-tab-folder">{folder}</span>
+        )}
         <button
           type="button"
           className="claude-code-tab-close"
@@ -182,6 +198,7 @@ export class ClaudeCodePanel extends React.Component<IClaudeCodePanelProps> {
                 key={session.number}
                 session={session}
                 isActive={session === active}
+                repositoryPath={this.props.repository.path}
                 onSelect={this.onSelectSession}
                 onClose={this.onCloseSession}
               />
@@ -189,9 +206,9 @@ export class ClaudeCodePanel extends React.Component<IClaudeCodePanelProps> {
           </div>
           <Button
             className="claude-code-header-button"
-            onClick={this.onNewSession}
-            ariaLabel="New Claude Code session"
-            tooltip="New Claude Code session"
+            onClick={this.onShowNewSessionMenu}
+            ariaLabel="New session or past conversation"
+            tooltip="Start a session, or continue a past conversation"
           >
             <Octicon symbol={octicons.plus} />
           </Button>
@@ -292,7 +309,96 @@ export class ClaudeCodePanel extends React.Component<IClaudeCodePanelProps> {
   }
 
   private onNewSession = () => {
-    this.sessions.create().start()
+    this.startSession({})
+  }
+
+  private startSession(options: IClaudeCodeSessionOptions) {
+    this.sessions.create(options).start()
+  }
+
+  /**
+   * Offers a new session, and the conversations Claude Code kept for the
+   * repository's folder or a folder above it. Conversations belong to the
+   * folder Claude Code ran in, so ones started in a parent folder only show
+   * up in sessions that run there too.
+   */
+  private onShowNewSessionMenu = async () => {
+    const { repository } = this.props
+    const folders = await findClaudeCodeFolders(
+      repository.path,
+      getClaudeCodeConfigDirectory()
+    )
+
+    const items: IMenuItem[] = [
+      {
+        label: __DARWIN__ ? 'New Session' : 'New session',
+        action: this.onNewSession,
+      },
+    ]
+
+    if (folders.length > 0) {
+      items.push(
+        { type: 'separator' },
+        {
+          label: __DARWIN__ ? 'Past Conversations' : 'Past conversations',
+          enabled: false,
+        }
+      )
+    }
+
+    for (const { path, conversationCount } of folders) {
+      const name =
+        Path.resolve(path) === Path.resolve(repository.path)
+          ? repository.name
+          : Path.basename(path)
+      const count = `${conversationCount} conversation${
+        conversationCount === 1 ? '' : 's'
+      }`
+
+      items.push({
+        label: `${name} (${count})`,
+        submenu: [
+          {
+            label: __DARWIN__
+              ? 'Continue Last Conversation'
+              : 'Continue last conversation',
+            action: () =>
+              this.startSession({ cwd: path, args: ['--continue'] }),
+          },
+          {
+            label: __DARWIN__
+              ? 'Choose a Conversation…'
+              : 'Choose a conversation…',
+            action: () => this.startSession({ cwd: path, args: ['--resume'] }),
+          },
+          { type: 'separator' },
+          {
+            label: __DARWIN__ ? 'New Session Here' : 'New session here',
+            action: () => this.startSession({ cwd: path }),
+          },
+        ],
+      })
+    }
+
+    items.push(
+      { type: 'separator' },
+      {
+        label: __DARWIN__ ? 'New Session in Folder…' : 'New session in folder…',
+        action: this.onNewSessionInFolder,
+      }
+    )
+
+    showContextualMenu(items)
+  }
+
+  private onNewSessionInFolder = async () => {
+    const path = await showOpenDialog({
+      properties: ['openDirectory'],
+      defaultPath: Path.dirname(this.props.repository.path),
+    })
+    if (path !== null) {
+      this.startSession({ cwd: path })
+    }
   }
 
   private onRestart = async () => {

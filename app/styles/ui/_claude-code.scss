@@ -127,6 +127,13 @@ $claude-code-header-height: 34px;
       white-space: nowrap;
     }
 
+    // The folder of a session that doesn't run in the repository's folder
+    .claude-code-tab-folder {
+      flex-shrink: 0;
+      color: var(--text-secondary-color);
+      font-size: var(--font-size-sm);
+    }
+
     .claude-code-tab-close {
       display: flex;
       flex-shrink: 0;
@@ -246,6 +253,12 @@ $claude-code-header-height: 34px;
   // Paths have no spaces to wrap at
   .claude-code-preferences-path {
     word-break: break-all;
+  }
+
+  .claude-code-preferences-warning {
+    margin: var(--spacing-half) 0 0;
+    color: var(--error-color);
+    font-size: var(--font-size-sm);
   }
 
   .claude-code-preferences-custom {

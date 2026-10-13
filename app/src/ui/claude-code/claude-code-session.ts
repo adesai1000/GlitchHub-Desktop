@@ -9,6 +9,7 @@ import { openExternal } from '../main-process-proxy'
 import { getShellEnv } from '../../lib/hooks/get-shell-env'
 import { getGitHookEnvShell } from '../../lib/hooks/config'
 import { resolveClaudeCodeExecutable } from '../../lib/claude-code/find-claude-code'
+import { isDefaultClaudeCodeConfigDirectory } from '../../lib/claude-code/claude-code-conversations'
 import {
   getClaudeCodeConfigDirectory,
   getClaudeCodeExecutable,
@@ -51,12 +52,15 @@ export class ClaudeCodeSession {
   private launchSettings: ILaunchSettings | null = null
 
   /**
-   * @param cwd The folder to run Claude Code in
+   * @param cwd The folder to run Claude Code in, which is also the folder
+   *            Claude Code files the conversation under
    * @param number Numbers the sessions of a repository, for their names
+   * @param args Arguments for Claude Code, such as `--continue`
    */
   public constructor(
-    private readonly cwd: string,
-    public readonly number: number
+    public readonly cwd: string,
+    public readonly number: number,
+    private readonly args: ReadonlyArray<string> = []
   ) {
     this.element.className = 'claude-code-terminal-element'
 
@@ -186,7 +190,7 @@ export class ClaudeCodeSession {
       const env = await getEnvironment(this.cwd, launchSettings)
       this.fit()
 
-      const pty = nodePty.spawn(executable, [], {
+      const pty = nodePty.spawn(executable, [...this.args], {
         name: 'xterm-256color',
         cols: this.terminal.cols,
         rows: this.terminal.rows,
@@ -246,6 +250,15 @@ export class ClaudeCodeSession {
   }
 }
 
+/** How a new session starts */
+export interface IClaudeCodeSessionOptions {
+  /** The folder to run Claude Code in, the repository's by default */
+  readonly cwd?: string
+
+  /** Arguments for Claude Code, such as `--continue` or `--resume` */
+  readonly args?: ReadonlyArray<string>
+}
+
 /** The Claude Code sessions of one repository, shown as tabs in the panel */
 export class ClaudeCodeSessions {
   private readonly emitter = new Emitter()
@@ -275,9 +288,13 @@ export class ClaudeCodeSessions {
     return this.emitter.on('did-change', callback)
   }
 
-  /** Starts a new session and makes it the active one */
-  public create() {
-    const session = new ClaudeCodeSession(this.cwd, this.nextNumber++)
+  /** Adds a new session and makes it the active one */
+  public create(options: IClaudeCodeSessionOptions = {}) {
+    const session = new ClaudeCodeSession(
+      options.cwd ?? this.cwd,
+      this.nextNumber++,
+      options.args
+    )
     this.subscriptions.set(
       session,
       session.onDidChange(() => this.emitChange())
@@ -371,7 +388,12 @@ async function getEnvironment(cwd: string, settings: ILaunchSettings) {
   env.TERM = 'xterm-256color'
   env.COLORTERM = 'truecolor'
 
-  if (settings.configDirectory !== null) {
+  // Naming the default folder would still change where Claude Code looks
+  // for some of its files, so only a different folder is passed on
+  if (
+    settings.configDirectory !== null &&
+    !isDefaultClaudeCodeConfigDirectory(settings.configDirectory)
+  ) {
     env.CLAUDE_CONFIG_DIR = untildify(settings.configDirectory)
   }
 
