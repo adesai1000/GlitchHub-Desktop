@@ -13,7 +13,6 @@ interface IAboutTestDialogProps {
   readonly onShowAcknowledgements: () => void
 
   /** A function to call when the user wants to see Terms and Conditions. */
-  readonly onShowTermsAndConditions: () => void
 }
 
 interface IAboutTestDialogState {
@@ -62,7 +61,6 @@ export class AboutTestDialog extends React.Component<
         applicationArchitecture={process.arch}
         onCheckForNonStaggeredUpdates={this.onCheckForNonStaggeredUpdates}
         onShowAcknowledgements={this.props.onShowAcknowledgements}
-        onShowTermsAndConditions={this.props.onShowTermsAndConditions}
         updateState={this.state.updateState}
         onQuitAndInstall={this.props.onDismissed}
         allowDevelopment={true}

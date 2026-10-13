@@ -67,10 +67,10 @@ export class ConfirmRemoveRepository extends React.Component<
         <DialogContent>
           <p>
             Are you sure you want to remove the repository "
-            {this.props.repository.name}" from GlitchHub Desktop?
+            {this.props.repository.name}" from StickShift?
           </p>
           <div className="description">
-            <p>The repository will be removed from GlitchHub Desktop:</p>
+            <p>The repository will be removed from StickShift:</p>
             <p>
               <Ref>{this.props.repository.path}</Ref>
             </p>

@@ -3,16 +3,9 @@ import { Account } from '../models/account'
 const Disable = false
 
 /**
- * Where GlitchHub Desktop builds are published. Shown in the About dialog in
- * place of the update checker.
- */
-export const GlitchHubReleasesURL =
-  'https://github.com/adesai1000/GlitchHub-Desktop/releases'
-
-/**
  * Whether to talk to GitHub's own services for the official app: the update
  * server (which would replace this fork with the official build) and the
- * usage statistics endpoint. Off for GlitchHub Desktop; new builds come from
+ * usage statistics endpoint. Off for StickShift; new builds come from
  * the releases page instead.
  */
 export function enableUpstreamServices(): boolean {

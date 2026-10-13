@@ -40,9 +40,8 @@ const DefaultTitle = 'Sign in'
 
 const browserSignInInfoContent = (
   <p>
-    Your browser will redirect you back to GlitchHub Desktop once you've signed
-    in. If your browser asks for your permission to launch GlitchHub Desktop,
-    please allow it.
+    Your browser will redirect you back to StickShift once you've signed in. If
+    your browser asks for your permission to launch StickShift, please allow it.
   </p>
 )
 

@@ -1,19 +1,18 @@
 {
   "name": "desktop",
-  "productName": "GlitchHub Desktop",
-  "bundleID": "com.glitchhub.GlitchHubDesktop",
-  "companyName": "GitHub, Inc.",
+  "productName": "StickShift",
+  "bundleID": "com.stickshift.StickShift",
+  "companyName": "StickShift",
   "version": "1.2.0",
   "main": "./main.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/desktop/desktop.git"
+    "url": "https://github.com/adesai1000/GlitchHub-Desktop.git"
   },
-  "description": "Simple collaboration from your desktop",
+  "description": "An IDE for the agentic age",
   "author": {
-    "name": "GitHub, Inc.",
-    "email": "opensource+desktop@github.com",
-    "url": "https://desktop.github.com/"
+    "name": "StickShift",
+    "url": "https://github.com/adesai1000/GlitchHub-Desktop"
   },
   "license": "MIT",
   "dependencies": {

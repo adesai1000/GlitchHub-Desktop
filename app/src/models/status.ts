@@ -15,7 +15,7 @@ export enum GitStatusEntry {
   UpdatedButUnmerged = 'U',
 }
 
-/** The enum representation of a Git file change in GitHub Desktop. */
+/** The enum representation of a Git file change in StickShift. */
 export enum AppFileStatusKind {
   New = 'New',
   Modified = 'Modified',

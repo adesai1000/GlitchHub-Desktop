@@ -17,9 +17,9 @@ export function findToastActivatorClsid() {
       'Start Menu',
       'Programs',
       'GitHub, Inc',
-      'GlitchHub Desktop.lnk'
+      'StickShift.lnk'
     ),
-    path.join(os.homedir(), 'Desktop', 'GlitchHub Desktop.lnk'),
+    path.join(os.homedir(), 'Desktop', 'StickShift.lnk'),
   ]
 
   for (const shortcutPath of shortcutPaths) {

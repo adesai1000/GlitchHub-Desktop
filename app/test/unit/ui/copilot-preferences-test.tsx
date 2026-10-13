@@ -461,7 +461,7 @@ describe('CopilotPreferences', () => {
 
     assert.ok(
       screen.getByText(
-        'Copilot features in GlitchHub Desktop require a GitHub Copilot license.'
+        'Copilot features in StickShift require a GitHub Copilot license.'
       )
     )
 
@@ -692,7 +692,7 @@ describe('CopilotPreferences', () => {
 
     assert.ok(
       screen.getByText(
-        'Copilot features in GlitchHub Desktop require a GitHub Copilot license.'
+        'Copilot features in StickShift require a GitHub Copilot license.'
       )
     )
     assert.strictEqual(screen.queryByRole('combobox'), null)

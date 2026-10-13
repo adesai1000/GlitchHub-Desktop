@@ -78,7 +78,7 @@ export class Advanced extends React.Component<
   private reportDesktopUsageLabel() {
     return (
       <span>
-        Help GlitchHub Desktop improve by submitting{' '}
+        Help StickShift improve by submitting{' '}
         <LinkButton uri={SamplesURL}>usage stats</LinkButton>
       </span>
     )
@@ -126,8 +126,8 @@ export class Advanced extends React.Component<
             />
           ) : (
             <p className="settings-description usage-privacy">
-              Your usage data stays private. GlitchHub Desktop doesn't send
-              usage statistics, crash reports or update checks anywhere.
+              Your usage data stays private. StickShift doesn't send usage
+              statistics, crash reports or update checks anywhere.
             </p>
           )}
         </div>

@@ -306,8 +306,8 @@ export class Appearance extends React.Component<
   }
 
   public renderThemeSwatch = (theme: ApplicationTheme) => {
-    const darkThemeImage = encodePathAsUrl(__dirname, 'static/ghd_dark.svg')
-    const lightThemeImage = encodePathAsUrl(__dirname, 'static/ghd_light.svg')
+    const darkThemeImage = encodePathAsUrl(__dirname, 'static/theme-dark.svg')
+    const lightThemeImage = encodePathAsUrl(__dirname, 'static/theme-light.svg')
 
     switch (theme) {
       case ApplicationTheme.Light:

@@ -1,4 +1,4 @@
-import { Menu, shell, app, BrowserWindow } from 'electron'
+import { Menu, shell, BrowserWindow } from 'electron'
 import { ensureItemIds } from './ensure-item-ids'
 import { MenuEvent } from './menu-event'
 import { truncateWithEllipsis } from '../../lib/truncate-with-ellipsis'
@@ -9,6 +9,10 @@ import { MenuLabelsEvent } from '../../models/menu-labels'
 import * as ipcWebContents from '../ipc-webcontents'
 import { mkdir } from 'fs/promises'
 import { buildTestMenu } from './build-test-menu'
+import {
+  StickShiftNewIssueURL,
+  StickShiftRepositoryURL,
+} from '../../lib/stickshift-urls'
 
 const createPullRequestLabel = __DARWIN__
   ? 'Create Pull Request'
@@ -69,10 +73,10 @@ export function buildDefaultMenuTemplate({
 
   if (__DARWIN__) {
     template.push({
-      label: 'GlitchHub Desktop',
+      label: 'StickShift',
       submenu: [
         {
-          label: 'About GlitchHub Desktop',
+          label: 'About StickShift',
           click: emit('show-about'),
           id: 'about',
         },
@@ -533,39 +537,17 @@ export function buildDefaultMenuTemplate({
     label: __DARWIN__ ? 'Report Issue…' : 'Report issue…',
     click() {
       shell
-        .openExternal('https://github.com/desktop/desktop/issues/new/choose')
+        .openExternal(StickShiftNewIssueURL)
         .catch(err => log.error('Failed opening issue creation page', err))
     },
   }
 
-  const contactSupportItem: Electron.MenuItemConstructorOptions = {
-    label: __DARWIN__ ? 'Contact GitHub Support…' : '&Contact GitHub support…',
+  const showUserGuide: Electron.MenuItemConstructorOptions = {
+    label: __DARWIN__ ? 'Show User Guide' : 'Show user guide',
     click() {
       shell
-        .openExternal(
-          `https://github.com/contact?from_desktop_app=1&app_version=${app.getVersion()}`
-        )
-        .catch(err => log.error('Failed opening contact support page', err))
-    },
-  }
-
-  const showUserGuides: Electron.MenuItemConstructorOptions = {
-    label: 'Show User Guides',
-    click() {
-      shell
-        .openExternal('https://docs.github.com/en/desktop')
-        .catch(err => log.error('Failed opening user guides page', err))
-    },
-  }
-
-  const showKeyboardShortcuts: Electron.MenuItemConstructorOptions = {
-    label: __DARWIN__ ? 'Show Keyboard Shortcuts' : 'Show keyboard shortcuts',
-    click() {
-      shell
-        .openExternal(
-          'https://docs.github.com/en/desktop/installing-and-configuring-github-desktop/overview/keyboard-shortcuts'
-        )
-        .catch(err => log.error('Failed opening keyboard shortcuts page', err))
+        .openExternal(`${StickShiftRepositoryURL}#readme`)
+        .catch(err => log.error('Failed opening user guide', err))
     },
   }
 
@@ -585,13 +567,7 @@ export function buildDefaultMenuTemplate({
     },
   }
 
-  const helpItems = [
-    submitIssueItem,
-    contactSupportItem,
-    showUserGuides,
-    showKeyboardShortcuts,
-    showLogsItem,
-  ]
+  const helpItems = [submitIssueItem, showUserGuide, showLogsItem]
 
   helpItems.push(...buildTestMenu())
 
@@ -607,7 +583,7 @@ export function buildDefaultMenuTemplate({
         ...helpItems,
         separator,
         {
-          label: '&About GlitchHub Desktop',
+          label: '&About StickShift',
           click: emit('show-about'),
           id: 'about',
         },

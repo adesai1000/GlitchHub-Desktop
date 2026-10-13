@@ -18,7 +18,7 @@ async function withRepo(
   files: Record<string, string>,
   fn: (path: string) => Promise<void>
 ) {
-  const path = await mkdtemp(join(tmpdir(), 'glitchhub-scripts-'))
+  const path = await mkdtemp(join(tmpdir(), 'stickshift-scripts-'))
   try {
     for (const [name, contents] of Object.entries(files)) {
       await writeFile(join(path, name), contents)

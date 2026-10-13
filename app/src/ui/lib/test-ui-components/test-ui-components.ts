@@ -345,7 +345,7 @@ export function showTestUI(
   function showTestNoExternalEditor() {
     dispatcher.postError(
       new ExternalEditorError(
-        `No suitable editors installed for GlitchHub Desktop to launch. Install ${suggestedExternalEditor.name} for your platform and restart GlitchHub Desktop to try again.`,
+        `No suitable editors installed for StickShift to launch. Install ${suggestedExternalEditor.name} for your platform and restart StickShift to try again.`,
         { suggestDefaultEditor: true }
       )
     )

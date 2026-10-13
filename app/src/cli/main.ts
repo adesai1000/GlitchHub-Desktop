@@ -18,7 +18,7 @@ const run = (...args: Array<string>) => {
   if (process.platform === 'darwin') {
     execFile('open', ['-n', join(__dirname, '../../..'), '--args', ...args], cb)
   } else if (process.platform === 'win32') {
-    const exeName = `GitHubDesktop${__DEV__ ? '-dev' : ''}.exe`
+    const exeName = `StickShift${__DEV__ ? '-dev' : ''}.exe`
     spawn(join(__dirname, `../../${exeName}`), args, {
       detached: true,
       stdio: 'ignore',
@@ -38,12 +38,12 @@ const args = parse(process.argv.slice(2), {
 
 const usage = (exitCode = 1): never => {
   process.stderr.write(
-    'GlitchHub Desktop CLI usage: \n' +
-      '  github                            Open the current directory\n' +
-      '  github open [path]                Open the provided path\n' +
-      '  github clone [-b branch] <url>    Clone the repository by url or name/owner\n' +
-      '                                    (ex torvalds/linux), optionally checking out\n' +
-      '                                    the branch\n'
+    'StickShift CLI usage: \n' +
+      '  stickshift                            Open the current directory\n' +
+      '  stickshift open [path]                Open the provided path\n' +
+      '  stickshift clone [-b branch] <url>    Clone the repository by url or name/owner\n' +
+      '                                        (ex torvalds/linux), optionally checking out\n' +
+      '                                        the branch\n'
   )
   process.exit(exitCode)
 }

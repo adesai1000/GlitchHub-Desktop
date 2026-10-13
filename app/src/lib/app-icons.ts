@@ -17,7 +17,7 @@ export interface IAppIcon {
 }
 
 /** The id of the icon the app ships with by default. */
-export const defaultAppIconId = 'glitch'
+export const defaultAppIconId = 'stickshift'
 
 const selectedAppIconKey = 'selected-app-icon'
 const installedAppIconsKey = 'installed-app-icons'
@@ -34,14 +34,8 @@ export function getBuiltInAppIcons(staticDir: string): ReadonlyArray<IAppIcon> {
   return [
     {
       id: defaultAppIconId,
-      name: 'Glitch',
-      path: Path.join(dir, 'glitch.png'),
-      builtIn: true,
-    },
-    {
-      id: 'boring',
-      name: 'Boring',
-      path: Path.join(dir, 'boring.png'),
+      name: 'StickShift',
+      path: Path.join(dir, 'stickshift.png'),
       builtIn: true,
     },
   ]

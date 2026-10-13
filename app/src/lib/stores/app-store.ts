@@ -921,7 +921,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
   /**
    * On Windows OS, whenever a user toggles their zoom factor, chromium stores it
-   * in their `%AppData%/Roaming/GlitchHub Desktop/Preferences.js` denoted by the
+   * in their `%AppData%/Roaming/StickShift/Preferences.js` denoted by the
    * file path to the application. That file path contains the apps version.
    * Thus, on every update, the users set zoom level gets reset as there is not
    * defined value for the current app version.
@@ -7863,7 +7863,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
         if (match === null) {
           this.emitError(
             new ExternalEditorError(
-              `No suitable editors installed for GlitchHub Desktop to launch. Install ${suggestedExternalEditor.name} for your platform and restart GlitchHub Desktop to try again.`,
+              `No suitable editors installed for StickShift to launch. Install ${suggestedExternalEditor.name} for your platform and restart StickShift to try again.`,
               { suggestDefaultEditor: true }
             )
           )
@@ -7897,7 +7897,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       if (match === null) {
         this.emitError(
           new ExternalEditorError(
-            `No suitable editors installed for GlitchHub Desktop to launch. Install ${suggestedExternalEditor.name} for your platform and restart GlitchHub Desktop to try again.`,
+            `No suitable editors installed for StickShift to launch. Install ${suggestedExternalEditor.name} for your platform and restart StickShift to try again.`,
             { suggestDefaultEditor: true }
           )
         )

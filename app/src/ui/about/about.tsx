@@ -9,10 +9,8 @@ import {
   DefaultDialogFooter,
 } from '../dialog'
 import { LinkButton } from '../lib/link-button'
-import {
-  enableUpstreamServices,
-  GlitchHubReleasesURL,
-} from '../../lib/feature-flag'
+import { enableUpstreamServices } from '../../lib/feature-flag'
+import { StickShiftReleasesURL } from '../../lib/stickshift-urls'
 import { IUpdateState, UpdateStatus } from '../lib/update-store'
 import { Loading } from '../lib/loading'
 import { RelativeTime } from '../relative-time'
@@ -56,7 +54,6 @@ interface IAboutProps {
   readonly onShowAcknowledgements: () => void
 
   /** A function to call when the user wants to see Terms and Conditions. */
-  readonly onShowTermsAndConditions: () => void
   readonly onQuitAndInstall: () => void
 
   readonly updateState: IUpdateState
@@ -154,8 +151,8 @@ export class About extends React.Component<IAboutProps> {
     if (!enableUpstreamServices()) {
       return (
         <p>
-          GlitchHub Desktop doesn't update itself. New builds are published on
-          the <LinkButton uri={GlitchHubReleasesURL}>releases page</LinkButton>.
+          StickShift doesn't update itself. New builds are published on the{' '}
+          <LinkButton uri={StickShiftReleasesURL}>releases page</LinkButton>.
         </p>
       )
     }
@@ -282,12 +279,7 @@ export class About extends React.Component<IAboutProps> {
         {this.renderUpdateErrors()}
         <DialogContent>
           <Row className="logo">
-            <img
-              src={DesktopLogo}
-              alt="GlitchHub Desktop"
-              width="64"
-              height="64"
-            />
+            <img src={DesktopLogo} alt="StickShift" width="64" height="64" />
           </Row>
           <h1 id={titleId}>About {name}</h1>
           <p className="no-padding">
@@ -301,18 +293,13 @@ export class About extends React.Component<IAboutProps> {
           {this.renderBetaLink()}
           <div className="terms-and-license-container">
             <p className="no-padding terms-and-license">
-              <LinkButton onClick={this.props.onShowTermsAndConditions}>
-                Terms and Conditions
-              </LinkButton>
-            </p>
-            <p className="no-padding terms-and-license">
               <LinkButton onClick={this.props.onShowAcknowledgements}>
                 License and Open Source Notices
               </LinkButton>
             </p>
             <p className="terms-and-license">
               <LinkButton uri="https://gh.io/copilot-for-desktop-transparency">
-                Responsible use of Copilot in GitHub Desktop
+                Responsible use of Copilot
               </LinkButton>
             </p>
           </div>

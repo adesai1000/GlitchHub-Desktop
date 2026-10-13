@@ -45,7 +45,7 @@ export async function setAppIcon(iconPath: string | null): Promise<void> {
   }
 
   const dockIconPath =
-    iconPath ?? Path.join(__dirname, 'static', 'app-icons', 'glitch.png')
+    iconPath ?? Path.join(__dirname, 'static', 'app-icons', 'stickshift.png')
   const dockImage = nativeImage.createFromPath(dockIconPath)
   if (!dockImage.isEmpty()) {
     app.dock?.setIcon(dockImage)

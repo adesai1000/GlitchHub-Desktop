@@ -5,7 +5,7 @@ import { open } from 'fs/promises'
 
 /** Create the Git LFS progress reporting file and return the path. */
 export async function createLFSProgressFile(): Promise<string> {
-  const path = await getTempFilePath('GitHubDesktop-lfs-progress')
+  const path = await getTempFilePath('StickShift-lfs-progress')
 
   // getTempFilePath will take care of creating the directory, we only need
   // to make sure the file exists as well. We use `wx` to throw if the file

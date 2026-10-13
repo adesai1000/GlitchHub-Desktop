@@ -113,7 +113,7 @@ export const crash = merge({}, commonConfig, {
   target: 'electron-renderer',
   plugins: [
     new HtmlWebpackPlugin({
-      title: 'GitHub Desktop',
+      title: 'StickShift',
       filename: 'crash.html',
       chunks: ['crash'],
     }),

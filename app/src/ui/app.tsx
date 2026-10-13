@@ -99,7 +99,6 @@ import { Acknowledgements } from './acknowledgements'
 import { UntrustedCertificate } from './untrusted-certificate'
 import { NoRepositoriesView } from './no-repositories'
 import { ConfirmRemoveRepository } from './remove-repository'
-import { TermsAndConditions } from './terms-and-conditions'
 import { PushBranchCommits } from './branches'
 import { CLIInstalled } from './cli-installed'
 import { GenericGitAuthentication } from './generic-git-auth'
@@ -2020,7 +2019,6 @@ export class App extends React.Component<IAppProps, IAppState> {
             applicationArchitecture={process.arch}
             onCheckForNonStaggeredUpdates={this.onCheckForNonStaggeredUpdates}
             onShowAcknowledgements={this.showAcknowledgements}
-            onShowTermsAndConditions={this.showTermsAndConditions}
             updateState={this.state.updateState}
             onQuitAndInstall={this.onQuitAndInstall}
           />
@@ -2059,13 +2057,6 @@ export class App extends React.Component<IAppProps, IAppState> {
             key="confirm-remove-repository"
             repository={popup.repository}
             onConfirmation={this.onConfirmRepoRemoval}
-            onDismissed={onPopupDismissedFn}
-          />
-        )
-      case PopupType.TermsAndConditions:
-        return (
-          <TermsAndConditions
-            key="terms-and-conditions"
             onDismissed={onPopupDismissedFn}
           />
         )
@@ -2853,7 +2844,6 @@ export class App extends React.Component<IAppProps, IAppState> {
             key="about"
             onDismissed={onPopupDismissedFn}
             onShowAcknowledgements={this.showAcknowledgements}
-            onShowTermsAndConditions={this.showTermsAndConditions}
           />
         )
       case PopupType.TestCLIAction:
@@ -3353,10 +3343,6 @@ export class App extends React.Component<IAppProps, IAppState> {
 
   private showAcknowledgements = () => {
     this.props.dispatcher.showPopup({ type: PopupType.Acknowledgements })
-  }
-
-  private showTermsAndConditions = () => {
-    this.props.dispatcher.showPopup({ type: PopupType.TermsAndConditions })
   }
 
   private onQuitAndInstall = () => updateStore.quitAndInstallUpdate()

@@ -11,6 +11,7 @@ import { getVersion } from '../ui/lib/app-proxy'
 import { getOS } from '../lib/get-os'
 import * as ipcRenderer from '../lib/ipc-renderer'
 import { getCurrentWindowState } from '../ui/main-process-proxy'
+import { StickShiftRepositoryURL } from '../lib/stickshift-urls'
 
 // This is a weird one, let's leave it as a placeholder
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -42,7 +43,7 @@ const BottomImageUri = encodePathAsUrl(
   'static/welcome-illustration-left-bottom.svg'
 )
 
-const issuesUri = 'https://github.com/desktop/desktop/issues'
+const issuesUri = `${StickShiftRepositoryURL}/issues`
 
 /**
  * Formats an error by attempting to strip out user-identifiable information
@@ -136,8 +137,8 @@ export class CrashApp extends React.Component<ICrashAppProps, ICrashAppState> {
   private renderTitle() {
     const message =
       this.state.type === 'launch'
-        ? 'GlitchHub Desktop failed to launch'
-        : 'GlitchHub Desktop encountered an error'
+        ? 'StickShift failed to launch'
+        : 'StickShift encountered an error'
 
     return (
       <header>
@@ -151,18 +152,18 @@ export class CrashApp extends React.Component<ICrashAppProps, ICrashAppState> {
     if (this.state.type === 'launch') {
       return (
         <p>
-          GlitchHub Desktop encountered a catastrophic error that prevents it
-          from launching. This has been reported to the team, but if you
-          encounter this repeatedly please report this issue to the GlitchHub
-          Desktop <LinkButton uri={issuesUri}>issue tracker</LinkButton>.
+          StickShift encountered a catastrophic error that prevents it from
+          launching. This has been reported to the team, but if you encounter
+          this repeatedly please report this issue to the StickShift{' '}
+          <LinkButton uri={issuesUri}>issue tracker</LinkButton>.
         </p>
       )
     } else {
       return (
         <p>
-          GlitchHub Desktop has encountered an unrecoverable error and will need
-          to restart. This has been reported to the team, but if you encounter
-          this repeatedly please report this issue to the GlitchHub Desktop{' '}
+          StickShift has encountered an unrecoverable error and will need to
+          restart. This has been reported to the team, but if you encounter this
+          repeatedly please report this issue to the StickShift{' '}
           <LinkButton uri={issuesUri}>issue tracker</LinkButton>.
         </p>
       )

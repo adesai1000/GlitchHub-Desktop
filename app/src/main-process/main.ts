@@ -1,3 +1,5 @@
+// Must run before anything else reads or writes the profile folder
+import './migrate-profile'
 import '../lib/logging/main/install'
 import { setAppIcon } from './app-icon'
 
@@ -121,7 +123,7 @@ if (__DARWIN__) {
 // On Windows, in order to get notifications properly working for dev builds,
 // we'll want to set the right App User Model ID from production builds.
 if (__WIN32__ && __DEV__) {
-  app.setAppUserModelId('com.squirrel.GitHubDesktop.GitHubDesktop')
+  app.setAppUserModelId('com.squirrel.StickShift.StickShift')
 }
 
 app.on('window-all-closed', () => {

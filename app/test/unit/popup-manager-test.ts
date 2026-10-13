@@ -124,21 +124,21 @@ describe('PopupManager', () => {
       const popupManager = new PopupManager(2)
       popupManager.addPopup({ type: PopupType.About })
       popupManager.addPopup({ type: PopupType.SignIn })
-      popupManager.addPopup({ type: PopupType.TermsAndConditions })
+      popupManager.addPopup({ type: PopupType.Acknowledgements })
 
       const aboutPopups = popupManager.getPopupsOfType(PopupType.About)
       const signInPoups = popupManager.getPopupsOfType(PopupType.SignIn)
-      const termsAndConditionsPoups = popupManager.getPopupsOfType(
-        PopupType.TermsAndConditions
+      const acknowledgementsPopups = popupManager.getPopupsOfType(
+        PopupType.Acknowledgements
       )
       assert.equal(aboutPopups.length, 0)
       assert.equal(signInPoups.length, 1)
-      assert.equal(termsAndConditionsPoups.length, 1)
+      assert.equal(acknowledgementsPopups.length, 1)
 
       assert.equal(signInPoups.at(0)?.type, PopupType.SignIn)
       assert.equal(
-        termsAndConditionsPoups.at(0)?.type,
-        PopupType.TermsAndConditions
+        acknowledgementsPopups.at(0)?.type,
+        PopupType.Acknowledgements
       )
     })
   })
@@ -311,7 +311,7 @@ describe('PopupManager', () => {
       const popup1 = popupManager.addPopup({ type: PopupType.About })
       const popup2 = popupManager.addPopup({ type: PopupType.SignIn })
       const popup3 = popupManager.addPopup({
-        type: PopupType.TermsAndConditions,
+        type: PopupType.Acknowledgements,
       })
 
       assert.equal(popup1.id, 1)

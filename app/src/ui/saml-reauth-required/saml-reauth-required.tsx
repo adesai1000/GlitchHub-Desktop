@@ -49,12 +49,12 @@ export class SAMLReauthRequiredDialog extends React.Component<
           <p>
             The "{this.props.organizationName}" organization has enabled or
             enforced SAML SSO. To access this repository, you must sign in again
-            and grant GlitchHub Desktop permission to access the organization's
+            and grant StickShift permission to access the organization's
             repositories.
           </p>
           <p>
-            Would you like to open a browser to grant GlitchHub Desktop
-            permission to access the repository?
+            Would you like to open a browser to grant StickShift permission to
+            access the repository?
           </p>
         </DialogContent>
         <DialogFooter>

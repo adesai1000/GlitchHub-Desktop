@@ -17,10 +17,10 @@ export class TutorialWelcome extends React.Component {
     return (
       <div id="tutorial-welcome">
         <div className="header">
-          <h1>Welcome to GlitchHub Desktop</h1>
+          <h1>Welcome to StickShift</h1>
           <p>
-            Use this tutorial to get comfortable with Git, GitHub, and GlitchHub
-            Desktop.
+            Use this tutorial to get comfortable with Git, GitHub, and
+            StickShift.
           </p>
         </div>
         <ul className="definitions">
@@ -43,8 +43,7 @@ export class TutorialWelcome extends React.Component {
           <li>
             <img src={CloudServerImage} alt="Server stack with cloud" />
             <p>
-              <strong>GlitchHub Desktop</strong> helps you work with GitHub
-              locally.
+              <strong>StickShift</strong> helps you work with GitHub locally.
             </p>
           </li>
         </ul>

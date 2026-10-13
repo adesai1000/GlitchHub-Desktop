@@ -23,7 +23,7 @@ function renderAppearance(
     selectedTabSize: 4,
     onSelectedTabSizeChanged: () => {},
     appIcons: [],
-    selectedAppIconId: 'glitch',
+    selectedAppIconId: 'stickshift',
     onSelectedAppIconChanged: () => {},
     onInstallAppIcon: () => {},
     onRemoveAppIcon: () => {},

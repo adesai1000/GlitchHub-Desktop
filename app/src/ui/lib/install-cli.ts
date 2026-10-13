@@ -4,10 +4,10 @@ import * as fsAdmin from 'fs-admin'
 import { mkdir, readlink, symlink, unlink } from 'fs/promises'
 
 /** The path for the installed command line tool. */
-export const InstalledCLIPath = '/usr/local/bin/github'
+export const InstalledCLIPath = '/usr/local/bin/stickshift'
 
 /** The path to the packaged CLI. */
-const PackagedPath = Path.resolve(__dirname, 'static', 'github.sh')
+const PackagedPath = Path.resolve(__dirname, 'static', 'stickshift.sh')
 
 /** Install the command line tool on macOS. */
 export async function installCLI(): Promise<void> {
@@ -42,7 +42,7 @@ function removeExistingSymlink(asAdmin: boolean) {
       if (error !== null) {
         reject(
           new Error(
-            `Failed to remove file at ${InstalledCLIPath}. Authorization of GlitchHub Desktop Helper is required.`
+            `Failed to remove file at ${InstalledCLIPath}. Authorization of StickShift Helper is required.`
           )
         )
         return

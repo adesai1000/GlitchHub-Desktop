@@ -5,9 +5,9 @@ import { getAppPath } from '../lib/app-proxy'
 import { Loading } from '../lib/loading'
 import { LinkButton } from '../lib/link-button'
 import { Dialog, DialogContent, DefaultDialogFooter } from '../dialog'
+import { StickShiftRepositoryURL } from '../../lib/stickshift-urls'
 
-const WebsiteURL = 'https://desktop.github.com'
-const RepositoryURL = 'https://github.com/desktop/desktop'
+const UpstreamURL = 'https://github.com/desktop/desktop'
 
 interface IAcknowledgementsProps {
   /** The function to call when the dialog should be dismissed. */
@@ -121,15 +121,16 @@ export class Acknowledgements extends React.Component<
       >
         <DialogContent>
           <p>
-            <LinkButton uri={WebsiteURL}>GitHub Desktop</LinkButton> is an open
-            source project published under the MIT License. You can view the
-            source code and contribute to this project on{' '}
-            <LinkButton uri={RepositoryURL}>GitHub</LinkButton>.
+            StickShift is an open source project published under the MIT
+            License. You can view the source code and contribute to it on{' '}
+            <LinkButton uri={StickShiftRepositoryURL}>GitHub</LinkButton>. It's
+            built on <LinkButton uri={UpstreamURL}>GitHub Desktop</LinkButton>,
+            which GitHub publishes under the same license.
           </p>
 
           {desktopLicense}
 
-          <p>GitHub Desktop also distributes these libraries:</p>
+          <p>StickShift also distributes these libraries:</p>
 
           {licenses ? this.renderLicenses(licenses) : <Loading />}
         </DialogContent>

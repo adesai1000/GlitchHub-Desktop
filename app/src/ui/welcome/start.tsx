@@ -28,19 +28,19 @@ export class Start extends React.Component<IStartProps, {}> {
     return (
       <section
         id="start"
-        aria-label="Welcome to GlitchHub Desktop"
+        aria-label="Welcome to StickShift"
         aria-describedby="start-description"
       >
         <div className="start-content">
           <h1 className="welcome-title">
-            Welcome to <span>GlitchHub Desktop</span>
+            Welcome to <span>StickShift</span>
           </h1>
           {!this.props.loadingBrowserAuth ? (
             <>
               <p id="start-description" className="welcome-text">
-                GlitchHub Desktop is a seamless way to contribute to projects on
-                GitHub and GitHub Enterprise. Sign in below to get started with
-                your existing projects.
+                StickShift is a seamless way to contribute to projects on GitHub
+                and GitHub Enterprise. Sign in below to get started with your
+                existing projects.
               </p>
             </>
           ) : (
@@ -96,8 +96,8 @@ export class Start extends React.Component<IStartProps, {}> {
             </LinkButton>
           </p>
           <p>
-            GlitchHub Desktop sends usage metrics to improve the product and
-            inform feature decisions.{' '}
+            StickShift sends usage metrics to improve the product and inform
+            feature decisions.{' '}
             <LinkButton uri={SamplesURL}>
               Learn more about user metrics.
             </LinkButton>

@@ -39,9 +39,9 @@ export class Accessibility extends React.Component<
             id="underline-setting-description"
             className="settings-description"
           >
-            When enabled, GlitchHub Desktop will underline links in commit
-            messages, comments, and other text fields. This can help make links
-            easier to distinguish. {this.renderExampleLink()}
+            When enabled, StickShift will underline links in commit messages,
+            comments, and other text fields. This can help make links easier to
+            distinguish. {this.renderExampleLink()}
           </p>
 
           <Checkbox

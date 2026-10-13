@@ -99,29 +99,29 @@ function resolveVersionedPath(binPath: string, relativePath: string): string {
 function writeBatchScriptCLITrampoline(binPath: string): Promise<void> {
   const versionedPath = resolveVersionedPath(
     binPath,
-    'resources/app/static/github.bat'
+    'resources/app/static/stickshift.bat'
   )
 
   const trampoline = `@echo off\n"%~dp0\\${versionedPath}" %*`
-  const trampolinePath = Path.join(binPath, 'github.bat')
+  const trampolinePath = Path.join(binPath, 'stickshift.bat')
 
   return writeFile(trampolinePath, trampoline)
 }
 
 function writeShellScriptCLITrampoline(binPath: string): Promise<void> {
   // The path we get from `resolveVersionedPath` is a Win32 relative
-  // path (something like `..\app-2.5.0\resources\app\static\github.sh`).
+  // path (something like `..\app-2.5.0\resources\app\static\stickshift.sh`).
   // We need to make sure it's a POSIX path in order for WSL to be able
   // to resolve it. See https://github.com/desktop/desktop/issues/4998
   const versionedPath = resolveVersionedPath(
     binPath,
-    'resources/app/static/github.sh'
+    'resources/app/static/stickshift.sh'
   ).replace(/\\/g, '/')
 
   const trampoline = `#!/usr/bin/env bash
   DIR="$( cd "$( dirname "\$\{BASH_SOURCE[0]\}" )" && pwd )"
   sh "$DIR/${versionedPath}" "$@"`
-  const trampolinePath = Path.join(binPath, 'github')
+  const trampolinePath = Path.join(binPath, 'stickshift')
 
   return writeFile(trampolinePath, trampoline, { encoding: 'utf8', mode: 755 })
 }
@@ -159,7 +159,7 @@ async function updateShortcut(): Promise<void> {
     const desktopShortcutPath = Path.join(
       homeDirectory,
       'Desktop',
-      'GlitchHub Desktop.lnk'
+      'StickShift.lnk'
     )
     const exists = await pathExists(desktopShortcutPath)
     const locations: ShortcutLocations = exists

@@ -107,7 +107,7 @@ export class Notifications extends React.Component<
           <LinkButton onClick={this.onGrantNotificationPermission}>
             grant permission
           </LinkButton>{' '}
-          to display these notifications from GlitchHub Desktop.
+          to display these notifications from StickShift.
         </>
       )
     }
@@ -121,8 +121,8 @@ export class Notifications extends React.Component<
     if (warnNotificationsDenied) {
       return (
         <div className="setting-hint-warning">
-          <span className="warning-icon">⚠️</span> GlitchHub Desktop has no
-          permission to display notifications. Please, enable them in the{' '}
+          <span className="warning-icon">⚠️</span> StickShift has no permission
+          to display notifications. Please, enable them in the{' '}
           <LinkButton uri={notificationSettingsURL}>
             Notifications Settings
           </LinkButton>
@@ -138,7 +138,7 @@ export class Notifications extends React.Component<
     return (
       <>
         {' '}
-        Make sure notifications are {verb} for GlitchHub Desktop in the{' '}
+        Make sure notifications are {verb} for StickShift in the{' '}
         <LinkButton uri={notificationSettingsURL}>
           Notifications Settings
         </LinkButton>

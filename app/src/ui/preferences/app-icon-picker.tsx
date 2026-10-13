@@ -105,7 +105,7 @@ export class AppIconPicker extends React.Component<IAppIconPickerProps> {
         <div className="app-icon-group-label">Preview</div>
         {this.renderDockPreview()}
 
-        <div className="app-icon-group-label">Included with GlitchHub</div>
+        <div className="app-icon-group-label">Included with StickShift</div>
         <div className="app-icon-grid">
           {builtIn.map(icon => (
             <AppIconCard

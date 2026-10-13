@@ -204,7 +204,7 @@ function packageApp() {
       new RegExp('/\\.git($|/)'),
       new RegExp('/node_modules/\\.bin($|/)'),
     ],
-    appCopyright: `Copyright © ${new Date().getFullYear()} GitHub, Inc.`,
+    appCopyright: `Copyright © ${new Date().getFullYear()} StickShift. Built on GitHub Desktop, © GitHub, Inc.`,
 
     // macOS
     appBundleId: getBundleID(),
@@ -224,7 +224,7 @@ function packageApp() {
       // or otherwise it will replace '-' with one of the regular codesigning
       // identities in our system.
       //
-      // GlitchHub Desktop releases are built without an Apple developer
+      // StickShift releases are built without an Apple developer
       // certificate, so they're signed ad-hoc too unless notarization
       // credentials (and therefore a real identity) are available.
       identity: adHocSign ? '-' : undefined,
@@ -491,7 +491,7 @@ function generateLicenseMetadata(outRoot: string) {
   )
 
   const licenseText = readFileSync(chooseALicenseLicense, 'utf8')
-  const licenseWithHeader = `GitHub Desktop uses licensing information provided by choosealicense.com.
+  const licenseWithHeader = `StickShift uses licensing information provided by choosealicense.com.
 
 The bundle in available-licenses.json has been generated from a source list provided at https://github.com/github/choosealicense.com, which is made available under the below license:
 

@@ -15,23 +15,20 @@ import {
 } from '../../src/lib/app-icons'
 
 describe('app icons', () => {
-  it('ships Glitch as the default and Boring as the vanilla icon', () => {
+  it('ships the StickShift icon as the only built-in icon', () => {
     const icons = getBuiltInAppIcons('/out')
     assert.deepStrictEqual(
       icons.map(i => [i.id, i.name, i.builtIn]),
-      [
-        ['glitch', 'Glitch', true],
-        ['boring', 'Boring', true],
-      ]
+      [['stickshift', 'StickShift', true]]
     )
     assert.strictEqual(icons[0].id, defaultAppIconId)
-    assert.ok(icons[1].path.endsWith('/static/app-icons/boring.png'))
+    assert.ok(icons[0].path.endsWith('/static/app-icons/stickshift.png'))
   })
 
   it('persists the selection and treats the default as unset', () => {
     assert.strictEqual(getSelectedAppIconId(), defaultAppIconId)
-    setSelectedAppIconId('boring')
-    assert.strictEqual(getSelectedAppIconId(), 'boring')
+    setSelectedAppIconId('custom-icon')
+    assert.strictEqual(getSelectedAppIconId(), 'custom-icon')
     setSelectedAppIconId(defaultAppIconId)
     assert.strictEqual(getSelectedAppIconId(), defaultAppIconId)
   })
@@ -45,7 +42,7 @@ describe('app icons', () => {
   })
 
   it('installs a PNG into the profile folder and can remove it again', async () => {
-    const dir = await mkdtemp(join(tmpdir(), 'glitchhub-icons-'))
+    const dir = await mkdtemp(join(tmpdir(), 'stickshift-icons-'))
     try {
       const source = join(dir, 'my-icon.png')
       await writeFile(source, 'not really a png')

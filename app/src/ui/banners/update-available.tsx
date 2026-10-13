@@ -73,12 +73,10 @@ export class UpdateAvailable extends React.Component<IUpdateAvailableProps> {
     if (this.props.isX64ToARM64ImmediateAutoUpdate) {
       return (
         <span onSubmit={this.updateNow}>
-          An optimized version of GlitchHub Desktop is available for your{' '}
+          An optimized version of StickShift is available for your{' '}
           {__DARWIN__ ? 'Apple silicon' : 'Arm64'} machine and will be installed
           at the next launch or{' '}
-          <LinkButton onClick={this.updateNow}>
-            restart GlitchHub Desktop
-          </LinkButton>{' '}
+          <LinkButton onClick={this.updateNow}>restart StickShift</LinkButton>{' '}
           now.
         </span>
       )
@@ -87,7 +85,7 @@ export class UpdateAvailable extends React.Component<IUpdateAvailableProps> {
     if (this.props.isUpdateShowcaseVisible) {
       const version =
         this.props.newReleases !== null
-          ? ` with GlitchHub Desktop ${this.props.newReleases[0].latestVersion}`
+          ? ` with StickShift ${this.props.newReleases[0].latestVersion}`
           : ''
 
       return (
@@ -112,7 +110,7 @@ export class UpdateAvailable extends React.Component<IUpdateAvailableProps> {
     if (this.props.prioritizeUpdate) {
       return (
         <span onSubmit={this.updateNow}>
-          This version of GlitchHub Desktop is missing{' '}
+          This version of StickShift is missing{' '}
           {this.props.prioritizeUpdateInfoUrl ? (
             <LinkButton uri={this.props.prioritizeUpdateInfoUrl}>
               important updates
@@ -121,9 +119,7 @@ export class UpdateAvailable extends React.Component<IUpdateAvailableProps> {
             'important updates'
           )}
           . Please{' '}
-          <LinkButton onClick={this.updateNow}>
-            restart GlitchHub Desktop
-          </LinkButton>{' '}
+          <LinkButton onClick={this.updateNow}>restart StickShift</LinkButton>{' '}
           now to install pending updates.
         </span>
       )
@@ -131,13 +127,10 @@ export class UpdateAvailable extends React.Component<IUpdateAvailableProps> {
 
     return (
       <span onSubmit={this.updateNow}>
-        An updated version of GlitchHub Desktop is available and will be
-        installed at the next launch. See{' '}
+        An updated version of StickShift is available and will be installed at
+        the next launch. See{' '}
         <LinkButton onClick={this.showReleaseNotes}>what's new</LinkButton> or{' '}
-        <LinkButton onClick={this.updateNow}>
-          restart GlitchHub Desktop
-        </LinkButton>
-        .
+        <LinkButton onClick={this.updateNow}>restart StickShift</LinkButton>.
       </span>
     )
   }

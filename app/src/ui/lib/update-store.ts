@@ -202,7 +202,7 @@ class UpdateStore {
    */
   public async checkForUpdates(inBackground: boolean, skipGuidCheck: boolean) {
     if (!enableUpstreamServices()) {
-      // GlitchHub Desktop isn't served by GitHub's update server; pulling an
+      // StickShift isn't served by GitHub's update server; pulling an
       // update from it would replace this app with the official build.
       return
     }

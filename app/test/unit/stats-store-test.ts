@@ -6,7 +6,7 @@ import { StatsStore } from '../../src/lib/stats'
 import { TestActivityMonitor } from '../helpers/test-activity-monitor'
 import { fakePost } from '../fake-stats-post'
 
-// GlitchHub Desktop never posts usage data; these tests exercise the posting
+// StickShift never posts usage data; these tests exercise the posting
 // code paths, so opt back in for their duration.
 process.env.GLITCHHUB_UPSTREAM_SERVICES = '1'
 
