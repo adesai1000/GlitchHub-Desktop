@@ -1,4 +1,5 @@
 # StickShift
+<img width="2135" height="1411" alt="image" src="https://github.com/user-attachments/assets/53456adf-ea8b-4225-bb44-0fd3ed4e3d5b" />
 
 StickShift is an IDE for the agentic age. Your coding agent, your diffs, and your Git history live in one window: Claude Code runs in a panel next to your repository, its changes land in tabbed diffs, and you stage, commit, and push without switching apps. It's a [desktop app for macOS](https://github.com/adesai1000/StickShift/releases/latest), built on the open source [GitHub Desktop](https://github.com/desktop/desktop).
 
