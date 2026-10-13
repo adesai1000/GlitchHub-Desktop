@@ -105,16 +105,12 @@ export const enableCustomIntegration = () => true
 
 export const enableResizingToolbarButtons = () => true
 
-export const enableCommitMessageGeneration = (account: Account) => {
-  return (
-    (account.features ?? []).includes(
-      'desktop_copilot_generate_commit_message'
-    ) &&
-    // IMPORTANT: Do not remove this feature flag without replacing its usages
-    // with a check for the `isCopilotDesktopEnabled` property on the account.
-    account.isCopilotDesktopEnabled
-  )
-}
+/**
+ * Whether Copilot can write commit messages. Always off in StickShift: GitHub
+ * only serves Copilot to the official app, so the button and menu item would
+ * offer something that can't work.
+ */
+export const enableCommitMessageGeneration = (_account: Account) => false
 
 export const enableCopilotSdkCommitMessageGeneration = (account: Account) => {
   // Enabled for all users in beta and development channels, and for users with

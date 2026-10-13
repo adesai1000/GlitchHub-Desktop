@@ -19,16 +19,8 @@ const PreviewFeaturesEnv = 'GITHUB_DESKTOP_PREVIEW_FEATURES'
 const previousPreviewFeatures = process.env[PreviewFeaturesEnv]
 
 type CommitMessageProps = React.ComponentProps<typeof CommitMessage>
-type CopilotButtonProps = {
-  readonly ariaLabel?: string
-  readonly disabled?: boolean
-}
-
 type CommitMessageTestInstance = {
   readonly renderCopilotButton: () => React.ReactElement | null
-  readonly onCopilotButtonClick: (
-    event: Pick<React.MouseEvent<HTMLButtonElement>, 'preventDefault'>
-  ) => Promise<void>
 }
 
 function createAccount() {
@@ -136,38 +128,6 @@ function toTestInstance(component: CommitMessage): CommitMessageTestInstance {
   return component as unknown as CommitMessageTestInstance
 }
 
-function isElementWithCopilotButtonProps(
-  node: React.ReactNode
-): node is React.ReactElement<
-  CopilotButtonProps & { readonly className?: string }
-> {
-  return React.isValidElement(node) && node.props.className === 'copilot-button'
-}
-
-function getCopilotButtonProps(
-  component: CommitMessageTestInstance
-): CopilotButtonProps {
-  const button = component.renderCopilotButton()
-  if (button === null) {
-    throw new Error('Expected Copilot button to render')
-  }
-
-  const buttonElement = React.Children.toArray(button.props.children).find(
-    isElementWithCopilotButtonProps
-  )
-  if (buttonElement === undefined) {
-    throw new Error('Expected Copilot button element to render')
-  }
-
-  return buttonElement.props
-}
-
-async function clickCopilotButton(component: CommitMessageTestInstance) {
-  await component.onCopilotButtonClick({
-    preventDefault: () => {},
-  })
-}
-
 afterEach(() => {
   if (previousPreviewFeatures === undefined) {
     delete process.env[PreviewFeaturesEnv]
@@ -177,51 +137,19 @@ afterEach(() => {
 })
 
 describe('CommitMessage', () => {
-  it('does not allow cancelling commit message generation when the Copilot SDK is disabled', async () => {
+  // GitHub only serves Copilot to the official app, so StickShift never
+  // offers to generate commit messages, even for accounts that have Copilot
+  it('does not show the Copilot button for an account with Copilot', () => {
     delete process.env[PreviewFeaturesEnv]
+    const component = toTestInstance(new CommitMessage(createProps()))
 
-    let cancelCount = 0
-    const component = toTestInstance(
-      new CommitMessage(
-        createProps({
-          onCancelGenerateCommitMessage: () => {
-            cancelCount++
-          },
-        })
-      )
-    )
-
-    const buttonProps = getCopilotButtonProps(component)
-
-    assert.equal(buttonProps.ariaLabel, 'Generating commit details…')
-    assert.equal(buttonProps.disabled, true)
-
-    await clickCopilotButton(component)
-
-    assert.equal(cancelCount, 0)
+    assert.equal(component.renderCopilotButton(), null)
   })
 
-  it('allows cancelling commit message generation when the Copilot SDK is enabled', async () => {
+  it('does not show the Copilot button with preview features on', () => {
     process.env[PreviewFeaturesEnv] = '1'
+    const component = toTestInstance(new CommitMessage(createProps()))
 
-    let cancelCount = 0
-    const component = toTestInstance(
-      new CommitMessage(
-        createProps({
-          onCancelGenerateCommitMessage: () => {
-            cancelCount++
-          },
-        })
-      )
-    )
-
-    const buttonProps = getCopilotButtonProps(component)
-
-    assert.equal(buttonProps.ariaLabel, 'Cancel generating commit details')
-    assert.equal(buttonProps.disabled, false)
-
-    await clickCopilotButton(component)
-
-    assert.equal(cancelCount, 1)
+    assert.equal(component.renderCopilotButton(), null)
   })
 })
