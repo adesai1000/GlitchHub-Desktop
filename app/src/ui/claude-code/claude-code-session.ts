@@ -13,6 +13,7 @@ import { isDefaultClaudeCodeConfigDirectory } from '../../lib/claude-code/claude
 import {
   getClaudeCodeConfigDirectory,
   getClaudeCodeExecutable,
+  getClaudeCodeWorkingDirectory,
 } from '../../lib/claude-code/claude-code-settings'
 
 export type ClaudeCodeSessionStatus =
@@ -28,6 +29,22 @@ interface ILaunchSettings {
   /** The executable from Settings, null for the newest installation */
   readonly executableSetting: string | null
   readonly configDirectory: string | null
+  readonly workingDirectory: string | null
+}
+
+/** How a new session starts */
+export interface IClaudeCodeSessionOptions {
+  /**
+   * The folder to run Claude Code in. Without one, the session runs in the
+   * working folder from Settings, or the fallback folder when there's none.
+   */
+  readonly folder?: string
+
+  /** Where to run when neither a folder nor a working folder is set */
+  readonly fallbackFolder: string
+
+  /** Arguments for Claude Code, such as `--continue` or `--resume` */
+  readonly args?: ReadonlyArray<string>
 }
 
 /** Lets the selection show in both the light and the dark theme */
@@ -50,17 +67,12 @@ export class ClaudeCodeSession {
   private _terminalTitle = ''
   private _executablePath: string | null = null
   private launchSettings: ILaunchSettings | null = null
+  private _cwd: string | null = null
 
-  /**
-   * @param cwd The folder to run Claude Code in, which is also the folder
-   *            Claude Code files the conversation under
-   * @param number Numbers the sessions of a repository, for their names
-   * @param args Arguments for Claude Code, such as `--continue`
-   */
+  /** @param number Numbers the sessions, for their names */
   public constructor(
-    public readonly cwd: string,
     public readonly number: number,
-    private readonly args: ReadonlyArray<string> = []
+    private readonly options: IClaudeCodeSessionOptions
   ) {
     this.element.className = 'claude-code-terminal-element'
 
@@ -108,6 +120,21 @@ export class ClaudeCodeSession {
       : `Claude ${this.number}`
   }
 
+  /**
+   * The folder Claude Code runs in, which is also the folder it files the
+   * conversation under: where it last started, or where it will start
+   */
+  public get cwd() {
+    return this._cwd ?? this.resolveCwd()
+  }
+
+  private resolveCwd() {
+    const { folder, fallbackFolder } = this.options
+    return untildify(
+      folder ?? getClaudeCodeWorkingDirectory() ?? fallbackFolder
+    )
+  }
+
   /** The executable the session last started, if it found one */
   public get executablePath() {
     return this._executablePath
@@ -122,7 +149,10 @@ export class ClaudeCodeSession {
     return (
       launched !== null &&
       (launched.executableSetting !== getClaudeCodeExecutable() ||
-        launched.configDirectory !== getClaudeCodeConfigDirectory())
+        launched.configDirectory !== getClaudeCodeConfigDirectory() ||
+        // A session started in a chosen folder doesn't follow the setting
+        (this.options.folder === undefined &&
+          launched.workingDirectory !== getClaudeCodeWorkingDirectory()))
     )
   }
 
@@ -162,7 +192,7 @@ export class ClaudeCodeSession {
 
   /**
    * Starts Claude Code, stopping it first if it's running. Each start reads
-   * the Claude Code location and configuration folder from Settings again.
+   * the Claude Code location and folders from Settings again.
    */
   public async start() {
     this.kill()
@@ -172,8 +202,10 @@ export class ClaudeCodeSession {
     const launchSettings: ILaunchSettings = {
       executableSetting: getClaudeCodeExecutable(),
       configDirectory: getClaudeCodeConfigDirectory(),
+      workingDirectory: getClaudeCodeWorkingDirectory(),
     }
     this.launchSettings = launchSettings
+    this._cwd = this.resolveCwd()
     this.setStatus({ kind: 'starting' })
 
     const executable = await resolveClaudeCodeExecutable(
@@ -190,7 +222,7 @@ export class ClaudeCodeSession {
       const env = await getEnvironment(this.cwd, launchSettings)
       this.fit()
 
-      const pty = nodePty.spawn(executable, [...this.args], {
+      const pty = nodePty.spawn(executable, [...(this.options.args ?? [])], {
         name: 'xterm-256color',
         cols: this.terminal.cols,
         rows: this.terminal.rows,
@@ -250,24 +282,16 @@ export class ClaudeCodeSession {
   }
 }
 
-/** How a new session starts */
-export interface IClaudeCodeSessionOptions {
-  /** The folder to run Claude Code in, the repository's by default */
-  readonly cwd?: string
-
-  /** Arguments for Claude Code, such as `--continue` or `--resume` */
-  readonly args?: ReadonlyArray<string>
-}
-
-/** The Claude Code sessions of one repository, shown as tabs in the panel */
+/**
+ * The app's Claude Code sessions, shown as tabs in the panel. They don't
+ * belong to a repository, so they stay put when another one is selected.
+ */
 export class ClaudeCodeSessions {
   private readonly emitter = new Emitter()
   private readonly subscriptions = new Map<ClaudeCodeSession, Disposable>()
   private _sessions: ReadonlyArray<ClaudeCodeSession> = []
   private _active: ClaudeCodeSession | null = null
   private nextNumber = 1
-
-  public constructor(private readonly cwd: string) {}
 
   public get sessions() {
     return this._sessions
@@ -289,12 +313,8 @@ export class ClaudeCodeSessions {
   }
 
   /** Adds a new session and makes it the active one */
-  public create(options: IClaudeCodeSessionOptions = {}) {
-    const session = new ClaudeCodeSession(
-      options.cwd ?? this.cwd,
-      this.nextNumber++,
-      options.args
-    )
+  public create(options: IClaudeCodeSessionOptions) {
+    const session = new ClaudeCodeSession(this.nextNumber++, options)
     this.subscriptions.set(
       session,
       session.onDidChange(() => this.emitChange())
@@ -341,30 +361,22 @@ export class ClaudeCodeSessions {
   }
 }
 
-const sessionsByRepository = new Map<string, ClaudeCodeSessions>()
 const changes = new Emitter()
+const sessions = new ClaudeCodeSessions()
 
-/** The Claude Code sessions of the repository at the given path */
-export function getClaudeCodeSessions(repositoryPath: string) {
-  let sessions = sessionsByRepository.get(repositoryPath)
-  if (sessions === undefined) {
-    sessions = new ClaudeCodeSessions(repositoryPath)
-    sessionsByRepository.set(repositoryPath, sessions)
-  }
+/** The app's Claude Code sessions */
+export function getClaudeCodeSessions() {
   return sessions
 }
 
-/** Called when any repository's Claude Code sessions change */
+/** Called when the Claude Code sessions change */
 export function onDidChangeClaudeCodeSessions(
   callback: () => void
 ): Disposable {
   return changes.on('did-change', callback)
 }
 
-window.addEventListener('beforeunload', () => {
-  sessionsByRepository.forEach(sessions => sessions.dispose())
-  sessionsByRepository.clear()
-})
+window.addEventListener('beforeunload', () => sessions.dispose())
 
 /**
  * The login shell's environment, so that Claude Code finds the same tools it

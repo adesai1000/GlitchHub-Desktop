@@ -2,6 +2,7 @@ import { getBoolean, getNumber, setBoolean, setNumber } from '../local-storage'
 
 const executableKey = 'claude-code-executable'
 const configDirectoryKey = 'claude-code-config-directory'
+const workingDirectoryKey = 'claude-code-working-directory'
 const toolbarButtonVisibleKey = 'claude-code-toolbar-button-visible'
 const panelOpenKey = 'claude-code-panel-open'
 const panelWidthKey = 'claude-code-panel-width'
@@ -30,6 +31,43 @@ export function getClaudeCodeConfigDirectory(): string | null {
 
 export function setClaudeCodeConfigDirectory(path: string | null) {
   setOrRemove(configDirectoryKey, path)
+}
+
+/**
+ * The folder Claude Code runs in, and files its conversations under, or
+ * null to run it in the folder of the repository selected when a session
+ * starts
+ */
+export function getClaudeCodeWorkingDirectory(): string | null {
+  return localStorage.getItem(workingDirectoryKey)
+}
+
+export function setClaudeCodeWorkingDirectory(path: string | null) {
+  setOrRemove(workingDirectoryKey, path)
+}
+
+/**
+ * Before the working folder setting existed, the configuration folder was
+ * the only folder setting, and it got used to pick the folder Claude Code
+ * works in. A configuration folder that has none of Claude Code's files was
+ * meant as the working folder, so move it there.
+ *
+ * @param isConfigDirectory Whether a folder has Claude Code's files
+ */
+export function moveMistakenConfigDirectory(
+  isConfigDirectory: (path: string) => boolean
+) {
+  const configDirectory = getClaudeCodeConfigDirectory()
+  if (
+    configDirectory === null ||
+    getClaudeCodeWorkingDirectory() !== null ||
+    isConfigDirectory(configDirectory)
+  ) {
+    return
+  }
+
+  setClaudeCodeWorkingDirectory(configDirectory)
+  setClaudeCodeConfigDirectory(null)
 }
 
 /** Whether the Claude Code button is shown in the toolbar */

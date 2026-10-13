@@ -47,9 +47,11 @@ import {
   getClaudeCodeConfigDirectory,
   getClaudeCodeExecutable,
   getClaudeCodeToolbarButtonVisible,
+  getClaudeCodeWorkingDirectory,
   setClaudeCodeConfigDirectory,
   setClaudeCodeExecutable,
   setClaudeCodeToolbarButtonVisible,
+  setClaudeCodeWorkingDirectory,
 } from '../../lib/claude-code/claude-code-settings'
 import {
   appIconFileExtensions,
@@ -223,6 +225,7 @@ interface IPreferencesState {
   readonly claudeCodeToolbarButtonVisible: boolean
   readonly claudeCodeExecutable: string | null
   readonly claudeCodeConfigDirectory: string | null
+  readonly claudeCodeWorkingDirectory: string | null
   readonly scriptsAlwaysConfirm: boolean
   readonly scriptsPreferredPackageManager: PackageManager | undefined
   /** The repository whose scripts are being edited in the Scripts tab */
@@ -324,6 +327,7 @@ export class Preferences extends React.Component<
       claudeCodeToolbarButtonVisible: getClaudeCodeToolbarButtonVisible(),
       claudeCodeExecutable: getClaudeCodeExecutable(),
       claudeCodeConfigDirectory: getClaudeCodeConfigDirectory(),
+      claudeCodeWorkingDirectory: getClaudeCodeWorkingDirectory(),
       scriptsAlwaysConfirm: getAlwaysConfirmScripts(),
       scriptsPreferredPackageManager: getPreferredPackageManager(),
       scriptsRepository: initialScriptsRepository,
@@ -892,6 +896,8 @@ export class Preferences extends React.Component<
             onExecutableChanged={this.onClaudeCodeExecutableChanged}
             configDirectory={this.state.claudeCodeConfigDirectory}
             onConfigDirectoryChanged={this.onClaudeCodeConfigDirectoryChanged}
+            workingDirectory={this.state.claudeCodeWorkingDirectory}
+            onWorkingDirectoryChanged={this.onClaudeCodeWorkingDirectoryChanged}
           />
         )
         break
@@ -1220,6 +1226,10 @@ export class Preferences extends React.Component<
     this.setState({ claudeCodeConfigDirectory: directory })
   }
 
+  private onClaudeCodeWorkingDirectoryChanged = (directory: string | null) => {
+    this.setState({ claudeCodeWorkingDirectory: directory })
+  }
+
   private onScriptsToolbarButtonVisibleChanged = (visible: boolean) => {
     this.setState({ scriptsToolbarButtonVisible: visible })
   }
@@ -1432,6 +1442,7 @@ export class Preferences extends React.Component<
     setClaudeCodeToolbarButtonVisible(this.state.claudeCodeToolbarButtonVisible)
     setClaudeCodeExecutable(this.state.claudeCodeExecutable)
     setClaudeCodeConfigDirectory(this.state.claudeCodeConfigDirectory)
+    setClaudeCodeWorkingDirectory(this.state.claudeCodeWorkingDirectory)
     setAlwaysConfirmScripts(this.state.scriptsAlwaysConfirm)
     setPreferredPackageManager(this.state.scriptsPreferredPackageManager)
     for (const [id, config] of this.state.scriptsDirtyConfigs) {

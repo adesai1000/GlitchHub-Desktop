@@ -1,6 +1,7 @@
 import * as Os from 'os'
 import * as Path from 'path'
-import { readdir, stat } from 'fs/promises'
+import { existsSync, readdirSync } from 'fs'
+import { readdir } from 'fs/promises'
 import untildify from 'untildify'
 
 /** A folder Claude Code has run in, with the conversations it kept there */
@@ -25,18 +26,42 @@ export function isDefaultClaudeCodeConfigDirectory(directory: string) {
   )
 }
 
+/** Files and folders only a Claude Code configuration folder has */
+const configDirectoryEntries = [
+  'projects',
+  'settings.json',
+  '.credentials.json',
+]
+
 /**
- * Whether a folder looks like a Claude Code configuration folder, which
- * keeps conversations in `projects` and settings in `settings.json`
+ * Whether a folder looks like a Claude Code configuration folder: it has
+ * Claude Code's files and holds no Git repositories. The second check
+ * matters because Claude Code creates its files in whatever folder it's
+ * given, so a folder of repositories mistakenly used as one gets them too.
  */
-export async function isClaudeCodeConfigDirectory(directory: string) {
+export function isClaudeCodeConfigDirectorySync(directory: string) {
   const resolved = untildify(directory)
-  for (const name of ['projects', 'settings.json', '.credentials.json']) {
-    if (await exists(Path.join(resolved, name))) {
-      return true
-    }
+  return (
+    configDirectoryEntries.some(name =>
+      existsSync(Path.join(resolved, name))
+    ) && !holdsGitRepositories(resolved)
+  )
+}
+
+/** Whether a folder is a Git repository or has one directly inside it */
+function holdsGitRepositories(folder: string) {
+  if (existsSync(Path.join(folder, '.git'))) {
+    return true
   }
-  return false
+
+  try {
+    return readdirSync(folder, { withFileTypes: true }).some(
+      entry =>
+        entry.isDirectory() && existsSync(Path.join(folder, entry.name, '.git'))
+    )
+  } catch {
+    return false
+  }
 }
 
 /**
@@ -97,13 +122,4 @@ function getFolderAndParents(folder: string) {
   }
 
   return folders
-}
-
-async function exists(path: string) {
-  try {
-    await stat(path)
-    return true
-  } catch {
-    return false
-  }
 }

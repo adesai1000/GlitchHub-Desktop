@@ -1,5 +1,7 @@
 import * as React from 'react'
+import * as Os from 'os'
 import * as Path from 'path'
+import untildify from 'untildify'
 import { Disposable } from 'event-kit'
 import classNames from 'classnames'
 import { Repository } from '../../models/repository'
@@ -10,7 +12,10 @@ import { clamp } from '../../lib/clamp'
 import { IMenuItem, showContextualMenu } from '../../lib/menu-item'
 import { showOpenDialog } from '../main-process-proxy'
 import { findClaudeCodeFolders } from '../../lib/claude-code/claude-code-conversations'
-import { getClaudeCodeConfigDirectory } from '../../lib/claude-code/claude-code-settings'
+import {
+  getClaudeCodeConfigDirectory,
+  getClaudeCodeWorkingDirectory,
+} from '../../lib/claude-code/claude-code-settings'
 import {
   ClaudeCodeSession,
   ClaudeCodeSessions,
@@ -23,7 +28,11 @@ const minimumWidth = 320
 const maximumWidthFraction = 0.75
 
 interface IClaudeCodePanelProps {
-  readonly repository: Repository
+  /**
+   * The selected repository, if any. New sessions run in its folder when
+   * Settings has no working folder.
+   */
+  readonly repository: Repository | null
   readonly width: number
   readonly onWidthChanged: (width: number) => void
   readonly onWidthReset: () => void
@@ -35,8 +44,6 @@ interface IClaudeCodeSessionTabProps {
   readonly session: ClaudeCodeSession
   readonly isActive: boolean
 
-  /** The repository's folder, to point out sessions running elsewhere */
-  readonly repositoryPath: string
   readonly onSelect: (session: ClaudeCodeSession) => void
   readonly onClose: (session: ClaudeCodeSession) => void
 }
@@ -44,12 +51,9 @@ interface IClaudeCodeSessionTabProps {
 /** A tab for one Claude Code session, named after its conversation */
 class ClaudeCodeSessionTab extends React.Component<IClaudeCodeSessionTabProps> {
   public render() {
-    const { session, isActive, repositoryPath } = this.props
+    const { session, isActive } = this.props
     const isRunning = session.status.kind === 'running'
-    const folder =
-      Path.resolve(session.cwd) === Path.resolve(repositoryPath)
-        ? null
-        : Path.basename(session.cwd)
+    const folder = Path.basename(session.cwd)
 
     return (
       <div
@@ -67,9 +71,7 @@ class ClaudeCodeSessionTab extends React.Component<IClaudeCodeSessionTabProps> {
           })}
         />
         <span className="claude-code-tab-title">{session.title}</span>
-        {folder !== null && (
-          <span className="claude-code-tab-folder">{folder}</span>
-        )}
+        <span className="claude-code-tab-folder">{folder}</span>
         <button
           type="button"
           className="claude-code-tab-close"
@@ -109,10 +111,11 @@ class ClaudeCodeSessionTab extends React.Component<IClaudeCodeSessionTabProps> {
 }
 
 /**
- * A panel on the right of the window that runs Claude Code in the selected
- * repository. A repository can have several sessions, shown as tabs, and
- * they keep running while the panel is hidden or another repository is
- * shown.
+ * A panel on the right of the window that runs Claude Code, in the working
+ * folder from Settings or the selected repository's folder. Its sessions,
+ * shown as tabs, belong to the app rather than a repository: they stay put
+ * when another repository is selected, and keep running while the panel is
+ * hidden.
  */
 export class ClaudeCodePanel extends React.Component<IClaudeCodePanelProps> {
   private readonly hostRef = React.createRef<HTMLDivElement>()
@@ -125,7 +128,7 @@ export class ClaudeCodePanel extends React.Component<IClaudeCodePanelProps> {
 
   public constructor(props: IClaudeCodePanelProps) {
     super(props)
-    this.sessions = getClaudeCodeSessions(props.repository.path)
+    this.sessions = getClaudeCodeSessions()
   }
 
   public componentDidMount() {
@@ -138,7 +141,7 @@ export class ClaudeCodePanel extends React.Component<IClaudeCodePanelProps> {
     }
 
     if (this.sessions.sessions.length === 0) {
-      this.sessions.create().start()
+      this.startSession({})
     }
     this.attachActiveSession()
   }
@@ -198,7 +201,6 @@ export class ClaudeCodePanel extends React.Component<IClaudeCodePanelProps> {
                 key={session.number}
                 session={session}
                 isActive={session === active}
-                repositoryPath={this.props.repository.path}
                 onSelect={this.onSelectSession}
                 onClose={this.onCloseSession}
               />
@@ -233,8 +235,8 @@ export class ClaudeCodePanel extends React.Component<IClaudeCodePanelProps> {
         {active?.hasOutdatedSettings && active.status.kind === 'running' && (
           <div className="claude-code-notice">
             <span>
-              The Claude Code location or configuration folder changed in
-              Settings. Restart this session to use them.
+              Claude Code's settings changed since this session started. Restart
+              it to use them.
             </span>
             <Button onClick={this.onRestart}>Restart</Button>
           </div>
@@ -249,7 +251,7 @@ export class ClaudeCodePanel extends React.Component<IClaudeCodePanelProps> {
     if (session === null) {
       return (
         <div className="claude-code-status">
-          <p>No Claude Code sessions are open for this repository.</p>
+          <p>No Claude Code sessions are open.</p>
           <div className="claude-code-status-actions">
             <Button onClick={this.onNewSession}>
               {__DARWIN__ ? 'New Session' : 'New session'}
@@ -312,26 +314,45 @@ export class ClaudeCodePanel extends React.Component<IClaudeCodePanelProps> {
     this.startSession({})
   }
 
-  private startSession(options: IClaudeCodeSessionOptions) {
-    this.sessions.create(options).start()
+  private startSession(
+    options: Omit<IClaudeCodeSessionOptions, 'fallbackFolder'>
+  ) {
+    this.sessions
+      .create({ ...options, fallbackFolder: this.fallbackFolder })
+      .start()
+  }
+
+  /** Where a session runs when Settings has no working folder */
+  private get fallbackFolder() {
+    return this.props.repository?.path ?? Os.homedir()
+  }
+
+  /** Where a new session runs */
+  private get defaultFolder() {
+    const workingDirectory = getClaudeCodeWorkingDirectory()
+    return workingDirectory !== null
+      ? untildify(workingDirectory)
+      : this.fallbackFolder
   }
 
   /**
    * Offers a new session, and the conversations Claude Code kept for the
-   * repository's folder or a folder above it. Conversations belong to the
-   * folder Claude Code ran in, so ones started in a parent folder only show
-   * up in sessions that run there too.
+   * folder new sessions run in or a folder above it. Conversations belong to
+   * the folder Claude Code ran in, so ones started in a parent folder only
+   * show up in sessions that run there too.
    */
   private onShowNewSessionMenu = async () => {
-    const { repository } = this.props
+    const { defaultFolder } = this
     const folders = await findClaudeCodeFolders(
-      repository.path,
+      defaultFolder,
       getClaudeCodeConfigDirectory()
     )
 
     const items: IMenuItem[] = [
       {
-        label: __DARWIN__ ? 'New Session' : 'New session',
+        label: `${
+          __DARWIN__ ? 'New Session in' : 'New session in'
+        } ${Path.basename(defaultFolder)}`,
         action: this.onNewSession,
       },
     ]
@@ -347,10 +368,7 @@ export class ClaudeCodePanel extends React.Component<IClaudeCodePanelProps> {
     }
 
     for (const { path, conversationCount } of folders) {
-      const name =
-        Path.resolve(path) === Path.resolve(repository.path)
-          ? repository.name
-          : Path.basename(path)
+      const name = Path.basename(path)
       const count = `${conversationCount} conversation${
         conversationCount === 1 ? '' : 's'
       }`
@@ -363,18 +381,19 @@ export class ClaudeCodePanel extends React.Component<IClaudeCodePanelProps> {
               ? 'Continue Last Conversation'
               : 'Continue last conversation',
             action: () =>
-              this.startSession({ cwd: path, args: ['--continue'] }),
+              this.startSession({ folder: path, args: ['--continue'] }),
           },
           {
             label: __DARWIN__
               ? 'Choose a Conversation…'
               : 'Choose a conversation…',
-            action: () => this.startSession({ cwd: path, args: ['--resume'] }),
+            action: () =>
+              this.startSession({ folder: path, args: ['--resume'] }),
           },
           { type: 'separator' },
           {
             label: __DARWIN__ ? 'New Session Here' : 'New session here',
-            action: () => this.startSession({ cwd: path }),
+            action: () => this.startSession({ folder: path }),
           },
         ],
       })
@@ -394,10 +413,10 @@ export class ClaudeCodePanel extends React.Component<IClaudeCodePanelProps> {
   private onNewSessionInFolder = async () => {
     const path = await showOpenDialog({
       properties: ['openDirectory'],
-      defaultPath: Path.dirname(this.props.repository.path),
+      defaultPath: this.defaultFolder,
     })
     if (path !== null) {
-      this.startSession({ cwd: path })
+      this.startSession({ folder: path })
     }
   }
 

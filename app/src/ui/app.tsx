@@ -3285,18 +3285,11 @@ export class App extends React.Component<IAppProps, IAppState> {
   }
 
   private renderClaudeCodeToolbarButton(): JSX.Element | null {
-    const repository = this.getSelectedRepositoryForClaudeCode()
-    if (!getClaudeCodeToolbarButtonVisible() || repository === null) {
+    if (!getClaudeCodeToolbarButtonVisible()) {
       return null
     }
 
-    return (
-      <ClaudeCodeToolbarButton
-        key={`claude-code-${repository.hash}`}
-        repository={repository}
-        onClick={this.toggleClaudeCode}
-      />
-    )
+    return <ClaudeCodeToolbarButton onClick={this.toggleClaudeCode} />
   }
 
   private onShowIntegrationsPreferences = () => {

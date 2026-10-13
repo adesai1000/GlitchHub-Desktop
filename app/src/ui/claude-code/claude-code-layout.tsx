@@ -5,9 +5,11 @@ import {
   defaultClaudeCodePanelWidth,
   getClaudeCodePanelOpen,
   getClaudeCodePanelWidth,
+  moveMistakenConfigDirectory,
   setClaudeCodePanelOpen,
   setClaudeCodePanelWidth,
 } from '../../lib/claude-code/claude-code-settings'
+import { isClaudeCodeConfigDirectorySync } from '../../lib/claude-code/claude-code-conversations'
 
 interface IClaudeCodeLayoutProps {
   /** The selected repository, or null when none is selected */
@@ -31,6 +33,7 @@ export class ClaudeCodeLayout extends React.Component<
 > {
   public constructor(props: IClaudeCodeLayoutProps) {
     super(props)
+    moveMistakenConfigDirectory(isClaudeCodeConfigDirectorySync)
     this.state = {
       isOpen: getClaudeCodePanelOpen(),
       width: getClaudeCodePanelWidth(),
@@ -48,13 +51,13 @@ export class ClaudeCodeLayout extends React.Component<
     return (
       <div id="claude-code-layout">
         {this.props.children}
-        {this.state.isOpen && repository !== null && (
+        {this.state.isOpen && (
           <ClaudeCodePanel
-            // Each repository has its own sessions, so give each its own
-            // panel. The key has to differ from the repository view's beside
-            // it, which uses the repository's hash: siblings with the same key
-            // leave a stale repository view on screen when the hash changes.
-            key={`claude-code-panel-${repository.id}`}
+            // One panel for the whole app, so switching repositories keeps
+            // the same sessions on screen. The key has to differ from the
+            // repository view's beside it, which uses the repository's hash:
+            // siblings with the same key leave a stale view on screen.
+            key="claude-code-panel"
             repository={repository}
             width={this.state.width}
             onWidthChanged={this.onWidthChanged}

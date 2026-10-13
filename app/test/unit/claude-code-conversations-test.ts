@@ -6,7 +6,7 @@ import { join } from 'path'
 import {
   findClaudeCodeFolders,
   getClaudeCodeProjectName,
-  isClaudeCodeConfigDirectory,
+  isClaudeCodeConfigDirectorySync,
   isDefaultClaudeCodeConfigDirectory,
 } from '../../src/lib/claude-code/claude-code-conversations'
 
@@ -50,7 +50,17 @@ describe('Claude Code conversations', () => {
     const config = join(root, 'config')
     await mkdir(join(config, 'projects'), { recursive: true })
 
-    assert.ok(await isClaudeCodeConfigDirectory(config))
-    assert.ok(!(await isClaudeCodeConfigDirectory(root)))
+    assert.ok(isClaudeCodeConfigDirectorySync(config))
+    assert.ok(!isClaudeCodeConfigDirectorySync(root))
+  })
+
+  it("doesn't take a folder of repositories for a configuration folder", async () => {
+    // Claude Code creates its files in any folder it's given as one
+    const root = await mkdtemp(join(tmpdir(), 'stickshift-'))
+    await mkdir(join(root, 'projects'))
+    await writeFile(join(root, 'settings.json'), '{}')
+    await mkdir(join(root, 'my-app', '.git'), { recursive: true })
+
+    assert.ok(!isClaudeCodeConfigDirectorySync(root))
   })
 })

@@ -17,9 +17,10 @@ StickShift puts them in one place. You get everything GitHub Desktop ships, plus
 Press <kbd>⌘</kbd>+<kbd>Esc</kbd>, or click **Claude Code** at the end of the toolbar, and Claude Code opens in a panel next to your repository. It's the real CLI in a real terminal, so slash commands, plan mode, and permission prompts all work the way you're used to.
 
 - **Several sessions.** Click **+** to start another one. Each session gets a tab named after its conversation.
-- **Pick up past conversations.** The **+** menu finds the conversations Claude Code kept for the repository, or for a folder above it, such as one holding several repositories. Continue the last one, or choose from the list.
-- **Always running.** Hiding the panel or switching repositories doesn't stop anything. Every repository keeps its own sessions.
-- **Your setup.** Sessions start in the repository folder with your login shell's environment and your Claude Code login.
+- **Your working folder.** Set a working folder in Settings → **Claude Code**, such as the folder that holds your repositories, and every session starts there. Without one, sessions start in the selected repository's folder.
+- **Pick up past conversations.** The **+** menu finds the conversations Claude Code kept for the working folder, or a folder above it. Continue the last one, or choose from the list.
+- **Always running.** The panel belongs to the app, not a repository, so switching repositories keeps your sessions on screen. Hiding the panel doesn't stop them either.
+- **Your setup.** Sessions start with your login shell's environment and your Claude Code login.
 - **Your choice of Claude Code.** Settings → **Claude Code** runs the newest copy it finds, or the one you pick. It can also use a separate configuration folder, such as `~/.claude-work`.
 
 ### Review like an editor

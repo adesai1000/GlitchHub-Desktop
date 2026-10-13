@@ -8,7 +8,7 @@ import { TextBox } from '../lib/text-box'
 import { Button } from '../lib/button'
 import { showOpenDialog } from '../main-process-proxy'
 import {
-  isClaudeCodeConfigDirectory,
+  isClaudeCodeConfigDirectorySync,
   isDefaultClaudeCodeConfigDirectory,
 } from '../../lib/claude-code/claude-code-conversations'
 import {
@@ -34,6 +34,10 @@ interface IClaudeCodePreferencesProps {
   /** The configuration folder, or null for Claude Code's default */
   readonly configDirectory: string | null
   readonly onConfigDirectoryChanged: (directory: string | null) => void
+
+  /** The folder sessions run in, or null for the selected repository's */
+  readonly workingDirectory: string | null
+  readonly onWorkingDirectoryChanged: (directory: string | null) => void
 }
 
 interface IClaudeCodePreferencesState {
@@ -42,6 +46,7 @@ interface IClaudeCodePreferencesState {
   readonly configDirectories: ReadonlyArray<string>
   readonly customExecutable: boolean
   readonly customConfigDirectory: boolean
+  readonly customWorkingDirectory: boolean
 
   /** Whether the chosen configuration folder lacks Claude Code's files */
   readonly configDirectoryLooksWrong: boolean
@@ -61,6 +66,7 @@ export class ClaudeCodePreferences extends React.Component<
       configDirectories: [],
       customExecutable: false,
       customConfigDirectory: false,
+      customWorkingDirectory: props.workingDirectory !== null,
       configDirectoryLooksWrong: false,
     }
   }
@@ -96,11 +102,11 @@ export class ClaudeCodePreferences extends React.Component<
   }
 
   /** Warns about a configuration folder Claude Code has never used */
-  private async checkConfigDirectory() {
+  private checkConfigDirectory() {
     const { configDirectory } = this.props
     const looksWrong =
       configDirectory !== null &&
-      !(await isClaudeCodeConfigDirectory(configDirectory))
+      !isClaudeCodeConfigDirectorySync(configDirectory)
 
     if (!this.unmounted && configDirectory === this.props.configDirectory) {
       this.setState({ configDirectoryLooksWrong: looksWrong })
@@ -130,6 +136,7 @@ export class ClaudeCodePreferences extends React.Component<
             }
             onChange={this.onToolbarButtonVisibleChanged}
           />
+          {this.renderWorkingDirectory()}
           {this.renderExecutable()}
           {this.renderConfigDirectory()}
         </div>
@@ -188,6 +195,65 @@ export class ClaudeCodePreferences extends React.Component<
     )
   }
 
+  private renderWorkingDirectory() {
+    const { customWorkingDirectory } = this.state
+
+    return (
+      <div className="claude-code-preferences-group">
+        <Select
+          label={__DARWIN__ ? 'Working Folder' : 'Working folder'}
+          value={customWorkingDirectory ? CustomValue : DefaultValue}
+          onChange={this.onWorkingDirectorySelected}
+        >
+          <option value={DefaultValue}>
+            The selected repository's folder (default)
+          </option>
+          <option value={CustomValue}>A folder you choose…</option>
+        </Select>
+        <p className="claude-code-preferences-hint">
+          Claude Code starts here, and files its conversations under this
+          folder, so choosing the folder you usually run Claude Code in brings
+          back your past conversations. Sessions stay open when you switch
+          repositories.
+        </p>
+        {customWorkingDirectory && (
+          <div className="claude-code-preferences-custom">
+            <TextBox
+              ariaLabel="Path to the working folder"
+              placeholder="~/Developer"
+              value={this.props.workingDirectory ?? ''}
+              onValueChanged={this.onCustomWorkingDirectoryChanged}
+            />
+            <Button onClick={this.onChooseWorkingDirectory}>Choose…</Button>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  private onWorkingDirectorySelected = (
+    event: React.FormEvent<HTMLSelectElement>
+  ) => {
+    const customWorkingDirectory = event.currentTarget.value === CustomValue
+    this.setState({ customWorkingDirectory })
+    if (!customWorkingDirectory) {
+      this.props.onWorkingDirectoryChanged(null)
+    }
+  }
+
+  private onCustomWorkingDirectoryChanged = (value: string) => {
+    this.props.onWorkingDirectoryChanged(value.trim() === '' ? null : value)
+  }
+
+  private onChooseWorkingDirectory = async () => {
+    const path = await showOpenDialog({
+      properties: ['openDirectory', 'createDirectory'],
+    })
+    if (path !== null) {
+      this.props.onWorkingDirectoryChanged(path)
+    }
+  }
+
   private renderConfigDirectory() {
     const { configDirectories, customConfigDirectory } = this.state
     const defaultDirectory = Path.join(Os.homedir(), '.claude')
@@ -215,15 +281,15 @@ export class ClaudeCodePreferences extends React.Component<
         <p className="claude-code-preferences-hint">
           Claude Code keeps its login, settings, and conversations here. The
           default folder is shared with the Claude Code CLI and your editor's
-          Claude Code extension, so you stay signed in. This isn't the folder
-          Claude Code works in: to continue conversations you started in another
-          folder, such as the one above the repository, click <strong>+</strong>{' '}
-          in the Claude Code panel.
+          Claude Code extension, so you stay signed in. To choose where Claude
+          Code works, use the working folder instead.
         </p>
         {this.state.configDirectoryLooksWrong && (
           <p className="claude-code-preferences-warning">
             This folder doesn't look like a Claude Code configuration folder, so
-            Claude Code won't find your login or past conversations in it.
+            Claude Code won't find your login or past conversations in it. If
+            it's the folder you run Claude Code in, choose it as the working
+            folder instead.
           </p>
         )}
         {customConfigDirectory && (

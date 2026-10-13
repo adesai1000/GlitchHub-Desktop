@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { Disposable } from 'event-kit'
-import { Repository } from '../../models/repository'
 import { ToolbarButton, ToolbarButtonStyle } from '../toolbar/button'
 import * as octicons from '../octicons/octicons.generated'
 import {
@@ -9,13 +8,12 @@ import {
 } from './claude-code-session'
 
 interface IClaudeCodeToolbarButtonProps {
-  readonly repository: Repository
   readonly onClick: () => void
 }
 
 /**
  * The toolbar button that shows or hides the Claude Code panel, with how
- * many sessions are running for the repository.
+ * many sessions are running.
  */
 export class ClaudeCodeToolbarButton extends React.Component<IClaudeCodeToolbarButtonProps> {
   private subscription: Disposable | null = null
@@ -29,7 +27,7 @@ export class ClaudeCodeToolbarButton extends React.Component<IClaudeCodeToolbarB
   }
 
   public render() {
-    const { runningCount } = getClaudeCodeSessions(this.props.repository.path)
+    const { runningCount } = getClaudeCodeSessions()
     const shortcut = __DARWIN__ ? '⌘Esc' : 'Ctrl+Esc'
     const description =
       runningCount === 0 ? 'Not running' : `${runningCount} running`
