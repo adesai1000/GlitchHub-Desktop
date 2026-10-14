@@ -1,0 +1,63 @@
+#branch-review {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+
+  .review-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-half);
+    padding: var(--spacing-half) var(--spacing);
+    background: var(--box-alt-background-color);
+    border-bottom: var(--base-border);
+
+    .checkbox-component {
+      margin: 0;
+    }
+  }
+
+  .review-base-branch .popover-dropdown-component {
+    display: flex;
+    width: 100%;
+
+    .button-content {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .review-summary {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-half);
+    color: var(--text-secondary-color);
+    font-size: var(--font-size-sm);
+
+    > div:first-child {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .lines-added-deleted {
+      flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  .review-files {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .review-message {
+    padding: var(--spacing-double) var(--spacing);
+    color: var(--text-secondary-color);
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+}

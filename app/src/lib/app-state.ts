@@ -500,6 +500,7 @@ export type Foldout =
 export enum RepositorySectionTab {
   Changes,
   History,
+  Review,
 }
 
 /**
@@ -586,6 +587,15 @@ export interface IRepositoryState {
    * to null after a pull request has been opened.
    */
   readonly pullRequestState: IPullRequestState | null
+
+  /** The state of the Review tab */
+  readonly branchReviewState: IBranchReviewState
+
+  /**
+   * The branch each commit in the History tab was most likely made on, by
+   * commit SHA. An empty string means no branch contains the commit.
+   */
+  readonly commitBranchNames: ReadonlyMap<string, string>
 
   /**
    * The name and email that will be used for the author info
@@ -1221,6 +1231,65 @@ export interface IConstrainedValue {
   readonly value: number
   readonly max: number
   readonly min: number
+}
+
+/** Why the Review tab has nothing to compare, or that it has loaded */
+export enum BranchReviewStatus {
+  /** The file list hasn't loaded yet */
+  Loading,
+
+  /** The file list has loaded */
+  Loaded,
+
+  /** HEAD has no commits yet */
+  NoCommits,
+
+  /** The repository has no default branch and the user hasn't picked one */
+  NoBaseBranch,
+
+  /** The base branch doesn't share any history with HEAD */
+  UnrelatedHistories,
+}
+
+/**
+ * The state of the Review tab, which shows the net change between the merge
+ * base of the current branch and a base branch, as a pull request would.
+ */
+export interface IBranchReviewState {
+  readonly status: BranchReviewStatus
+
+  /**
+   * The branch the user picked to compare against, or null to compare
+   * against the repository's default branch
+   */
+  readonly selectedBaseBranch: Branch | null
+
+  /** The branch the review compares against, once resolved */
+  readonly baseBranch: Branch | null
+
+  /**
+   * The ref the merge base was computed with. This is the upstream of a local
+   * base branch when it has one, for example `origin/main`.
+   */
+  readonly baseRef: string | null
+
+  /** The best common ancestor of the base ref and HEAD */
+  readonly mergeBase: string | null
+
+  /** The number of commits on HEAD since the merge base */
+  readonly commitCount: number
+
+  /** Whether the review includes changes that aren't committed yet */
+  readonly includeUncommitted: boolean
+
+  /** The files that differ from the merge base */
+  readonly changesetData: IChangesetData
+
+  /** The file whose diff is shown */
+  readonly selectedFile: CommittedFileChange | null
+
+  /** The diff of the selected file, or null while it loads */
+  readonly diff: IDiff | null
 }
 
 /**

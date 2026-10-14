@@ -159,6 +159,7 @@ import {
   IDisplayHistory,
   PossibleSelections,
   RepositorySectionTab,
+  BranchReviewStatus,
   SelectionType,
   IRepositoryState,
   ChangesSelectionKind,
@@ -236,6 +237,11 @@ import {
   updateRemoteHEAD,
   getBranchMergeBaseChangedFiles,
   getBranchMergeBaseDiff,
+  getBranchReviewBase,
+  getBranchReviewChangedFiles,
+  getBranchReviewCommitCount,
+  getBranchReviewDiff,
+  getBranchNamesForCommits,
   checkoutCommit,
   getRemoteURL,
   getGlobalConfigPath,
@@ -275,7 +281,10 @@ import { TypedBaseStore } from './base-store'
 import { MergeTreeResult } from '../../models/merge'
 import { promiseWithMinimumTimeout } from '../promise'
 import { BackgroundFetcher } from './helpers/background-fetcher'
-import { RepositoryStateCache } from './repository-state-cache'
+import {
+  RepositoryStateCache,
+  branchReviewIncludeUncommittedKey,
+} from './repository-state-cache'
 import { readEmoji } from '../read-emoji'
 import { Emoji } from '../emoji'
 import { GitStoreCache } from './git-store-cache'
@@ -713,6 +722,18 @@ export class AppStore extends TypedBaseStore<IAppState> {
     hideWhitespaceInHistoryDiffDefault
   private hideWhitespaceInPullRequestDiff: boolean =
     hideWhitespaceInPullRequestDiffDefault
+
+  /**
+   * The latest Review tab load for each repository, by repository hash, so
+   * that a slow load can't overwrite the result of a newer one
+   */
+  private readonly branchReviewLoadIds = new Map<string, number>()
+
+  /**
+   * The branches each repository's commit branch names were computed with,
+   * by repository hash. The names are stale once a branch moves.
+   */
+  private readonly commitBranchNamesRefs = new Map<string, string>()
   /** Whether or not the spellchecker is enabled for commit summary and description */
   private commitSpellcheckEnabled: boolean = commitSpellcheckEnabledDefault
   private showSideBySideDiff: boolean = ShowSideBySideDiffDefault
@@ -1894,6 +1915,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
         showBranchList: false,
       }))
       this.updateOrSelectFirstCommit(repository, commits)
+      this.updateCommitBranchNames(repository)
 
       return this.emitUpdate()
     }
@@ -1962,6 +1984,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.emitUpdate()
 
     this.updateOrSelectFirstCommit(repository, commitSHAs)
+    this.updateCommitBranchNames(repository)
 
     if (this.currentMergeTreePromise != null) {
       return this.currentMergeTreePromise
@@ -2057,7 +2080,53 @@ export class AppStore extends TypedBaseStore<IAppState> {
         commitSHAs: commits.concat(newCommits),
       }))
       this.emitUpdate()
+      this.updateCommitBranchNames(repository)
     }
+  }
+
+  /**
+   * Work out which branch each commit in the History tab was made on, for the
+   * commits that don't have a name yet. Names everything again when a branch
+   * has moved since the last time.
+   */
+  private async updateCommitBranchNames(repository: Repository) {
+    const { compareState, branchesState, commitBranchNames } =
+      this.repositoryStateCache.get(repository)
+
+    const refs = branchesState.allBranches
+      .map(b => `${b.ref} ${b.tip.sha}`)
+      .join('\n')
+    const refsChanged = this.commitBranchNamesRefs.get(repository.hash) !== refs
+    const missing = compareState.commitSHAs.filter(
+      sha => refsChanged || !commitBranchNames.has(sha)
+    )
+
+    if (missing.length === 0) {
+      return
+    }
+
+    this.commitBranchNamesRefs.set(repository.hash, refs)
+
+    let names: Map<string, string>
+    try {
+      names = await getBranchNamesForCommits(repository, missing)
+    } catch (e) {
+      log.error('Could not work out the branches of commits', e)
+      return
+    }
+
+    // A newer call started after the branches moved, and will name them
+    if (this.commitBranchNamesRefs.get(repository.hash) !== refs) {
+      return
+    }
+
+    this.repositoryStateCache.update(repository, state => ({
+      commitBranchNames: new Map([
+        ...(refsChanged ? [] : state.commitBranchNames),
+        ...names,
+      ]),
+    }))
+    this.emitUpdate()
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */
@@ -3479,6 +3548,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
         includingStatus: true,
         clearPartialState: false,
       })
+    } else if (selectedSection === RepositorySectionTab.Review) {
+      await this._loadBranchReview(repository)
     }
 
     if (forceButtonFocus) {
@@ -4271,6 +4342,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
         includingStatus: false,
         clearPartialState: false,
       })
+    } else if (section === RepositorySectionTab.Review) {
+      refreshSectionPromise = this._loadBranchReview(repository)
     } else {
       return assertNever(section, `Unknown section: ${section}`)
     }
@@ -4297,6 +4370,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.updateMenuItemLabels(latestState)
 
     this._initializeCompare(repository)
+    this.updateCommitBranchNames(repository)
 
     this.updateCurrentTutorialStep(repository)
   }
@@ -8125,6 +8199,27 @@ export class AppStore extends TypedBaseStore<IAppState> {
     }
   }
 
+  /**
+   * The Review tab previews a pull request, so it shares the whitespace
+   * setting of the pull request preview.
+   *
+   * This shouldn't be called directly. See 'Dispatcher'.
+   */
+  public _setHideWhitespaceInBranchReviewDiff(
+    hideWhitespaceInDiff: boolean,
+    repository: Repository
+  ): Promise<void> {
+    setBoolean(hideWhitespaceInPullRequestDiffKey, hideWhitespaceInDiff)
+    this.hideWhitespaceInPullRequestDiff = hideWhitespaceInDiff
+    this.emitUpdate()
+
+    const { selectedFile } =
+      this.repositoryStateCache.get(repository).branchReviewState
+    return selectedFile === null
+      ? Promise.resolve()
+      : this._changeBranchReviewFileSelection(repository, selectedFile)
+  }
+
   public _setShowSideBySideDiff(showSideBySideDiff: boolean) {
     if (showSideBySideDiff !== this.showSideBySideDiff) {
       setShowSideBySideDiff(showSideBySideDiff)
@@ -10623,6 +10718,208 @@ export class AppStore extends TypedBaseStore<IAppState> {
     }
 
     this._initializePullRequestPreview(repository, baseBranch, tip.branch)
+  }
+
+  /**
+   * Load the files the current branch changes since it left the base branch,
+   * and the diff of the selected file.
+   *
+   * This shouldn't be called directly. See 'Dispatcher'.
+   */
+  public async _loadBranchReview(repository: Repository): Promise<void> {
+    const loadId = (this.branchReviewLoadIds.get(repository.hash) ?? 0) + 1
+    this.branchReviewLoadIds.set(repository.hash, loadId)
+    const isStale = () =>
+      this.branchReviewLoadIds.get(repository.hash) !== loadId
+
+    const { branchesState, branchReviewState } =
+      this.repositoryStateCache.get(repository)
+    const { tip } = branchesState
+    const { includeUncommitted, selectedBaseBranch } = branchReviewState
+
+    const setStatus = (
+      status: BranchReviewStatus,
+      baseBranch: Branch | null
+    ) => {
+      this.repositoryStateCache.updateBranchReviewState(repository, () => ({
+        status,
+        baseBranch,
+        baseRef: null,
+        mergeBase: null,
+        commitCount: 0,
+        changesetData: { files: [], linesAdded: 0, linesDeleted: 0 },
+        selectedFile: null,
+        diff: null,
+      }))
+      this.emitUpdate()
+    }
+
+    const headSHA =
+      tip.kind === TipState.Valid
+        ? tip.branch.tip.sha
+        : tip.kind === TipState.Detached
+        ? tip.currentSha
+        : null
+
+    if (headSHA === null) {
+      setStatus(BranchReviewStatus.NoCommits, null)
+      return
+    }
+
+    // Prefer the default branch of the parent repository when contributing to
+    // a fork, since that's where a pull request would go.
+    const baseBranch =
+      selectedBaseBranch ??
+      branchesState.upstreamDefaultBranch ??
+      branchesState.defaultBranch
+
+    if (baseBranch === null) {
+      setStatus(BranchReviewStatus.NoBaseBranch, null)
+      return
+    }
+
+    // A local copy of the base branch can lag behind the remote, so compare
+    // against its upstream when there is one.
+    const candidateRefs =
+      baseBranch.type === BranchType.Local && baseBranch.upstream !== null
+        ? [baseBranch.upstream, baseBranch.name]
+        : [baseBranch.name]
+
+    const gitStore = this.gitStoreCache.get(repository)
+    const result = await gitStore.performFailableOperation(async () => {
+      const base = await getBranchReviewBase(repository, candidateRefs)
+      if (base === null) {
+        return null
+      }
+
+      const [commitCount, changesetData] = await Promise.all([
+        getBranchReviewCommitCount(repository, base.mergeBase),
+        getBranchReviewChangedFiles(
+          repository,
+          base.mergeBase,
+          headSHA,
+          includeUncommitted
+        ),
+      ])
+
+      return { base, commitCount, changesetData }
+    })
+
+    if (isStale() || result === undefined) {
+      return
+    }
+
+    if (result === null) {
+      setStatus(BranchReviewStatus.UnrelatedHistories, baseBranch)
+      return
+    }
+
+    const { base, commitCount, changesetData } = result
+    const { files } = changesetData
+
+    // Keep the selected file across refreshes as long as it's still changed
+    const previousPath =
+      this.repositoryStateCache.get(repository).branchReviewState.selectedFile
+        ?.path
+    const selectedFile =
+      files.find(f => f.path === previousPath) ?? files.at(0) ?? null
+
+    this.repositoryStateCache.updateBranchReviewState(repository, state => ({
+      status: BranchReviewStatus.Loaded,
+      baseBranch,
+      baseRef: base.ref,
+      mergeBase: base.mergeBase,
+      commitCount,
+      changesetData,
+      selectedFile,
+      // Keep showing the previous diff of the same file while the new one
+      // loads, so a refresh doesn't flash an empty diff
+      diff: selectedFile?.path === previousPath ? state.diff : null,
+    }))
+    this.emitUpdate()
+
+    if (selectedFile !== null) {
+      await this._changeBranchReviewFileSelection(repository, selectedFile)
+    }
+  }
+
+  /** This shouldn't be called directly. See 'Dispatcher'. */
+  public async _changeBranchReviewFileSelection(
+    repository: Repository,
+    file: CommittedFileChange
+  ): Promise<void> {
+    const { branchReviewState } = this.repositoryStateCache.get(repository)
+    const { mergeBase, selectedFile } = branchReviewState
+
+    if (mergeBase === null) {
+      return
+    }
+
+    if (selectedFile !== file) {
+      this.repositoryStateCache.updateBranchReviewState(repository, () => ({
+        selectedFile: file,
+        diff: null,
+      }))
+      this.emitUpdate()
+    }
+
+    const diff =
+      (await this.gitStoreCache
+        .get(repository)
+        .performFailableOperation(() =>
+          getBranchReviewDiff(
+            repository,
+            file,
+            mergeBase,
+            this.hideWhitespaceInPullRequestDiff
+          )
+        )) ?? null
+
+    const stateAfterLoad =
+      this.repositoryStateCache.get(repository).branchReviewState
+
+    // The user picked another file, or the review reloaded, while the diff
+    // was loading
+    if (
+      stateAfterLoad.selectedFile !== file ||
+      stateAfterLoad.mergeBase !== mergeBase
+    ) {
+      return
+    }
+
+    this.repositoryStateCache.updateBranchReviewState(repository, () => ({
+      diff,
+    }))
+    this.emitUpdate()
+  }
+
+  /** This shouldn't be called directly. See 'Dispatcher'. */
+  public _changeBranchReviewBaseBranch(
+    repository: Repository,
+    baseBranch: Branch
+  ): Promise<void> {
+    this.repositoryStateCache.updateBranchReviewState(repository, () => ({
+      selectedBaseBranch: baseBranch,
+      status: BranchReviewStatus.Loading,
+    }))
+    this.emitUpdate()
+
+    return this._loadBranchReview(repository)
+  }
+
+  /** This shouldn't be called directly. See 'Dispatcher'. */
+  public _setBranchReviewIncludeUncommitted(
+    repository: Repository,
+    includeUncommitted: boolean
+  ): Promise<void> {
+    setBoolean(branchReviewIncludeUncommittedKey, includeUncommitted)
+    this.repositoryStateCache.updateBranchReviewState(repository, () => ({
+      includeUncommitted,
+      status: BranchReviewStatus.Loading,
+    }))
+    this.emitUpdate()
+
+    return this._loadBranchReview(repository)
   }
 
   private setupPRMergeTreePromise(

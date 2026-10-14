@@ -8,6 +8,7 @@ import { NoChanges } from './changes/no-changes'
 import { MultipleSelection } from './changes/multiple-selection'
 import { FilesChangedBadge } from './changes/files-changed-badge'
 import { SelectedCommits, CompareSidebar } from './history'
+import { ReviewSidebar, ReviewDiff } from './review'
 import { Resizable } from './resizable'
 import { TabBar } from './tab-bar'
 import {
@@ -51,6 +52,7 @@ interface IRepositoryViewProps {
   readonly imageDiffType: ImageDiffType
   readonly hideWhitespaceInChangesDiff: boolean
   readonly hideWhitespaceInHistoryDiff: boolean
+  readonly hideWhitespaceInBranchReviewDiff: boolean
   readonly showSideBySideDiff: boolean
   readonly expandWholeFileByDefault: boolean
   readonly showDiffCheckMarks: boolean
@@ -152,7 +154,18 @@ interface IRepositoryViewState {
 const enum Tab {
   Changes = 0,
   History = 1,
+  Review = 2,
 }
+
+/** The tab bar's tabs, in order, and the sections they show */
+const sectionForTab = new Map<Tab, RepositorySectionTab>([
+  [Tab.Changes, RepositorySectionTab.Changes],
+  [Tab.History, RepositorySectionTab.History],
+  [Tab.Review, RepositorySectionTab.Review],
+])
+const tabForSection = new Map(
+  Array.from(sectionForTab, ([tab, section]) => [section, tab])
+)
 
 export class RepositoryView extends React.Component<
   IRepositoryViewProps,
@@ -217,9 +230,7 @@ export class RepositoryView extends React.Component<
 
   private renderTabs(): JSX.Element {
     const selectedTab =
-      this.props.state.selectedSection === RepositorySectionTab.Changes
-        ? Tab.Changes
-        : Tab.History
+      tabForSection.get(this.props.state.selectedSection) ?? Tab.Changes
 
     return (
       <TabBar selectedIndex={selectedTab} onTabClicked={this.onTabClicked}>
@@ -230,6 +241,10 @@ export class RepositoryView extends React.Component<
 
         <div className="with-indicator" id="history-tab">
           <span>History</span>
+        </div>
+
+        <div className="with-indicator" id="review-tab">
+          <span>Review</span>
         </div>
       </TabBar>
     )
@@ -269,7 +284,7 @@ export class RepositoryView extends React.Component<
     const availableWidth = clamp(this.props.sidebarWidth) - 1
 
     const scrollTop =
-      this.previousSection === RepositorySectionTab.History
+      this.previousSection !== RepositorySectionTab.Changes
         ? this.state.changesListScrollTop
         : undefined
     this.previousSection = RepositorySectionTab.Changes
@@ -347,7 +362,7 @@ export class RepositoryView extends React.Component<
     const currentBranch = tip.kind === TipState.Valid ? tip.branch : null
     const scrollTop =
       this.forceCompareListScrollTop ||
-      this.previousSection === RepositorySectionTab.Changes
+      this.previousSection !== RepositorySectionTab.History
         ? this.state.compareListScrollTop
         : undefined
     this.previousSection = RepositorySectionTab.History
@@ -364,6 +379,7 @@ export class RepositoryView extends React.Component<
         currentBranch={currentBranch}
         emoji={emoji}
         commitLookup={commitLookup}
+        commitBranchNames={state.commitBranchNames}
         localCommitSHAs={localCommitSHAs}
         localTags={localTags}
         dispatcher={dispatcher}
@@ -385,6 +401,28 @@ export class RepositoryView extends React.Component<
     )
   }
 
+  private renderReviewSidebar(): JSX.Element {
+    const { branchesState, branchReviewState } = this.props.state
+    const { tip } = branchesState
+    this.previousSection = RepositorySectionTab.Review
+
+    return (
+      <ReviewSidebar
+        repository={this.props.repository}
+        dispatcher={this.props.dispatcher}
+        reviewState={branchReviewState}
+        currentBranch={tip.kind === TipState.Valid ? tip.branch : null}
+        defaultBranch={branchesState.defaultBranch}
+        allBranches={branchesState.allBranches}
+        recentBranches={branchesState.recentBranches}
+        // -1 Because of right hand side border
+        availableWidth={clamp(this.props.sidebarWidth) - 1}
+        externalEditorLabel={this.props.externalEditorLabel}
+        onOpenInExternalEditor={this.props.onOpenInExternalEditor}
+      />
+    )
+  }
+
   private renderSidebarContents(): JSX.Element {
     const selectedSection = this.props.state.selectedSection
 
@@ -392,6 +430,8 @@ export class RepositoryView extends React.Component<
       return this.renderChangesSidebar()
     } else if (selectedSection === RepositorySectionTab.History) {
       return this.renderCompareSidebar()
+    } else if (selectedSection === RepositorySectionTab.Review) {
+      return this.renderReviewSidebar()
     } else {
       return assertNever(selectedSection, 'Unknown repository section')
     }
@@ -645,12 +685,34 @@ export class RepositoryView extends React.Component<
     this.props.dispatcher.changeImageDiffType(imageDiffType)
   }
 
+  private renderContentForReview(): JSX.Element {
+    return (
+      <ReviewDiff
+        repository={this.props.repository}
+        dispatcher={this.props.dispatcher}
+        reviewState={this.props.state.branchReviewState}
+        imageDiffType={this.props.imageDiffType}
+        hideWhitespaceInDiff={this.props.hideWhitespaceInBranchReviewDiff}
+        showSideBySideDiff={this.props.showSideBySideDiff}
+        expandWholeFileByDefault={this.props.expandWholeFileByDefault}
+        externalEditorLabel={this.props.externalEditorLabel}
+        onOpenInExternalEditor={this.props.onOpenInExternalEditor}
+        onOpenBinaryFile={this.onOpenBinaryFile}
+        onOpenSubmodule={this.onOpenSubmodule}
+        onChangeImageDiffType={this.onChangeImageDiffType}
+        onDiffOptionsOpened={this.onDiffOptionsOpened}
+      />
+    )
+  }
+
   private renderContent(): JSX.Element | null {
     const selectedSection = this.props.state.selectedSection
     if (selectedSection === RepositorySectionTab.Changes) {
       return this.renderContentForChanges()
     } else if (selectedSection === RepositorySectionTab.History) {
       return this.renderContentForHistory()
+    } else if (selectedSection === RepositorySectionTab.Review) {
+      return this.renderContentForReview()
     } else {
       return assertNever(selectedSection, 'Unknown repository section')
     }
@@ -707,20 +769,19 @@ export class RepositoryView extends React.Component<
       return
     }
 
-    // Toggle tab selection on Ctrl+Tab. Note that we don't care
-    // about the shift key here, we can get away with that as long
-    // as there's only two tabs.
+    // Cycle through the tabs on Ctrl+Tab, backwards with Shift
     if (event.ctrlKey && event.key === 'Tab') {
-      this.changeTab()
+      this.changeTab(event.shiftKey ? -1 : 1)
       event.preventDefault()
     }
   }
 
-  private changeTab() {
-    const section =
-      this.props.state.selectedSection === RepositorySectionTab.History
-        ? RepositorySectionTab.Changes
-        : RepositorySectionTab.History
+  private changeTab(step: 1 | -1) {
+    const tabCount = sectionForTab.size
+    const currentTab =
+      tabForSection.get(this.props.state.selectedSection) ?? Tab.Changes
+    const nextTab: Tab = (currentTab + step + tabCount) % tabCount
+    const section = sectionForTab.get(nextTab) ?? RepositorySectionTab.Changes
 
     this.props.dispatcher.changeRepositorySection(
       this.props.repository,
@@ -729,16 +790,13 @@ export class RepositoryView extends React.Component<
   }
 
   private onTabClicked = (tab: Tab) => {
-    const section =
-      tab === Tab.History
-        ? RepositorySectionTab.History
-        : RepositorySectionTab.Changes
+    const section = sectionForTab.get(tab) ?? RepositorySectionTab.Changes
 
     this.props.dispatcher.changeRepositorySection(
       this.props.repository,
       section
     )
-    if (!!section) {
+    if (section === RepositorySectionTab.History) {
       this.props.dispatcher.updateCompareForm(this.props.repository, {
         showBranchList: false,
       })

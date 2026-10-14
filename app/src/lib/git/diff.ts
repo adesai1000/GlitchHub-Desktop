@@ -692,7 +692,8 @@ export async function convertDiff(
   diff: IRawDiff,
   newestCommitish: string,
   oldestCommitish: string,
-  lineEndingsChange?: LineEndingsChange
+  lineEndingsChange?: LineEndingsChange,
+  loadImageDiff?: () => Promise<IImageDiff>
 ): Promise<IDiff> {
   const extension = Path.extname(file.path).toLowerCase()
 
@@ -702,6 +703,8 @@ export async function convertDiff(
       return {
         kind: DiffType.Binary,
       }
+    } else if (loadImageDiff !== undefined) {
+      return loadImageDiff()
     } else {
       return getImageDiff(repository, file, newestCommitish, oldestCommitish)
     }
@@ -764,7 +767,9 @@ const lineEndingsChangeRegex =
  *
  * @param error A buffer of binary text from a spawned process
  */
-function parseLineEndingsWarning(error: Buffer): LineEndingsChange | undefined {
+export function parseLineEndingsWarning(
+  error: Buffer
+): LineEndingsChange | undefined {
   if (error.length === 0) {
     return undefined
   }
@@ -843,13 +848,22 @@ async function buildSubmoduleDiff(
   }
 }
 
-async function buildDiff(
+/**
+ * Parses the output of a diff-like command that uses `--patch-with-raw` into
+ * a diff the UI can render.
+ *
+ * @param loadImageDiff Loads both versions of an image when the default of
+ *                      comparing `newestCommitish` with the parent of
+ *                      `oldestCommitish` doesn't fit the diff.
+ */
+export async function buildDiff(
   buffer: Buffer,
   repository: Repository,
   file: FileChange,
   newestCommitish: string,
   oldestCommitish: string,
-  lineEndingsChange?: LineEndingsChange
+  lineEndingsChange?: LineEndingsChange,
+  loadImageDiff?: () => Promise<IImageDiff>
 ): Promise<IDiff> {
   if (file.status.submoduleStatus !== undefined) {
     return buildSubmoduleDiff(
@@ -889,7 +903,8 @@ async function buildDiff(
     diff,
     newestCommitish,
     oldestCommitish,
-    lineEndingsChange
+    lineEndingsChange,
+    loadImageDiff
   )
 }
 
@@ -1002,5 +1017,5 @@ async function getFilesUsingBinaryMergeDriver(
 // literal path. This is important for paths that appear to be absolute paths on
 // some platforms and not others. See
 // https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-top
-const ensureRelativePath = (path: string) =>
+export const ensureRelativePath = (path: string) =>
   isAbsolute(path) ? `:(top,literal)${path}` : path

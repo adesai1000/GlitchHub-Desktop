@@ -41,6 +41,9 @@ interface ICompareSidebarProps {
   readonly compareState: ICompareState
   readonly emoji: Map<string, Emoji>
   readonly commitLookup: Map<string, Commit>
+
+  /** The branch each commit was most likely made on, by SHA */
+  readonly commitBranchNames: ReadonlyMap<string, string>
   readonly localCommitSHAs: ReadonlyArray<string>
   readonly askForConfirmationOnCheckoutCommit: boolean
   readonly dispatcher: Dispatcher
@@ -244,6 +247,7 @@ export class CompareSidebar extends React.Component<
         gitHubRepository={this.props.repository.gitHubRepository}
         isLocalRepository={this.props.isLocalRepository}
         commitLookup={this.props.commitLookup}
+        commitBranchNames={this.props.commitBranchNames}
         commitSHAs={commitSHAs}
         selectedSHAs={this.props.selectedCommitShas}
         shasToHighlight={this.props.shasToHighlight}

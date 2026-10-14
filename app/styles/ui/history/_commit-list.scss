@@ -135,6 +135,22 @@
     .byline {
       @include ellipsis;
     }
+
+    // A byline with a branch name wraps instead of cutting the name off. The
+    // line height must match WrappingBylineLineHeight in commit-list-item.tsx.
+    .byline.with-branch {
+      min-width: 0;
+      white-space: normal;
+      line-height: 16px;
+
+      .byline-attribution {
+        white-space: nowrap;
+      }
+
+      .commit-branch-name {
+        overflow-wrap: anywhere;
+      }
+    }
   }
 
   .commit-indicators {

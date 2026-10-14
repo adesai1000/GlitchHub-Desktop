@@ -184,6 +184,12 @@ interface ICommitListProps {
 
   /** This will make the list semantics friendly to screen reader users in browse mode. */
   readonly isInformationalView?: boolean
+
+  /**
+   * The branch each commit was most likely made on, by SHA, to show after
+   * the commit's date
+   */
+  readonly commitBranchNames?: ReadonlyMap<string, string>
 }
 
 interface ICommitListState {
@@ -192,6 +198,9 @@ interface ICommitListState {
    * process.
    */
   readonly reorderingMessage: string
+
+  /** Changes whenever a row's height changes, see extraRowHeights */
+  readonly rowHeightsVersion: number
 }
 
 /** A component which displays the list of commits. */
@@ -207,6 +216,22 @@ export class CommitList extends React.Component<
 
   private containerRef = React.createRef<HTMLDivElement>()
   private listRef = React.createRef<List>()
+
+  /**
+   * The height each row needs beyond RowHeight, by commit SHA, for bylines
+   * that wrap onto more lines
+   */
+  private readonly extraRowHeights = new Map<string, number>()
+
+  /**
+   * The row heights of the list. A new function makes the list measure its
+   * rows again, so this changes whenever a row's height or the commits do.
+   */
+  private getRowHeight = memoizeOne(
+    (commitSHAs: ReadonlyArray<string>, _rowHeightsVersion: number) =>
+      ({ index }: { index: number }) =>
+        RowHeight + (this.extraRowHeights.get(commitSHAs[index]) ?? 0)
+  )
 
   // This function is debounced to avoid updating the aria live region too
   // frequently on every key press.
@@ -245,12 +270,22 @@ export class CommitList extends React.Component<
   public constructor(props: ICommitListProps) {
     super(props)
 
-    this.state = { reorderingMessage: '' }
+    this.state = { reorderingMessage: '', rowHeightsVersion: 0 }
   }
 
-  public componentDidUpdate(prevProps: ICommitListProps) {
+  public componentDidUpdate(
+    prevProps: ICommitListProps,
+    prevState: ICommitListState
+  ) {
     if (this.props.keyboardReorderData !== prevProps.keyboardReorderData) {
       this.updateKeyboardReorderingMessage(null)
+    }
+
+    if (
+      this.state.rowHeightsVersion !== prevState.rowHeightsVersion ||
+      this.props.commitSHAs !== prevProps.commitSHAs
+    ) {
+      this.listRef.current?.recomputeRowHeights()
     }
   }
 
@@ -268,6 +303,15 @@ export class CommitList extends React.Component<
 
   private isLocalCommit = (sha: string) =>
     this.props.localCommitSHAs.includes(sha)
+
+  private onExtraHeightChanged = (sha: string, extraHeight: number) => {
+    if ((this.extraRowHeights.get(sha) ?? 0) === extraHeight) {
+      return
+    }
+
+    this.extraRowHeights.set(sha, extraHeight)
+    this.setState(state => ({ rowHeightsVersion: state.rowHeightsVersion + 1 }))
+  }
 
   private renderCommit = (row: number) => {
     const sha = this.props.commitSHAs[row]
@@ -311,6 +355,12 @@ export class CommitList extends React.Component<
         disableSquashing={this.props.disableSquashing}
         accounts={this.props.accounts}
         preferAbsoluteDates={this.props.preferAbsoluteDates}
+        branchName={this.props.commitBranchNames?.get(commit.sha)}
+        onExtraHeightChanged={
+          this.props.commitBranchNames !== undefined
+            ? this.onExtraHeightChanged
+            : undefined
+        }
       />
     )
   }
@@ -589,7 +639,11 @@ export class CommitList extends React.Component<
           role={this.props.isInformationalView === true ? 'list' : 'listbox'}
           ref={this.listRef}
           rowCount={commitSHAs.length}
-          rowHeight={RowHeight}
+          rowHeight={
+            this.props.commitBranchNames !== undefined
+              ? this.getRowHeight(commitSHAs, this.state.rowHeightsVersion)
+              : RowHeight
+          }
           selectedRows={selectedRows}
           rowRenderer={this.renderCommit}
           onDropDataInsertion={this.onDropDataInsertion}
@@ -618,6 +672,7 @@ export class CommitList extends React.Component<
             tagsToPush: this.props.tagsToPush,
             shasToHighlight: this.props.shasToHighlight,
             preferAbsoluteDates: this.props.preferAbsoluteDates,
+            commitBranchNames: this.props.commitBranchNames,
           }}
           setScrollTop={this.props.compareListScrollTop}
           rowCustomClassNameMap={this.getRowCustomClassMap()}

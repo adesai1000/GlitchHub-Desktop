@@ -480,6 +480,8 @@ export class App extends React.Component<IAppProps, IAppState> {
         return this.showChanges(true)
       case 'show-history':
         return this.showHistory(true)
+      case 'show-review':
+        return this.showReview()
       case 'choose-repository':
         return this.chooseRepository()
       case 'add-local-repository':
@@ -953,6 +955,20 @@ export class App extends React.Component<IAppProps, IAppState> {
     if (shouldFocusChanges) {
       this.repositoryViewRef.current?.setFocusChangesNeeded()
     }
+  }
+
+  private async showReview() {
+    const state = this.state.selectedState
+    if (state == null || state.type !== SelectionType.Repository) {
+      return
+    }
+
+    this.props.dispatcher.closeCurrentFoldout()
+
+    await this.props.dispatcher.changeRepositorySection(
+      state.repository,
+      RepositorySectionTab.Review
+    )
   }
 
   private chooseRepository() {
@@ -4098,6 +4114,9 @@ export class App extends React.Component<IAppProps, IAppState> {
           imageDiffType={state.imageDiffType}
           hideWhitespaceInChangesDiff={state.hideWhitespaceInChangesDiff}
           hideWhitespaceInHistoryDiff={state.hideWhitespaceInHistoryDiff}
+          hideWhitespaceInBranchReviewDiff={
+            state.hideWhitespaceInPullRequestDiff
+          }
           showDiffCheckMarks={state.showDiffCheckMarks}
           preferAbsoluteDates={state.preferAbsoluteDates}
           showSideBySideDiff={state.showSideBySideDiff}

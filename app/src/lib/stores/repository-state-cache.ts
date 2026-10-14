@@ -19,7 +19,10 @@ import {
   IMultiCommitOperationUndoState,
   IMultiCommitOperationState,
   IPullRequestState,
+  IBranchReviewState,
+  BranchReviewStatus,
 } from '../app-state'
+import { getBoolean } from '../local-storage'
 import { merge } from '../merge'
 import { DefaultCommitMessage } from '../../models/commit-message'
 import { sendNonFatalException } from '../helpers/non-fatal-exception'
@@ -356,7 +359,27 @@ export class RepositoryStateCache {
       return { pullRequestState: null }
     })
   }
+
+  public updateBranchReviewState<K extends keyof IBranchReviewState>(
+    repository: Repository,
+    fn: (state: IBranchReviewState) => Pick<IBranchReviewState, K>
+  ) {
+    this.update(repository, state => {
+      const branchReviewState = merge(
+        state.branchReviewState,
+        fn(state.branchReviewState)
+      )
+      return { branchReviewState }
+    })
+  }
 }
+
+/**
+ * The key for the Review tab's "Include uncommitted changes" setting, which
+ * applies to every repository.
+ */
+export const branchReviewIncludeUncommittedKey =
+  'branch-review-include-uncommitted'
 
 function getInitialRepositoryState(): IRepositoryState {
   return {
@@ -422,6 +445,19 @@ function getInitialRepositoryState(): IRepositoryState {
       defaultBranch: null,
     },
     pullRequestState: null,
+    branchReviewState: {
+      status: BranchReviewStatus.Loading,
+      selectedBaseBranch: null,
+      baseBranch: null,
+      baseRef: null,
+      mergeBase: null,
+      commitCount: 0,
+      includeUncommitted: getBoolean(branchReviewIncludeUncommittedKey, false),
+      changesetData: { files: [], linesAdded: 0, linesDeleted: 0 },
+      selectedFile: null,
+      diff: null,
+    },
+    commitBranchNames: new Map<string, string>(),
     commitAuthor: null,
     commitLookup: new Map<string, Commit>(),
     localCommitSHAs: [],

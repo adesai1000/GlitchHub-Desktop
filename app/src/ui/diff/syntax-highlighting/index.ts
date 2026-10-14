@@ -11,6 +11,7 @@ import {
   CommittedFileChange,
   WorkingDirectoryFileChange,
   AppFileStatusKind,
+  WorkingTreeCommitish,
 } from '../../../models/status'
 import { Repository } from '../../../models/repository'
 import { DiffHunk, DiffLineType, DiffLine } from '../../../models/diff'
@@ -86,7 +87,10 @@ async function getNewFileContent(
     return null
   }
 
-  if (file instanceof WorkingDirectoryFileChange) {
+  if (
+    file instanceof WorkingDirectoryFileChange ||
+    file.commitish === WorkingTreeCommitish
+  ) {
     return readPartialFile(
       Path.join(repository.path, file.path),
       0,

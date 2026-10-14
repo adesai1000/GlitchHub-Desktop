@@ -2447,6 +2447,49 @@ export class Dispatcher {
     )
   }
 
+  /** Change the hide whitespace in diff setting of the Review tab */
+  public onHideWhitespaceInBranchReviewDiffChanged(
+    hideWhitespaceInDiff: boolean,
+    repository: Repository
+  ): Promise<void> {
+    return this.appStore._setHideWhitespaceInBranchReviewDiff(
+      hideWhitespaceInDiff,
+      repository
+    )
+  }
+
+  /** Reload the files and diff in the Review tab */
+  public loadBranchReview(repository: Repository): Promise<void> {
+    return this.appStore._loadBranchReview(repository)
+  }
+
+  /** Show the diff of a file in the Review tab */
+  public changeBranchReviewFileSelection(
+    repository: Repository,
+    file: CommittedFileChange
+  ): Promise<void> {
+    return this.appStore._changeBranchReviewFileSelection(repository, file)
+  }
+
+  /** Change the branch the Review tab compares the current branch against */
+  public changeBranchReviewBaseBranch(
+    repository: Repository,
+    baseBranch: Branch
+  ): Promise<void> {
+    return this.appStore._changeBranchReviewBaseBranch(repository, baseBranch)
+  }
+
+  /** Set whether the Review tab includes uncommitted changes */
+  public setBranchReviewIncludeUncommitted(
+    repository: Repository,
+    includeUncommitted: boolean
+  ): Promise<void> {
+    return this.appStore._setBranchReviewIncludeUncommitted(
+      repository,
+      includeUncommitted
+    )
+  }
+
   /** Change the side by side diff setting */
   public onShowSideBySideDiffChanged(showSideBySideDiff: boolean) {
     return this.appStore._setShowSideBySideDiff(showSideBySideDiff)

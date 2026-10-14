@@ -1757,4 +1757,13 @@ export class List extends React.Component<IListProps, IListState> {
       }
     }
   }
+
+  /**
+   * Measure the rows again, starting from the given row. Call this when the
+   * heights a `rowHeight` function returns change: the list caches them and
+   * a new function alone doesn't clear the cache.
+   */
+  public recomputeRowHeights(fromRow: number = 0) {
+    this.grid?.recomputeGridSize({ columnIndex: 0, rowIndex: fromRow })
+  }
 }

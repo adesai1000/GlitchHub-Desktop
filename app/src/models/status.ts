@@ -352,6 +352,13 @@ export class CommittedFileChange extends FileChange {
   }
 }
 
+/**
+ * The commitish of a CommittedFileChange whose 'after' version is the file on
+ * disk rather than a blob in a commit. The branch review uses it when it
+ * includes uncommitted changes.
+ */
+export const WorkingTreeCommitish = ':working-tree:'
+
 /** the state of the working directory for a repository */
 export class WorkingDirectoryStatus {
   /** Create a new status with the given files. */

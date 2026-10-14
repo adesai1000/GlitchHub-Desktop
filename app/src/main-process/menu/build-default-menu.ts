@@ -196,6 +196,12 @@ export function buildDefaultMenuTemplate({
         click: emit('show-history'),
       },
       {
+        label: __DARWIN__ ? 'Show Review' : 'Re&view',
+        id: 'show-review',
+        accelerator: 'CmdOrCtrl+3',
+        click: emit('show-review'),
+      },
+      {
         label: __DARWIN__ ? 'Show Repository List' : 'Repository &list',
         id: 'show-repository-list',
         accelerator: 'CmdOrCtrl+T',

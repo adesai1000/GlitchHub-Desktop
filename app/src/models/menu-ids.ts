@@ -22,6 +22,7 @@ export type MenuIDs =
   | 'create-branch'
   | 'show-changes'
   | 'show-history'
+  | 'show-review'
   | 'show-repository-list'
   | 'show-branches-list'
   | 'open-working-directory'

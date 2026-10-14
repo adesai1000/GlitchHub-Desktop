@@ -23,9 +23,9 @@ interface IBranchSelectProps {
   readonly defaultBranch: Branch | null
 
   /**
-   * The currently checked out branch
+   * The currently checked out branch, or null when HEAD is detached
    */
-  readonly currentBranch: Branch
+  readonly currentBranch: Branch | null
 
   /**
    * See IBranchesState.allBranches

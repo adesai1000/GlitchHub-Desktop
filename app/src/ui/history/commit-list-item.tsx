@@ -50,7 +50,22 @@ interface ICommitProps {
   readonly unpushedIndicatorTitle?: string
   readonly accounts: ReadonlyArray<Account>
   readonly preferAbsoluteDates: boolean
+
+  /** The branch the commit was most likely made on, shown after the date */
+  readonly branchName?: string
+
+  /**
+   * Called with the height the item needs beyond its normal height when the
+   * branch name makes the byline wrap onto more lines
+   */
+  readonly onExtraHeightChanged?: (sha: string, extraHeight: number) => void
 }
+
+/**
+ * The line height of a byline that can wrap, which must match
+ * `.byline.with-branch` in _commit-list.scss
+ */
+const WrappingBylineLineHeight = 16
 
 interface ICommitListItemState {
   readonly avatarUsers: ReadonlyArray<IAvatarUser>
@@ -61,6 +76,8 @@ export class CommitListItem extends React.PureComponent<
   ICommitProps,
   ICommitListItemState
 > {
+  private bylineResizeObserver: ResizeObserver | null = null
+
   public constructor(props: ICommitProps) {
     super(props)
 
@@ -81,6 +98,31 @@ export class CommitListItem extends React.PureComponent<
         ),
       })
     }
+  }
+
+  public componentWillUnmount() {
+    this.bylineResizeObserver?.disconnect()
+  }
+
+  private onBylineRef = (byline: HTMLDivElement | null) => {
+    this.bylineResizeObserver?.disconnect()
+    this.bylineResizeObserver = null
+
+    if (byline === null || this.props.onExtraHeightChanged === undefined) {
+      return
+    }
+
+    this.bylineResizeObserver = new ResizeObserver(() => {
+      const lines = Math.max(
+        1,
+        Math.round(byline.offsetHeight / WrappingBylineLineHeight)
+      )
+      this.props.onExtraHeightChanged?.(
+        this.props.commit.sha,
+        (lines - 1) * WrappingBylineLineHeight
+      )
+    })
+    this.bylineResizeObserver.observe(byline)
   }
 
   private onMouseUp = () => {
@@ -165,15 +207,42 @@ export class CommitListItem extends React.PureComponent<
                 accounts={this.props.accounts}
                 tooltip={!enableAccessibleListToolTips()}
               />
-              <div className="byline">
-                <CommitAttribution avatarUsers={this.state.avatarUsers} />
-                {renderRelativeTime(date, this.props.preferAbsoluteDates)}
-              </div>
+              {this.renderByline(date)}
             </div>
           </div>
           {this.renderCommitIndicators()}
         </div>
       </Draggable>
+    )
+  }
+
+  private renderByline(date: Date) {
+    const { branchName, preferAbsoluteDates } = this.props
+    const attributionAndDate = (
+      <>
+        <CommitAttribution avatarUsers={this.state.avatarUsers} />
+        {renderRelativeTime(date, preferAbsoluteDates)}
+      </>
+    )
+
+    if (branchName === undefined || branchName.length === 0) {
+      return (
+        <div className="byline" ref={this.onBylineRef}>
+          {attributionAndDate}
+        </div>
+      )
+    }
+
+    // The byline wraps before the dot rather than inside the author or the
+    // date, and inside the branch name only when it doesn't fit on a line
+    return (
+      <div className="byline with-branch" ref={this.onBylineRef}>
+        <span className="byline-attribution">{attributionAndDate}</span>
+        <span className="commit-branch">
+          {' •\u00a0'}
+          <span className="commit-branch-name">{branchName}</span>
+        </span>
+      </div>
     )
   }
 
