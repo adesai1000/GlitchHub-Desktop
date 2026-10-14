@@ -25,6 +25,9 @@ function run(argv) {
 }
 `
 
+/** Whether this run has replaced the Dock icon */
+let hasReplacedDockIcon = false
+
 /** The path of the .app bundle this process runs from, if any. */
 function getAppBundlePath(): string | null {
   // <name>.app/Contents/MacOS/<executable>
@@ -44,11 +47,22 @@ export async function setAppIcon(iconPath: string | null): Promise<void> {
     return
   }
 
+  // The Dock shows the bundle's own icon unless told otherwise, and that one
+  // follows the icon grid and the Dark, Clear, and Tinted styles. So leave
+  // it alone for the built-in icon, unless a custom icon replaced it earlier
+  // in this run: then put back a copy of the built-in one, padded to the same
+  // grid so it doesn't look bigger than the icons around it.
   const dockIconPath =
-    iconPath ?? Path.join(__dirname, 'static', 'app-icons', 'stickshift.png')
-  const dockImage = nativeImage.createFromPath(dockIconPath)
-  if (!dockImage.isEmpty()) {
-    app.dock?.setIcon(dockImage)
+    iconPath ??
+    (hasReplacedDockIcon
+      ? Path.join(__dirname, 'static', 'app-icons', 'stickshift.png')
+      : null)
+  if (dockIconPath !== null) {
+    const dockImage = nativeImage.createFromPath(dockIconPath)
+    if (!dockImage.isEmpty()) {
+      app.dock?.setIcon(dockImage)
+      hasReplacedDockIcon = true
+    }
   }
 
   const bundle = getAppBundlePath()
