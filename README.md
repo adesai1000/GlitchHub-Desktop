@@ -26,6 +26,8 @@ Press <kbd>⌘</kbd>+<kbd>Esc</kbd>, or click **Claude Code** at the end of the 
 
 ### Review like an editor
 
+- **Review a branch before the pull request.** The **Review** tab, next to **History**, lists every file your branch changes since it left the base branch, across all its commits, with the final diff a reviewer will see. Pick the base branch, and include your uncommitted changes if you like. Press <kbd>⌘</kbd>+<kbd>3</kbd> to open it.
+- **See where each commit came from.** The History list shows the branch each commit was made on after its date, read from merge messages when the branch is gone.
 - **Tabs for changed files.** Every file you open from the Changes list gets a tab above the diff. Close tabs with **×**, a middle click, or the tab menu.
 - **Whole files, no wrapping.** Open every diff fully expanded, and let long lines scroll instead of wrap.
 - **Jump to your editor.** Right-click any diff and open the file in your editor, with a different default editor per repository if you like.

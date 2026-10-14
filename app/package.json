@@ -3,7 +3,7 @@
   "productName": "StickShift",
   "bundleID": "com.stickshift.StickShift",
   "companyName": "StickShift",
-  "version": "2.2.2",
+  "version": "3.0.0",
   "main": "./main.js",
   "repository": {
     "type": "git",
