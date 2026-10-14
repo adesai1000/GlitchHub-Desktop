@@ -6,12 +6,10 @@
     {
       "layers" : [
         {
-          "blend-mode" : "normal",
-          "fill" : "none",
-          "image-name" : "stickshift-mark.png",
-          "name" : "stickshift-mark",
+          "image-name" : "StickShift.png",
+          "name" : "StickShift",
           "position" : {
-            "scale" : 3.5,
+            "scale" : 1,
             "translation-in-points" : [
               0,
               0
@@ -30,9 +28,8 @@
     }
   ],
   "supported-platforms" : {
-    "circles" : [
-      "watchOS"
-    ],
-    "squares" : "shared"
+    "squares" : [
+      "macOS"
+    ]
   }
 }
